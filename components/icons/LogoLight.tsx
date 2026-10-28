@@ -6,6 +6,7 @@ export default function LogoLight() {
       height="156"
       viewBox="0 0 212 156"
       fill="none"
+      className="brand-logo"
     >
       <g clip-path="url(#clip0_265_1588)">
         <path

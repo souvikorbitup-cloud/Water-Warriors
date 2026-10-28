@@ -5,7 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
 import Logo from "@/components/icons/Logo";
-import { LayoutDashboard, UserCircle, ChevronDown, Mail } from "lucide-react";
+import {
+  LayoutDashboard,
+  UserCircle,
+  ChevronDown,
+  Mail,
+  Palette,
+} from "lucide-react";
 import {
   canAccess,
   PERMISSIONS,
@@ -41,6 +47,12 @@ const menuSections: MenuSection[] = [
         name: "Profile",
         path: "/admin/profile",
         permission: PERMISSIONS.profileView,
+      },
+      {
+        icon: <Palette />,
+        name: "Brand Appearance",
+        path: "/admin/appearance",
+        permission: PERMISSIONS.appearanceManage,
       },
     ],
   },

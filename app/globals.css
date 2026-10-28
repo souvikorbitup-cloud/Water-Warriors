@@ -42,8 +42,8 @@
   --color-card-border: var(--card-border);
 
   /* Fonts */
-  --font-heading: var(--font-montserrat);
-  --font-body: var(--font-poppins);
+  --font-heading: var(--font-heading-family);
+  --font-body: var(--font-body-family);
 
   /* Font sizes */
   --text-theme-sm: var(--text-theme-sm);
@@ -72,7 +72,7 @@
   ======================================== */
 
   --card: #ffffff;
-  --card-bg: #ffeaac;
+  --card-bg: var(--secondary);
   --card-foreground: #202020;
 
   --popover: #ffffff;
@@ -89,16 +89,16 @@
      Muted
   ======================================== */
 
-  --muted: #ffeaac;
+  --muted: var(--secondary);
   --muted-foreground: #5e5e5e;
 
   /* ========================================
      Accent
   ======================================== */
 
-  --accent: #ffeaac;
+  --accent: var(--secondary);
   --accent-foreground: #202020;
-  --accent-orange: #f1bb1b;
+  --accent-orange: var(--primary);
 
   /* ========================================
      Borders & Inputs
@@ -111,7 +111,7 @@
 
   /* Focus Ring */
 
-  --ring: #f1bb1b;
+  --ring: var(--primary);
 
   /* ========================================
      Destructive
@@ -126,11 +126,18 @@
 
   --radius: 0.625rem;
 
+  --font-heading-family: "Outfit", sans-serif;
+  --font-body-family: "Inter", sans-serif;
+
   /* ========================================
      Custom Font Size
   ======================================== */
 
   --text-theme-sm: 0.875rem;
+}
+
+.brand-logo [fill="#F1BB1B"] {
+  fill: var(--primary);
 }
 
 @layer base {

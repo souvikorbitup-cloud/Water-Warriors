@@ -1,21 +1,10 @@
 import type { Metadata } from "next";
-import { Montserrat, Poppins } from "next/font/google";
 import "./globals.css";
 import Loding from "@/components/main/shared/loading/Loding";
 import { Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-});
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  variable: "--font-poppins",
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-});
+import AppearanceProvider from "@/components/admin/sections/appearance/AppearanceProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://bakahu.com"),
@@ -67,22 +56,22 @@ export default function RootLayout({
       className={cn(
         "h-full",
         "antialiased",
-        montserrat.variable,
-        poppins.variable,
         "font-sans",
       )}
     >
       <body className="min-h-full bg-white flex flex-col">
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-screen">
-              <Loding />
-            </div>
-          }
-        >
-          {children}
-          <Toaster position="top-right" richColors closeButton />
-        </Suspense>
+        <AppearanceProvider>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-screen">
+                <Loding />
+              </div>
+            }
+          >
+            {children}
+            <Toaster position="top-right" richColors closeButton />
+          </Suspense>
+        </AppearanceProvider>
       </body>
     </html>
   );

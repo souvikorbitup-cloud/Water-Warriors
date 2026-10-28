@@ -5,6 +5,7 @@ export const PERMISSIONS = {
   dashboardView: "dashboard:view",
   profileView: "profile:view",
   profileEdit: "profile:edit",
+  appearanceManage: "appearance:manage",
   // Content
   // Submission
   AllContactUsSubmissionsView: "allContactUsSubmissions:view",
@@ -21,6 +22,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     PERMISSIONS.dashboardView,
     PERMISSIONS.profileView,
     PERMISSIONS.profileEdit,
+    PERMISSIONS.appearanceManage,
     // Content
     // Submission
     PERMISSIONS.AllContactUsSubmissionsView,

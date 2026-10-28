@@ -6,7 +6,7 @@ export default function Logo({ className }: { className?: string }) {
       viewBox="0 0 264 195"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={`brand-logo ${className ?? ""}`}
       role="img"
       aria-label="Water Warriors AI"
     >
