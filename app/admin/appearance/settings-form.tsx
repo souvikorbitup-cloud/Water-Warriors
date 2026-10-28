@@ -20,6 +20,7 @@ import {
   type AppearanceSettings,
 } from "@/lib/appearance/settings";
 import { APPEARANCE_SETTINGS_UPDATED_EVENT } from "@/components/admin/sections/appearance/AppearanceProvider";
+import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 
 function isHexColor(value: string) {
   return /^#[\da-f]{6}$/i.test(value);
@@ -199,13 +200,14 @@ export default function AppearanceSettingsForm({
       </Card>
 
       <div className="flex justify-end">
-        <Button
-          type="button"
+        <PrimaryButton
+          btnType="solid-primary"
+          lifColor="light"
           onClick={() => void saveSettings()}
           disabled={!canSave}
         >
           {saving ? "Saving..." : "Save changes"}
-        </Button>
+        </PrimaryButton>
       </div>
     </div>
   );
