@@ -1,6 +1,6 @@
 export const HERO_BANNER_SETTINGS_ID = "hero-banner";
 export const DEFAULT_HERO_VIDEO_URL = "/hero.mp4";
-export const DEFAULT_HERO_FALLBACK_IMAGE_URL = "/hero-fallback.png";
+export const DEFAULT_HERO_FALLBACK_IMAGE_URL = "/hero-fallback.webp";
 
 export type HeroBannerSettings = {
   videoPublicId: string | null;
