@@ -1,23 +1,15 @@
 import "server-only";
-import { getMongoDB } from "@/lib/db";
 import {
   DEFAULT_APPEARANCE_SETTINGS,
   isAppearanceSettings,
   type AppearanceSettings,
 } from "@/lib/appearance/settings";
-
-type AppearanceSettingsDocument = AppearanceSettings & {
-  _id: string;
-  updatedAt?: Date;
-};
+import { getSiteSettingsCollection } from "@/lib/services/site-settings";
 
 const SETTINGS_ID = "appearance";
-const COLLECTION_NAME = "siteSettings";
 
 export async function getAppearanceSettings(): Promise<AppearanceSettings> {
-  const collection = (
-    await getMongoDB()
-  ).collection<AppearanceSettingsDocument>(COLLECTION_NAME);
+  const collection = await getSiteSettingsCollection();
   const document = await collection.findOne({ _id: SETTINGS_ID });
 
   if (!document) {
@@ -38,9 +30,7 @@ export async function getAppearanceSettings(): Promise<AppearanceSettings> {
 export async function saveAppearanceSettings(
   settings: AppearanceSettings,
 ): Promise<void> {
-  const collection = (
-    await getMongoDB()
-  ).collection<AppearanceSettingsDocument>(COLLECTION_NAME);
+  const collection = await getSiteSettingsCollection();
 
   await collection.updateOne(
     { _id: SETTINGS_ID },

@@ -27,6 +27,12 @@ new account creation through the sign-in page. OTPs will only be sent to
 registered email addresses, and unknown email addresses cannot create accounts.
 When `SIGN_UP` is unset or set to `true`, sign-up remains enabled.
 
+## Site settings
+
+Set `COLLECTION_NAME=siteSettings` in `.env.local` and in each deployment
+environment. The admin appearance and hero banner settings are stored as
+separate documents in this MongoDB collection.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

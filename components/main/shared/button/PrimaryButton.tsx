@@ -43,17 +43,17 @@ interface PrimaryButtonProps {
 ------------------------------------------------------------------- */
 
 const shapedSizeClasses: Record<ButtonSize, string> = {
-  sm: "h-8 text-sm",
+  sm: "h-9 text-sm sm:h-10",
   md: "h-10 text-sm sm:h-11.5",
 };
 
 const shapedStyles: Record<ShapedType, { fill: string; text: string }> = {
   "solid-primary": {
-    fill: "bg-primary group-hover:bg-primary/90",
+    fill: "bg-primary",
     text: "text-primary-foreground",
   },
   "solid-secondary": {
-    fill: "bg-secondary group-hover:bg-secondary/90",
+    fill: "bg-secondary",
     text: "text-heading",
   },
 };

@@ -1,10 +1,39 @@
-import UnderConstruction from "@/components/main/shared/UnderConstruction";
+import { Suspense } from "react";
+import { connection } from "next/server";
+import HeroSection from "@/components/main/sections/home/HeroSection";
+import IntroSection from "@/components/main/sections/home/IntroSection";
+import {
+  DEFAULT_HERO_FALLBACK_IMAGE_URL,
+  DEFAULT_HERO_VIDEO_URL,
+} from "@/lib/appearance/hero-banner";
+import { getHeroBannerSettings } from "@/lib/services/hero-banner-settings";
 
 export default function Home() {
   return (
     <>
-      <div className="h-150 bg-black -mt-30"></div>
-      <UnderConstruction pageName="Home Page" />
+      <Suspense
+        fallback={
+          <HeroSection
+            videoUrl={DEFAULT_HERO_VIDEO_URL}
+            fallbackImageUrl={DEFAULT_HERO_FALLBACK_IMAGE_URL}
+          />
+        }
+      >
+        <HeroBanner />
+      </Suspense>
+      <IntroSection />
     </>
+  );
+}
+
+async function HeroBanner() {
+  await connection();
+  const heroBannerSettings = await getHeroBannerSettings();
+
+  return (
+    <HeroSection
+      videoUrl={heroBannerSettings.videoUrl}
+      fallbackImageUrl={heroBannerSettings.fallbackImageUrl}
+    />
   );
 }

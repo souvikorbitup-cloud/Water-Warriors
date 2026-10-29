@@ -35,7 +35,7 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
     <header
       className={`relative z-50 ${type === "light" ? "bg-transparent" : "bg-white border-b border-b-[#C9C9C9]"}`}
     >
-      <div className="my-container-x grid grid-cols-[1fr_auto_1fr] items-center py-4 sm:py-5">
+      <div className="px-2.5 sm:px-4 grid grid-cols-[1fr_auto_1fr] items-center py-4 sm:py-5">
         {/* Left: slide-over menu */}
         <Sheet>
           <SheetTrigger asChild>

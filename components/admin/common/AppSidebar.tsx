@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Mail,
   Palette,
+  Film,
 } from "lucide-react";
 import {
   canAccess,
@@ -71,7 +72,14 @@ const menuSections: MenuSection[] = [
 
   {
     title: "Content",
-    items: [],
+    items: [
+      {
+        icon: <Film />,
+        name: "Hero Banner",
+        path: "/admin/hero-banner",
+        permission: PERMISSIONS.appearanceManage,
+      },
+    ],
   },
 ];
 
