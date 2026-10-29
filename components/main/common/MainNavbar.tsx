@@ -53,9 +53,9 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
               >
                 <path
                   d="M1 1H17M1 7H17M1 13H8"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   stroke={`${type === "light" ? "#fff" : "#202020"}`}
                   className="group-hover:stroke-primary transition"
                 />
