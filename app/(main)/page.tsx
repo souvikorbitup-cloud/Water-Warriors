@@ -1,12 +1,15 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import HeroSection from "@/components/main/sections/home/HeroSection";
-import IntroSection from "@/components/main/sections/home/IntroSection";
 import {
   DEFAULT_HERO_FALLBACK_IMAGE_URL,
   DEFAULT_HERO_VIDEO_URL,
 } from "@/lib/appearance/hero-banner";
 import { getHeroBannerSettings } from "@/lib/services/hero-banner-settings";
+import {
+  HeroSection,
+  IntroSection,
+  LocationSection,
+} from "@/components/main/sections/home";
 
 export default function Home() {
   return (
@@ -22,6 +25,7 @@ export default function Home() {
         <HeroBanner />
       </Suspense>
       <IntroSection />
+      <LocationSection />
     </>
   );
 }
