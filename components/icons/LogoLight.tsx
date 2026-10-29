@@ -1,4 +1,4 @@
-export default function LogoLight() {
+export default function LogoLight({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -6,7 +6,7 @@ export default function LogoLight() {
       height="156"
       viewBox="0 0 212 156"
       fill="none"
-      className="brand-logo"
+      className={`brand-logo ${className ?? ""}`}
     >
       <g clip-path="url(#clip0_265_1588)">
         <path
