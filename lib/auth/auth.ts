@@ -14,6 +14,7 @@ import {
   recordFailedVerifyAttempt,
   clearRateLimit,
 } from "../otp/otp-rate-limit";
+import { isValidEmail } from "./validation";
 import { DEFAULT_ROLE } from "./roles";
 
 const trustedOrigins = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
@@ -201,6 +202,21 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      if (isSignUpDisabled && ctx.path === "/email-otp/send-verification-otp") {
+        const email = (ctx.body as { email?: string } | undefined)?.email
+          ?.trim()
+          .toLowerCase();
+        if (email && isValidEmail(email)) {
+          const user = await ctx.context.internalAdapter.findUserByEmail(email);
+          if (!user) {
+            throw new APIError("BAD_REQUEST", {
+              message:
+                "This email address is not registered. Sign-up is currently disabled. Please use an existing account email.",
+            });
+          }
+        }
+      }
+
       const verifyPaths = [
         "/email-otp/verify-email",
         "/sign-in/email-otp",
