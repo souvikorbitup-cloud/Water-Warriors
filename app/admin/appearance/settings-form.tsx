@@ -202,7 +202,6 @@ export default function AppearanceSettingsForm({
       <div className="flex justify-end">
         <PrimaryButton
           btnType="solid-primary"
-          lifColor="light"
           onClick={() => void saveSettings()}
           disabled={!canSave}
         >

@@ -155,9 +155,10 @@ export function ProfileCompletionForm({
 
             <PrimaryButton
               type="submit"
-              lifColor="light"
+              btnType="solid-primary"
               disabled={isSubmitting}
               className="w-full text-center"
+              full
             >
               {isSubmitting ? "Saving…" : "Finish setup"}
             </PrimaryButton>

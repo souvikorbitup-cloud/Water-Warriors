@@ -270,7 +270,6 @@ export default function UserInfoCard({
                 <PrimaryButton
                   type="submit"
                   btnType="solid-primary"
-                  lifColor="light"
                   disabled={isSaving}
                 >
                   {isSaving ? "Saving..." : "Save Changes"}

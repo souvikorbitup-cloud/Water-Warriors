@@ -87,9 +87,10 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
 
               <PrimaryButton
                 type="submit"
-                lifColor="light"
+                btnType="solid-primary"
                 disabled={isSending}
                 className="w-full text-center"
+                full
               >
                 {isSending ? "Sending code..." : "Continue"}
               </PrimaryButton>
@@ -130,9 +131,10 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
 
               <PrimaryButton
                 type="submit"
-                lifColor="light"
+                btnType="solid-primary"
                 disabled={isVerifying || otpInput.length !== 6}
                 className="w-full text-center"
+                full
               >
                 {isVerifying ? "Verifying..." : "Verify & continue"}
               </PrimaryButton>

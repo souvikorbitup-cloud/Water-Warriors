@@ -32,10 +32,14 @@ export default function NotFound() {
 
           {/* Actions */}
           <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <PrimaryButton href="/" lifColor="light">
+            <PrimaryButton href="/" btnType="solid-primary">
               Back to Home
             </PrimaryButton>
-            <PrimaryButton btnType="outline" href="/contact-us">
+            <PrimaryButton
+              btnType="outline"
+              href="/contact-us"
+              className="border-border"
+            >
               Contact Support
             </PrimaryButton>
           </div>

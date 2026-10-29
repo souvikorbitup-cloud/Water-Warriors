@@ -25,10 +25,10 @@ export default function UnauthorizedPage() {
 
           {/* Actions */}
           <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <PrimaryButton href="/admin/profile" lifColor="light">
+            <PrimaryButton href="/admin/profile" btnType="solid-primary">
               Back to Profile
             </PrimaryButton>
-            <PrimaryButton btnType="outline" href="/contact-us">
+            <PrimaryButton btnType="outline" href="/contact-us" className="border-border">
               Contact Support
             </PrimaryButton>
           </div>

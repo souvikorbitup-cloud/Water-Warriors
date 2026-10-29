@@ -30,7 +30,7 @@ export default function UnderConstruction({
         </p>
 
         <div className="mt-8 flex items-center justify-center gap-4">
-          <PrimaryButton href="/" lifColor="light">
+          <PrimaryButton href="/" btnType="solid-primary">
             Back to Home
           </PrimaryButton>
         </div>
