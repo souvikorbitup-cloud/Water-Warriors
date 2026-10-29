@@ -3,6 +3,8 @@ import { requirePagePermission } from "@/lib/auth/auth-server-utils";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 
 export default async function Dashboard() {
-  const user = await requirePagePermission(PERMISSIONS.dashboardView);
-  return <UnderConstruction pageName="Dashboard Page" />;
+  await requirePagePermission(PERMISSIONS.dashboardView);
+  return (
+    <UnderConstruction pageName="Dashboard Page" classes="min-h-[80dvh]" />
+  );
 }

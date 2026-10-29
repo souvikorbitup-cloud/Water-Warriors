@@ -3,9 +3,12 @@ import { requirePagePermission } from "@/lib/auth/auth-server-utils";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 
 export default async function ContactUsSubmissionsPage() {
-  const user = await requirePagePermission(
-    PERMISSIONS.AllContactUsSubmissionsView,
-  );
+  await requirePagePermission(PERMISSIONS.AllContactUsSubmissionsView);
 
-  return <UnderConstruction pageName="Contact Us Submissions Page" />;
+  return (
+    <UnderConstruction
+      pageName="Contact Us Submissions Page"
+      classes="min-h-[80dvh]"
+    />
+  );
 }
