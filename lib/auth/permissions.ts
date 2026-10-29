@@ -30,6 +30,11 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     // Payments
     PERMISSIONS.paymentsView,
   ],
+  user: [
+    // Menu
+    PERMISSIONS.profileView,
+    PERMISSIONS.profileEdit,
+  ],
 };
 
 export function canAccess(role: Role, permission: Permission): boolean {

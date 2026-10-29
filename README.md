@@ -20,6 +20,13 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Sign-up control
+
+Set `SIGN_UP=false` in `.env.local` or your deployment environment to disable
+new account creation through the sign-in page. OTPs will only be sent to
+registered email addresses, and unknown email addresses cannot create accounts.
+When `SIGN_UP` is unset or set to `true`, sign-up remains enabled.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

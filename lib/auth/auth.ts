@@ -30,6 +30,7 @@ const cookieDomain = betterAuthUrl
 const isDevelopmentOtpBypassEnabled =
   process.env.NODE_ENV === "development" &&
   process.env.DEV_OTP_BYPASS === "true";
+const isSignUpDisabled = process.env.SIGN_UP?.trim().toLowerCase() === "false";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -176,7 +177,7 @@ export const auth = betterAuth({
       otpLength: 6,
       expiresIn: 5 * 60,
       allowedAttempts: 5,
-      disableSignUp: false,
+      disableSignUp: isSignUpDisabled,
       generateOTP: () => (isDevelopmentOtpBypassEnabled ? "123456" : undefined),
       async sendVerificationOTP({ email, otp, type }) {
         const result = await checkAndRecordOTPSend(type, email);
