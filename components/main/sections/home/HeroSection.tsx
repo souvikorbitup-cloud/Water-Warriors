@@ -44,6 +44,7 @@ export default function HeroSection({
             <PrimaryButton
               btnType="solid-primary"
               className="mt-8 min-h-11 max-w-full items-stretch text-left whitespace-normal sm:mt-12 sm:items-center sm:text-center sm:whitespace-nowrap"
+              href="/#save-water"
             >
               Discover how much water you could save
             </PrimaryButton>

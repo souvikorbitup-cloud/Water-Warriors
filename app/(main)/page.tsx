@@ -6,6 +6,7 @@ import {
 } from "@/lib/appearance/hero-banner";
 import { getHeroBannerSettings } from "@/lib/services/hero-banner-settings";
 import {
+  DIYSection,
   HeroSection,
   IntroSection,
   LocationSection,
@@ -28,6 +29,7 @@ export default function Home() {
       <IntroSection />
       <LocationSection />
       <TestimonialSection />
+      <DIYSection />
     </>
   );
 }

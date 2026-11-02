@@ -18,7 +18,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
       {/* Decorative background shape */}
       <Image
         src="/section-images/w-logo.svg"
-        alt=""
+        alt="w-logo"
         aria-hidden
         width={2000}
         height={2000}
@@ -28,7 +28,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
       />
       <Image
         src="/section-images/w-logo.svg"
-        alt=""
+        alt="w-logo"
         aria-hidden
         width={2000}
         height={2000}
@@ -88,7 +88,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
                   {altText === "Facebook" ? (
                     <Image
                       src={image}
-                      alt=""
+                      alt="Facebook"
                       width={18}
                       height={18}
                       className="size-6 sm:size-8"
@@ -96,7 +96,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
                   ) : (
                     <Image
                       src={image}
-                      alt=""
+                      alt={altText}
                       width={18}
                       height={18}
                       className="size-4 sm:size-6"

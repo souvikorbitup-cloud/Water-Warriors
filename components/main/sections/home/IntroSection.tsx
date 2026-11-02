@@ -78,7 +78,7 @@ export default function IntroSection() {
       {/* Decorative background shape */}
       <Image
         src="/section-images/w-logo-light.svg"
-        alt=""
+        alt="w-logo"
         aria-hidden
         width={2000}
         height={2000}
@@ -88,7 +88,7 @@ export default function IntroSection() {
       />
       <Image
         src="/section-images/w-logo-light.svg"
-        alt=""
+        alt="w-logo"
         aria-hidden
         width={2000}
         height={2000}
