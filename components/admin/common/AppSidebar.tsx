@@ -4,7 +4,7 @@ import React, { useEffect, useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
-import Logo from "@/components/icons/Logo";
+import { Logo } from "@/components/icons";
 import {
   LayoutDashboard,
   UserCircle,

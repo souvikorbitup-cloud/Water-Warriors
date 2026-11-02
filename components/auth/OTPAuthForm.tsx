@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
-import Logo from "@/components/icons/Logo";
+import { Logo } from "@/components/icons";
 import { useOTPFlow } from "@/lib/hooks/use-otp-flow";
 import PrimaryButton from "../main/shared/button/PrimaryButton";
 

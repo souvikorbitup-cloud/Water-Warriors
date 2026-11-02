@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Globe, MapPin, Mail, Menu, Phone, X } from "lucide-react";
+import { ChevronDown, Globe, MapPin, Mail, Phone, X } from "lucide-react";
 
-import Logo from "@/components/icons/Logo";
+import { Logo, LogoLight } from "@/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { contactDetails, languages, navLinks } from "@/lib/data/all_data";
-import LogoLight from "@/components/icons/LogoLight";
 
 type MainNavbarProps = {
   type?: "dark" | "light";

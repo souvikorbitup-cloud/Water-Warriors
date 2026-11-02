@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import Logo from "@/components/icons/Logo";
+import { Logo } from "@/components/icons";
 import { isValidName, isValidIndianPhone } from "@/lib/auth/validation";
 import PrimaryButton from "../main/shared/button/PrimaryButton";
 

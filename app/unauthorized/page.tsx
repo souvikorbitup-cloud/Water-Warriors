@@ -1,6 +1,6 @@
-import Logo from "@/components/icons/Logo";
 import { Card, CardContent } from "@/components/ui/card";
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
+import { Logo } from "@/components/icons";
 
 export default function UnauthorizedPage() {
   return (
@@ -28,7 +28,11 @@ export default function UnauthorizedPage() {
             <PrimaryButton href="/admin/profile" btnType="solid-primary">
               Back to Profile
             </PrimaryButton>
-            <PrimaryButton btnType="outline" href="/contact-us" className="border-border">
+            <PrimaryButton
+              btnType="outline"
+              href="/contact-us"
+              className="border-border"
+            >
               Contact Support
             </PrimaryButton>
           </div>

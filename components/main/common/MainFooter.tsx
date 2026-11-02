@@ -1,6 +1,6 @@
 "use client";
 
-import LogoLight from "@/components/icons/LogoLight";
+import { LogoLight } from "@/components/icons";
 import { footerNavLinks, socialLinks } from "@/lib/data/all_data";
 import Image from "next/image";
 import Link from "next/link";
