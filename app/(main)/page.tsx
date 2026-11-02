@@ -9,6 +9,7 @@ import {
   HeroSection,
   IntroSection,
   LocationSection,
+  TestimonialSection,
 } from "@/components/main/sections/home";
 
 export default function Home() {
@@ -26,6 +27,7 @@ export default function Home() {
       </Suspense>
       <IntroSection />
       <LocationSection />
+      <TestimonialSection />
     </>
   );
 }

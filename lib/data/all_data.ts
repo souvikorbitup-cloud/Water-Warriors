@@ -13,7 +13,7 @@ export const navLinks = [
 
 export const languages = [
   { title: "India - English", value: "english" },
-  { title: "বাংলা", value: "bengali" },
+  { title: "हिन्दी", value: "hindi" },
   { title: "தமிழ்", value: "tamil" },
   { title: "తెలుగు", value: "telugu" },
 ];
