@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
@@ -8,6 +8,7 @@ import { useGSAP } from "@gsap/react";
 
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 import Image from "next/image";
+import PopModal from "../../shared/modal/PopModal";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
@@ -27,7 +28,13 @@ const LINE_STYLES = {
   color: "transparent",
 };
 
-export default function IntroSection() {
+export default function IntroSection({
+  demoVideoUrl = null,
+}: {
+  demoVideoUrl?: string | null;
+}) {
+  const [demoOpen, setDemoOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const textRef = useRef<HTMLParagraphElement>(null);
 
@@ -113,17 +120,69 @@ export default function IntroSection() {
 
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:mt-10.5 sm:flex-row sm:gap-5">
             <PrimaryButton
-              href="/sample-report"
               btnType="solid-secondary"
               size="sm"
+              type="button"
+              onClick={() => setReportOpen(true)}
             >
               View a sample report here
             </PrimaryButton>
 
-            <PrimaryButton href="/demo" btnType="solid-primary" size="sm">
+            <PrimaryButton
+              btnType="solid-primary"
+              size="sm"
+              type="button"
+              onClick={() => setDemoOpen(true)}
+            >
               Click here for a demo
             </PrimaryButton>
           </div>
+
+          <PopModal
+            open={demoOpen}
+            onClose={() => setDemoOpen(false)}
+            title="Demo video"
+          >
+            {demoVideoUrl ? (
+              <video
+                className="aspect-video w-full bg-black"
+                src={demoVideoUrl}
+                controls
+                autoPlay
+                playsInline
+              />
+            ) : (
+              <p className="p-10 text-center text-sm">
+                The demo video isn&rsquo;t available yet. Please check back
+                soon.
+              </p>
+            )}
+          </PopModal>
+
+          <PopModal
+            open={reportOpen}
+            onClose={() => setReportOpen(false)}
+            title="Sample report"
+            className="max-w-5xl"
+          >
+            <iframe
+              src="/sample-report.pdf"
+              title="Sample report"
+              className="h-[80vh] w-full"
+            />
+            <p className="border-t px-4 py-2 text-center text-xs">
+              Can&rsquo;t see the PDF?{" "}
+              <a
+                href="/sample-report.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                Open it in a new tab
+              </a>
+              .
+            </p>
+          </PopModal>
         </div>
       </div>
     </section>

@@ -5,6 +5,7 @@ import {
   DEFAULT_HERO_VIDEO_URL,
 } from "@/lib/appearance/hero-banner";
 import { getHeroBannerSettings } from "@/lib/services/hero-banner-settings";
+import { getDemoVideoSettings } from "@/lib/services/demo-video-settings";
 import {
   DIYSection,
   HeroSection,
@@ -26,7 +27,9 @@ export default function Home() {
       >
         <HeroBanner />
       </Suspense>
-      <IntroSection />
+      <Suspense fallback={<IntroSection />}>
+        <DemoIntro />
+      </Suspense>
       <LocationSection />
       <TestimonialSection />
       <DIYSection />
@@ -44,4 +47,11 @@ async function HeroBanner() {
       fallbackImageUrl={heroBannerSettings.fallbackImageUrl}
     />
   );
+}
+
+async function DemoIntro() {
+  await connection();
+  const demoVideoSettings = await getDemoVideoSettings();
+
+  return <IntroSection demoVideoUrl={demoVideoSettings.videoUrl} />;
 }

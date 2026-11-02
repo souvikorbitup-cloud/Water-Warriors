@@ -12,6 +12,7 @@ import {
   Mail,
   Palette,
   Film,
+  Video,
 } from "lucide-react";
 import {
   canAccess,
@@ -77,6 +78,12 @@ const menuSections: MenuSection[] = [
         icon: <Film />,
         name: "Hero Banner",
         path: "/admin/hero-banner",
+        permission: PERMISSIONS.appearanceManage,
+      },
+      {
+        icon: <Video />,
+        name: "Demo Video",
+        path: "/admin/demo-video",
         permission: PERMISSIONS.appearanceManage,
       },
     ],
