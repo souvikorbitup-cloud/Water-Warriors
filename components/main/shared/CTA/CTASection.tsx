@@ -2,9 +2,15 @@ import Image from "next/image";
 
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 
-export default function CTASection() {
+export default function CTASection({
+  classes = "bg-secondary/35",
+}: {
+  classes?: string;
+}) {
   return (
-    <section className="container-y-pad relative isolate overflow-hidden bg-secondary/35">
+    <section
+      className={`container-y-pad relative isolate overflow-hidden ${classes}`}
+    >
       {/* Decorative line pattern between the background color and the content */}
       <Image
         src="/images/bg-lines.png"
