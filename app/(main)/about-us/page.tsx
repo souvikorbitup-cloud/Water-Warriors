@@ -1,5 +1,25 @@
-import UnderConstruction from "@/components/main/shared/UnderConstruction";
+import MainbannerSection from "@/components/main/shared/banner/MainbannerSection";
 
-export default async function AboutUs() {
-  return <UnderConstruction pageName="About-us Page" />;
+export default function AboutUs() {
+  return (
+    <MainbannerSection
+      heading={
+        <>
+          Every Rooftop <br />
+          <span className="text-primary">Holds a Possibility.</span>
+        </>
+      }
+      description="We help homeowners, offices and buildings discover their rainwater-harvesting potential, one property at a time."
+      classes="max-w-80 sm:max-w-140"
+      breadcrumbs={[
+        {
+          label: "Home",
+          href: "/",
+        },
+        {
+          label: "About Us",
+        },
+      ]}
+    />
+  );
 }
