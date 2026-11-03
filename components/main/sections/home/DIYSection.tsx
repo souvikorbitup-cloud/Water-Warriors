@@ -4,49 +4,7 @@ import { Play } from "lucide-react";
 
 import FeaturedVideoCard from "@/components/main/shared/card/FeaturedVideoCard";
 import { formatShortDate } from "@/lib/video-utils";
-
-const diy_guides = [
-  {
-    video_url: "https://www.youtube.com/watch?v=ScMzIvxBSi4",
-    video_thumbnel_url:
-      "https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg",
-    titile: "How to Build a Simple Rainwater Harvesting System at Home",
-    publish_date: "2026-10-15",
-    duration: "10 min",
-  },
-  {
-    video_url: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
-    video_thumbnel_url:
-      "https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg",
-    titile: "DIY Rainwater Collection: A Beginner's Step-by-Step Guide",
-    publish_date: "2026-10-10",
-    duration: "8 min",
-  },
-  {
-    video_url: "https://www.youtube.com/watch?v=ysz5S6PUM-U",
-    video_thumbnel_url:
-      "https://img.youtube.com/vi/ysz5S6PUM-U/maxresdefault.jpg",
-    titile: "How to Create an Affordable Rainwater Storage System",
-    publish_date: "2026-09-28",
-    duration: "12 min",
-  },
-  {
-    video_url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-    video_thumbnel_url:
-      "https://img.youtube.com/vi/aqz-KE-bpKQ/maxresdefault.jpg",
-    titile: "Easy DIY Rooftop Rainwater Harvesting Techniques",
-    publish_date: "2026-09-20",
-    duration: "6 min",
-  },
-  {
-    video_url: "https://www.youtube.com/watch?v=LXb3EKWsInQ",
-    video_thumbnel_url:
-      "https://img.youtube.com/vi/LXb3EKWsInQ/maxresdefault.jpg",
-    titile: "Rainwater Filtration: Make Your Own Water Filter at Home",
-    publish_date: "2026-09-12",
-    duration: "15 min",
-  },
-];
+import { diy_guides } from "@/lib/data/all_data";
 
 export default function DIYSection() {
   const [featured, ...rest] = diy_guides;
