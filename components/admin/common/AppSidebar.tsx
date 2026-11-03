@@ -17,6 +17,7 @@ import {
   UserGroup,
   FileVideoCamera,
   UserStar,
+  CircleQuestionMark,
 } from "lucide-react";
 import {
   canAccess,
@@ -119,6 +120,12 @@ const menuSections: MenuSection[] = [
         name: "DIY Guides",
         path: "/admin/diy-guides",
         permission: PERMISSIONS.AllDIYGuidesView,
+      },
+      {
+        icon: <CircleQuestionMark />,
+        name: "All FAQ's",
+        path: "/admin/all-faqs",
+        permission: PERMISSIONS.AllFaqsView,
       },
     ],
   },
