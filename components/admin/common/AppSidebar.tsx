@@ -13,6 +13,10 @@ import {
   Palette,
   Film,
   Video,
+  MessageSquareText,
+  UserGroup,
+  FileVideoCamera,
+  UserStar,
 } from "lucide-react";
 import {
   canAccess,
@@ -63,10 +67,34 @@ const menuSections: MenuSection[] = [
     title: "Submissions",
     items: [
       {
-        name: "Contact Us Submissions",
         icon: <Mail />,
+        name: "Contact Us Submissions",
         path: "/admin/submissions/contact-us",
         permission: PERMISSIONS.AllContactUsSubmissionsView,
+      },
+      {
+        icon: <MessageSquareText />,
+        name: "Feedback Submissions",
+        path: "/admin/submissions/feedback",
+        permission: PERMISSIONS.AllFeedbackSubmissionsView,
+      },
+    ],
+  },
+
+  {
+    title: "Manage",
+    items: [
+      {
+        icon: <UserGroup />,
+        name: "Team Members",
+        path: "/admin/team-members",
+        permission: PERMISSIONS.AllTeamMembersView,
+      },
+      {
+        icon: <UserStar />,
+        name: "All Testimonials",
+        path: "/admin/all-testimonials",
+        permission: PERMISSIONS.AllTestimonialsView,
       },
     ],
   },
@@ -85,6 +113,12 @@ const menuSections: MenuSection[] = [
         name: "Demo Video",
         path: "/admin/demo-video",
         permission: PERMISSIONS.appearanceManage,
+      },
+      {
+        icon: <FileVideoCamera />,
+        name: "DIY Guides",
+        path: "/admin/diy-guides",
+        permission: PERMISSIONS.AllDIYGuidesView,
       },
     ],
   },

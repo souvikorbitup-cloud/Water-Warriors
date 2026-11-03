@@ -6,10 +6,15 @@ export const PERMISSIONS = {
   profileView: "profile:view",
   profileEdit: "profile:edit",
   appearanceManage: "appearance:manage",
+  // Manage
+  AllTeamMembersView: "allTeamMembers:view",
+  AllTestimonialsView: "allTestimonials:view",
   // Content
+  AllDIYGuidesView: "allDIYGuides:view",
   // Submission
   AllContactUsSubmissionsView: "allContactUsSubmissions:view",
-  AllContactUsSubmissionsEdit: "allContactUsSubmissions:Edit",
+  AllContactUsSubmissionsEdit: "allContactUsSubmissions:edit",
+  AllFeedbackSubmissionsView: "allFeedbackSubmissions:view",
   // Payments
   paymentsView: "payments:view",
 } as const;
@@ -23,10 +28,15 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     PERMISSIONS.profileView,
     PERMISSIONS.profileEdit,
     PERMISSIONS.appearanceManage,
+    // Manage
+    PERMISSIONS.AllTeamMembersView,
+    PERMISSIONS.AllTestimonialsView,
     // Content
+    PERMISSIONS.AllDIYGuidesView,
     // Submission
     PERMISSIONS.AllContactUsSubmissionsView,
     PERMISSIONS.AllContactUsSubmissionsEdit,
+    PERMISSIONS.AllFeedbackSubmissionsView,
     // Payments
     PERMISSIONS.paymentsView,
   ],
