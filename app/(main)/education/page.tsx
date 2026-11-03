@@ -1,5 +1,12 @@
-import { HowItWorksStepsSection } from "@/components/main/sections/education";
+import {
+  ComingSoonSection,
+  DIYGuidesSection,
+  HowItWorksStepsSection,
+  KeepItWorkingSection,
+  TwoWaysSection,
+} from "@/components/main/sections/education";
 import MainbannerSection from "@/components/main/shared/banner/MainbannerSection";
+import CTASection from "@/components/main/shared/CTA/CTASection";
 
 export default function Education() {
   return (
@@ -25,6 +32,11 @@ export default function Education() {
         ]}
       />
       <HowItWorksStepsSection />
+      <TwoWaysSection />
+      <DIYGuidesSection />
+      <KeepItWorkingSection />
+      <ComingSoonSection />
+      <CTASection classes="bg-white" />
     </>
   );
 }

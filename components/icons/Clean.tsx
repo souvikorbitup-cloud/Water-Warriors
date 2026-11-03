@@ -7,26 +7,26 @@ export default function Clean() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M69 74H83V152H69V74Z" stroke-width="2" stroke="#202020" />
-      <path d="M44 62H155V74H44V62Z" stroke-width="2" stroke="#202020" />
+      <path d="M69 74H83V152H69V74Z" strokeWidth="2" stroke="#202020" />
+      <path d="M44 62H155V74H44V62Z" strokeWidth="2" stroke="#202020" />
       <mask id="stroke0_713_2537" fill="white">
         <path d="M218 39H154V103L173 130H199L218 103V39Z" />
       </mask>
       <path
         d="M154 39H218V103L199 130H173L154 103V39Z"
-        stroke-width="4"
+        strokeWidth="4"
         stroke="#202020"
         mask="url(#stroke0_713_2537)"
       />
-      <path d="M155 73H217V86H155V73Z" stroke-width="2" stroke="#202020" />
+      <path d="M155 73H217V86H155V73Z" strokeWidth="2" stroke="#202020" />
       <path
         d="M166 74V85M179 74V85M192 74V85M206 74V85"
-        stroke-width="1.5"
+        strokeWidth="1.5"
         stroke="#202020"
       />
       <path
         d="M186 131V149H231M222.818 156L231 149L222.818 142"
-        stroke-width="2"
+        strokeWidth="2"
         stroke="#202020"
       />
       <path
