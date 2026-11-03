@@ -150,8 +150,7 @@ const team_members: TeamMember[] = [
     tag: ["Environmentalist at heart, IT by profession."],
     description:
       "My commitment to the environment isn't just an interest; it's a calling. After spearheading numerous CSR initiatives—planting trees on a massive scale and building infrastructure to harvest and recharge our precious groundwater—I saw something that changed me. I witnessed the staggering, heartbreaking waste of rainwater in our communities. I knew right then that simply observing the problem wasn't enough; it demanded relentless action. That realization became the catalyst for Water Warriors. Capturing this wasted resource and turning this crisis into a sustainable future isn't just a project for me—it is my life's mission.",
-    avatar_url:
-      "https://ui-avatars.com/api/?name=Rajesh+Seshadri&size=500&background=215F30&color=ffffff",
+    avatar_url: "https://randomuser.me/api/portraits/men/75.jpg",
   },
   {
     type: "Leadership",
@@ -161,8 +160,7 @@ const team_members: TeamMember[] = [
     tag: ["Technology for a sustainable tomorrow."],
     description:
       "Driving technology and innovation to create meaningful environmental impact. Focused on building scalable digital solutions, intelligent systems, and technology-driven strategies that make rainwater harvesting more accessible and effective. At Water Warriors, the goal is to combine technology, innovation, and sustainability to create lasting change.",
-    avatar_url:
-      "https://ui-avatars.com/api/?name=Jai+Prakash&size=500&background=215F30&color=ffffff",
+    avatar_url: "https://randomuser.me/api/portraits/men/65.jpg",
   },
   {
     type: "Technical Advisors",
@@ -172,19 +170,17 @@ const team_members: TeamMember[] = [
     tag: ["Making every drop count."],
     description:
       "Anand takes industrial climate goals from ambition to audited outcomes. With 15+ years of experience, he has advised EU and Indian clients on GHG accounting, disclosure, net-zero strategy and climate risk. He has developed climate adaptation frameworks, delivered capacity building programs, and built tools that became client-facing services. Conceptualization and execution of carbon projects, including mangrove restoration, biogas and plantation, and their subsequent registration under Gold Standard® certification has been his major accomplishment. At Water Warriors AI, he brings this climate and decarbonisation expertise to one purpose: making every drop count.",
-    avatar_url:
-      "https://ui-avatars.com/api/?name=Anand+Raju+Mudunuri&size=500&background=215F30&color=ffffff",
+    avatar_url: "https://randomuser.me/api/portraits/men/50.jpg",
   },
   {
     type: "Technical Advisors",
     slug: "technical_advisors",
-    full_name: "Additional Technical Advisor",
+    full_name: "Subash Chandra Reddy",
     job_role: "Technical Advisor",
     tag: ["Expertise driving sustainable innovation."],
     description:
       "Bringing technical knowledge and industry insights to support innovative water conservation initiatives. Focused on exploring practical solutions, strengthening technical strategies, and helping communities adopt sustainable rainwater harvesting practices.",
-    avatar_url:
-      "https://ui-avatars.com/api/?name=Technical+Advisor&size=500&background=215F30&color=ffffff",
+    avatar_url: "https://randomuser.me/api/portraits/men/55.jpg",
   },
 ];
 
