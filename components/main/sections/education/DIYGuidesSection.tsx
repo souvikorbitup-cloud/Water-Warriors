@@ -9,7 +9,7 @@ export default function DIYGuidesSection() {
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
 
   return (
-    <section className="container-y-pad overflow-hidden">
+    <section className="container-y-pad overflow-hidden" id="diy-guides">
       <div className="my-container-x">
         <h2 className="text-center text-3xl leading-tight font-semibold sm:text-4xl lg:text-5xl">
           Step-by-Step DIY Guides

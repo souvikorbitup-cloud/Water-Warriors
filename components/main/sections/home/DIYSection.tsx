@@ -32,7 +32,7 @@ export default function DIYSection() {
             {upNext.map((guide) => (
               <li key={guide.video_url}>
                 <Link
-                  href="/education"
+                  href="/education/#diy-guides"
                   className="group flex items-center gap-3.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
                 >
                   <div className="relative aspect-3/2 w-32 shrink-0 overflow-hidden rounded-xl sm:w-38">
