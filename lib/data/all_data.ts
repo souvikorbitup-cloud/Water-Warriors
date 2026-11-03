@@ -30,7 +30,6 @@ export const footerNavLinks = [
   { title: "Contact", href: "/contact-us" },
   { title: "Education", href: "/education" },
   { title: "Privacy Policy", href: "/privacy-policy" },
-  { title: "Terms And Conditions", href: "/terms-and-conditions" },
 ];
 
 export const socialLinks = [

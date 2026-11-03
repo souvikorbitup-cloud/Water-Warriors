@@ -1,17 +1,45 @@
 "use client";
 
 import { LogoLight } from "@/components/icons";
+import PopModal from "@/components/main/shared/modal/PopModal";
+import { Button } from "@/components/ui/button";
 import { footerNavLinks, socialLinks } from "@/lib/data/all_data";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import PrimaryButton from "../shared/button/PrimaryButton";
+import { useRouter } from "next/navigation";
 
 type MainFooterProps = {
   visitorCount?: number;
 };
 
+type AnalyticsConsent = "accepted" | "declined";
+
 export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
+  const router = useRouter();
   const pathname = usePathname();
+  const [cookieSettingsOpen, setCookieSettingsOpen] = useState(false);
+  const [consentSaveError, setConsentSaveError] = useState<string | null>(null);
+
+  const openCookieSettings = () => {
+    setConsentSaveError(null);
+    setCookieSettingsOpen(true);
+  };
+
+  const saveAnalyticsConsent = (consent: AnalyticsConsent) => {
+    try {
+      window.localStorage.setItem("ww_analytics_consent", consent);
+      setConsentSaveError(null);
+      setCookieSettingsOpen(false);
+    } catch (error) {
+      console.error("Unable to save analytics cookie preference", error);
+      setConsentSaveError(
+        "We couldn't save your choice. Please check your browser settings and try again.",
+      );
+    }
+  };
 
   return (
     <footer className="relative isolate overflow-hidden bg-foreground text-background">
@@ -71,8 +99,70 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
                   </li>
                 );
               })}
+              <li>
+                <Button
+                  type="button"
+                  onClick={openCookieSettings}
+                  className={`text-sm font-normal transition-colors hover:text-primary sm:text-base text-background bg-transparent hover:bg-transparent cursor-pointer`}
+                >
+                  Cookie settings
+                </Button>
+              </li>
             </ul>
           </nav>
+
+          <PopModal
+            open={cookieSettingsOpen}
+            onClose={() => setCookieSettingsOpen(false)}
+            title="Cookies for site analytics"
+            className="max-w-xl"
+            light
+          >
+            <div className="p-6 text-left sm:p-8">
+              <h2 className="text-xl font-semibold text-heading sm:text-2xl">
+                Cookies for site analytics
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-paragraph sm:text-base">
+                We&apos;d like to use Google Analytics cookies to understand how
+                people use Water Warriors, such as which pages are visited and
+                whether reports are created. We don&apos;t use them for ads. See
+                our{" "}
+                <Button
+                  className="font-semibold text-heading hover:text-primary underline decoration-primary decoration-2 underline-offset-4 bg-transparent hover:bg-transparent p-0 cursor-pointer text-sm sm:text-base"
+                  onClick={() => {
+                    setCookieSettingsOpen(false);
+                    router.push("/privacy-policy");
+                  }}
+                >
+                  Privacy Policy
+                </Button>
+                .
+              </p>
+              {consentSaveError && (
+                <p className="mt-4 text-sm text-destructive" role="alert">
+                  {consentSaveError}
+                </p>
+              )}
+
+              <div className="mt-6 flex items-center gap-3 px-2 lg:justify-end">
+                <PrimaryButton
+                  type="button"
+                  btnType="outline"
+                  className="border-border"
+                  onClick={() => saveAnalyticsConsent("declined")}
+                >
+                  Decline
+                </PrimaryButton>
+                <PrimaryButton
+                  type="submit"
+                  btnType="solid-primary"
+                  onClick={() => saveAnalyticsConsent("accepted")}
+                >
+                  Accept
+                </PrimaryButton>
+              </div>
+            </div>
+          </PopModal>
 
           {/* Social icons */}
           <ul className="mt-8 flex items-center justify-center gap-3 sm:mt-10 sm:gap-4">

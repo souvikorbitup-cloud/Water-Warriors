@@ -9,12 +9,14 @@ export default function PopModal({
   title,
   children,
   className = "max-w-4xl",
+  light = false,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
   className?: string;
+  light?: boolean;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -50,7 +52,7 @@ export default function PopModal({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 z-10 flex size-9 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer"
+          className={`absolute top-3 right-3 z-10 flex size-9 items-center justify-center rounded-full ${light ? "bg-gray-100 text-gray-400 hover:bg-gray-200" : "bg-black/60 text-white hover:bg-black/80"} transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer`}
         >
           <X className="size-5" />
         </button>
