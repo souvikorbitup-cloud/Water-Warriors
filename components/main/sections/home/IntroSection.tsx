@@ -9,6 +9,7 @@ import { useGSAP } from "@gsap/react";
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 import Image from "next/image";
 import PopModal from "../../shared/modal/PopModal";
+import SampleReportModal from "../../shared/modal/SampleReportModal";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
@@ -159,30 +160,10 @@ export default function IntroSection({
             )}
           </PopModal>
 
-          <PopModal
+          <SampleReportModal
             open={reportOpen}
             onClose={() => setReportOpen(false)}
-            title="Sample report"
-            className="max-w-5xl"
-          >
-            <iframe
-              src="/sample-report.pdf"
-              title="Sample report"
-              className="h-[80vh] w-full"
-            />
-            <p className="border-t px-4 py-2 text-center text-xs">
-              Can&rsquo;t see the PDF?{" "}
-              <a
-                href="/sample-report.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Open it in a new tab
-              </a>
-              .
-            </p>
-          </PopModal>
+          />
         </div>
       </div>
     </section>
