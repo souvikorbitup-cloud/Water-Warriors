@@ -7,7 +7,7 @@ export default function Groundwater() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g clip-path="url(#clip0_331_8035)">
+      <g clipPath="url(#clip0_331_8035)">
         <rect width="584" height="289" fill="#F5F4F0" />
         <rect y="141" width="584" height="148" fill="#DDD5BF" />
         <path

@@ -226,7 +226,7 @@ function ShapedContent({
 
         {/* Arrow swap: current arrow exits right, a new one enters from the left */}
         <span className="relative flex size-6 items-center justify-center overflow-hidden">
-          <span className="flex transition-transform duration-300 ease-out group-hover:translate-x-full">
+          <span className="flex transition-transform duration-300 ease-out group-hover:translate-x-full group-hover:pl-1">
             {arrow}
           </span>
           <span
