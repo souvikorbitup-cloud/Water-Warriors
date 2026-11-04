@@ -32,7 +32,7 @@ const defaultRows: ForecastRow[] = [
   { month: "February 2027", rainfall: "1.4 mm", potential: "892 L" },
   { month: "March 2027", rainfall: "8.1 mm", potential: "5,163 L" },
   {
-    month: "March 2027",
+    month: "Grand Total",
     rainfall: "59.3 mm",
     potential: "37,797 Litres",
     highlight: true,
