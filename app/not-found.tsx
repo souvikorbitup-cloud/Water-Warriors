@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import "./globals.css";
 import { Card, CardContent } from "@/components/ui/card";
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 
