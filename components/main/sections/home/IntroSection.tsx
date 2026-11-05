@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 
+import { useTranslations } from "next-intl";
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 import Image from "next/image";
 import PopModal from "../../shared/modal/PopModal";
@@ -34,6 +35,7 @@ export default function IntroSection({
 }: {
   demoVideoUrl?: string | null;
 }) {
+  const t = useTranslations("Home");
   const [demoOpen, setDemoOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
@@ -110,13 +112,7 @@ export default function IntroSection({
             ref={textRef}
             className="max-w-177.5 text-base leading-normal sm:text-lg lg:text-xl"
           >
-            Every year, millions of liters of fresh rainwater go to waste
-            because we do not divert it appropriately. This site helps you
-            understand the rainwater harvesting potential that your home,
-            office, or building premises can provide-turning unused rainfall
-            into a powerful, sustainable resource. To help you take the next
-            step, we provide a comprehensive customized report for a nominal
-            cost.
+            {t("intro")}
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:mt-10.5 sm:flex-row sm:gap-5">
@@ -126,7 +122,7 @@ export default function IntroSection({
               type="button"
               onClick={() => setReportOpen(true)}
             >
-              View a sample report here
+              {t("viewSampleReport")}
             </PrimaryButton>
 
             <PrimaryButton
@@ -135,14 +131,14 @@ export default function IntroSection({
               type="button"
               onClick={() => setDemoOpen(true)}
             >
-              Click here for a demo
+              {t("demoButton")}
             </PrimaryButton>
           </div>
 
           <PopModal
             open={demoOpen}
             onClose={() => setDemoOpen(false)}
-            title="Demo video"
+            title={t("demoTitle")}
           >
             {demoVideoUrl ? (
               <video
@@ -153,10 +149,7 @@ export default function IntroSection({
                 playsInline
               />
             ) : (
-              <p className="p-10 text-center text-sm">
-                The demo video isn&rsquo;t available yet. Please check back
-                soon.
-              </p>
+              <p className="p-10 text-center text-sm">{t("demoUnavailable")}</p>
             )}
           </PopModal>
 

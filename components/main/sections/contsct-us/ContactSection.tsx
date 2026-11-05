@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   FileChartColumn,
   MapPin,
@@ -14,37 +15,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-type Topic = {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-};
-
-const topics: Topic[] = [
-  {
-    title: "Property assessment",
-    description:
-      "Questions about finding your location or selecting your rooftop area.",
-    icon: MapPin,
-  },
-  {
-    title: "Report questions",
-    description:
-      "Help understanding your customized rainwater-harvesting report.",
-    icon: FileChartColumn,
-  },
-  {
-    title: "General feedback",
-    description:
-      "Share your thoughts about Water Warriors AI and your experience.",
-    icon: MessageSquare,
-  },
+const topics: { Icon: LucideIcon; index: 0 | 1 | 2 }[] = [
+  { Icon: MapPin, index: 0 },
+  { Icon: FileChartColumn, index: 1 },
+  { Icon: MessageSquare, index: 2 },
 ];
 
 const fieldClasses =
   "rounded-lg border-input bg-background px-4 text-sm shadow-none placeholder:text-muted-foreground sm:text-[15px]";
 
 export default function ContactSection() {
+  const t = useTranslations("Contact");
   const [sending, setSending] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -62,10 +43,10 @@ export default function ContactSection() {
       });
       if (!response.ok) throw new Error("Request failed");
 
-      toast.success("Thanks! Your message has been sent.");
+      toast.success(t("success"));
       form.reset();
     } catch {
-      toast.error("Could not send your message. Please try again.");
+      toast.error(t("error"));
     } finally {
       setSending(false);
     }
@@ -78,29 +59,27 @@ export default function ContactSection() {
           {/* Left: intro + topics */}
           <div className="pt-8 sm:pt-0">
             <h2 className="text-3xl leading-tight font-semibold sm:text-4xl lg:text-5xl xl:text-[52px]">
-              How Can We Help?
+              {t("helpTitle")}
             </h2>
             <p className="mt-4 text-base leading-normal sm:mt-5 lg:text-lg">
-              Whether you're exploring rainwater harvesting for the first time
-              or have a question about a report, use the form to share your
-              inquiry.
+              {t("helpDescription")}
             </p>
 
             <div className="mt-8 rounded-2xl bg-secondary/35 p-5 sm:rounded-3xl sm:p-7 lg:mt-10">
               <h3 className="text-xl leading-snug font-semibold text-heading lg:text-[22px]">
-                Let's point you in the right direction.
+                {t("directionTitle")}
               </h3>
 
               <ul className="mt-6 space-y-6 lg:space-y-7">
-                {topics.map(({ title, description, icon: Icon }) => (
-                  <li key={title} className="grid grid-cols-[auto_1fr] gap-x-4">
+                {topics.map(({ Icon, index }) => (
+                  <li key={index} className="grid grid-cols-[auto_1fr] gap-x-4">
                     <Icon className="mt-0.5 size-5 text-heading" aria-hidden />
                     <div>
                       <h4 className="text-lg leading-6 font-semibold text-heading sm:text-xl">
-                        {title}
+                        {t(`topics.${index}.title`)}
                       </h4>
                       <p className="mt-2 text-sm leading-6 sm:text-[15px]">
-                        {description}
+                        {t(`topics.${index}.description`)}
                       </p>
                     </div>
                   </li>
@@ -115,11 +94,10 @@ export default function ContactSection() {
             className="rounded-2xl border border-border bg-card p-5 sm:rounded-3xl sm:p-7 lg:p-9"
           >
             <h2 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
-              Send us a message
+              {t("formTitle")}
             </h2>
             <p className="mt-2 text-sm sm:mt-3 sm:text-[15px]">
-              Tell us a little about your question. Fields marked * are
-              required.
+              {t("formDescription")}
             </p>
 
             <div className="mt-6 space-y-5 sm:mt-8 sm:space-y-6">
@@ -128,14 +106,14 @@ export default function ContactSection() {
                   htmlFor="contact-name"
                   className="text-sm font-medium text-heading sm:text-base"
                 >
-                  Name *
+                  {t("name")}
                 </Label>
                 <Input
                   id="contact-name"
                   name="name"
                   required
                   autoComplete="name"
-                  placeholder="Your name"
+                  placeholder={t("namePlaceholder")}
                   className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
                 />
               </div>
@@ -145,7 +123,7 @@ export default function ContactSection() {
                   htmlFor="contact-email"
                   className="text-sm font-medium text-heading sm:text-base"
                 >
-                  Email *
+                  {t("email")}
                 </Label>
                 <Input
                   id="contact-email"
@@ -153,7 +131,7 @@ export default function ContactSection() {
                   type="email"
                   required
                   autoComplete="email"
-                  placeholder="Your email address"
+                  placeholder={t("emailPlaceholder")}
                   className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
                 />
               </div>
@@ -163,22 +141,20 @@ export default function ContactSection() {
                   htmlFor="contact-message"
                   className="text-sm font-medium text-heading sm:text-base"
                 >
-                  Message *
+                  {t("message")}
                 </Label>
                 <Textarea
                   id="contact-message"
                   name="message"
                   required
-                  placeholder="How can we help? Share the details of your question here."
+                  placeholder={t("messagePlaceholder")}
                   className={`mt-2 min-h-36 resize-y py-3.5 sm:min-h-41 ${fieldClasses}`}
                 />
               </div>
             </div>
 
             <p className="mt-5 text-xs leading-5.5 sm:mt-6 sm:text-[13px]">
-              For a property question, mention the location and the step you're
-              asking about. For a report question, tell us which part you'd like
-              to understand.
+              {t("hint")}
             </p>
 
             <div className="mt-6 sm:mt-7">
@@ -187,7 +163,7 @@ export default function ContactSection() {
                 type="submit"
                 disabled={sending}
               >
-                {sending ? "Sending..." : "Send message"}
+                {sending ? t("sending") : t("send")}
               </PrimaryButton>
             </div>
           </form>

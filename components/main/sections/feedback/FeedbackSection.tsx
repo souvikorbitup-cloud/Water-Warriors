@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { toast } from "sonner";
 
@@ -16,20 +17,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-const topics = [
-  "Property assessment",
-  "Report questions",
-  "General feedback",
-  "Something else",
-];
-
-const ratings = [
-  { value: "1", label: "Poor" },
-  { value: "2", label: "Fair" },
-  { value: "3", label: "Good" },
-  { value: "4", label: "Very good" },
-  { value: "5", label: "Excellent" },
-];
+const topicKeys = ["property", "report", "general", "other"] as const;
+const ratingValues = ["1", "2", "3", "4", "5"] as const;
 
 const fieldClasses =
   "rounded-lg border-input bg-background px-4 text-sm shadow-none placeholder:text-muted-foreground sm:text-[15px]";
@@ -37,6 +26,7 @@ const fieldClasses =
 const labelClasses = "text-sm font-medium text-heading sm:text-base";
 
 export default function FeedbackSection() {
+  const t = useTranslations("Feedback");
   const [sending, setSending] = useState(false);
   const [topic, setTopic] = useState("");
 
@@ -45,7 +35,7 @@ export default function FeedbackSection() {
     const form = event.currentTarget;
 
     if (!topic) {
-      toast.error("Please select a feedback topic.");
+      toast.error(t("topicRequired"));
       return;
     }
 
@@ -61,11 +51,11 @@ export default function FeedbackSection() {
       });
       if (!response.ok) throw new Error("Request failed");
 
-      toast.success("Thank you! Your feedback has been submitted.");
+      toast.success(t("success"));
       form.reset();
       setTopic("");
     } catch {
-      toast.error("Could not submit your feedback. Please try again.");
+      toast.error(t("error"));
     } finally {
       setSending(false);
     }
@@ -90,13 +80,10 @@ export default function FeedbackSection() {
           {/* Left: intro */}
           <div className="pt-8 sm:pt-0">
             <h2 className="text-3xl leading-[1.15] font-semibold sm:text-4xl lg:text-5xl xl:text-[52px]">
-              A Better Journey <br className="hidden lg:block" />
-              Starts With You.
+              {t("introTitle")}
             </h2>
             <p className="mt-4 text-base leading-normal sm:mt-5 lg:text-lg">
-              Whether you're finding your property, marking a rooftop or
-              exploring a report, we'd like to hear about your experience with
-              Water Warriors AI.
+              {t("introDescription")}
             </p>
           </div>
 
@@ -106,33 +93,33 @@ export default function FeedbackSection() {
             className="rounded-2xl border border-border bg-card p-5 sm:rounded-3xl sm:p-7 lg:p-9"
           >
             <h2 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
-              Share your feedback
+              {t("formTitle")}
             </h2>
             <p className="mt-2 text-sm sm:mt-3 sm:text-[15px]">
-              Fields marked * are required. Your name and email are optional.
+              {t("formDescription")}
             </p>
 
             <div className="mt-6 space-y-5 sm:mt-8 sm:space-y-6">
               {/* Topic */}
               <div>
                 <Label htmlFor="feedback-topic" className={labelClasses}>
-                  Feedback topic *
+                  {t("topicLabel")}
                 </Label>
                 <Select value={topic} onValueChange={setTopic} name="topic">
                   <SelectTrigger
                     id="feedback-topic"
                     className={`mt-2 h-12! w-full sm:h-13! ${fieldClasses}`}
                   >
-                    <SelectValue placeholder="Select a topic" />
+                    <SelectValue placeholder={t("topicPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent className="-translate-x-1.5">
-                    {topics.map((item) => (
+                    {topicKeys.map((item) => (
                       <SelectItem
                         key={item}
                         value={item}
                         className="text-sm sm:text-[15px] w-full h-12!"
                       >
-                        {item}
+                        {t(`topics.${item}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -141,11 +128,9 @@ export default function FeedbackSection() {
 
               {/* Rating */}
               <fieldset aria-describedby="rating-hint">
-                <legend className={labelClasses}>
-                  How was your overall experience? *
-                </legend>
+                <legend className={labelClasses}>{t("ratingLabel")}</legend>
                 <div className="mt-2 grid grid-cols-5 gap-2 sm:gap-2.5">
-                  {ratings.map(({ value, label }) => (
+                  {ratingValues.map((value) => (
                     <label key={value} className="relative cursor-pointer">
                       <input
                         type="radio"
@@ -159,14 +144,14 @@ export default function FeedbackSection() {
                           {value}
                         </span>
                         <span className="text-[10px] leading-tight sm:text-sm">
-                          {label}
+                          {t(`ratings.${value}`)}
                         </span>
                       </span>
                     </label>
                   ))}
                 </div>
                 <p id="rating-hint" className="mt-3 text-xs sm:text-[13px]">
-                  Choose one rating, from 1 (poor) to 5 (excellent).
+                  {t("ratingHint")}
                 </p>
               </fieldset>
 
@@ -174,26 +159,26 @@ export default function FeedbackSection() {
               <div className="grid gap-5 sm:grid-cols-2 sm:gap-5">
                 <div>
                   <Label htmlFor="feedback-name" className={labelClasses}>
-                    Name
+                    {t("name")}
                   </Label>
                   <Input
                     id="feedback-name"
                     name="name"
                     autoComplete="name"
-                    placeholder="Your name"
+                    placeholder={t("namePlaceholder")}
                     className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
                   />
                 </div>
                 <div>
                   <Label htmlFor="feedback-email" className={labelClasses}>
-                    Email
+                    {t("email")}
                   </Label>
                   <Input
                     id="feedback-email"
                     name="email"
                     type="email"
                     autoComplete="email"
-                    placeholder="you@example.com"
+                    placeholder={t("emailPlaceholder")}
                     className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
                   />
                 </div>
@@ -202,24 +187,23 @@ export default function FeedbackSection() {
               {/* Message */}
               <div>
                 <Label htmlFor="feedback-message" className={labelClasses}>
-                  Your feedback *
+                  {t("message")}
                 </Label>
                 <Textarea
                   id="feedback-message"
                   name="message"
                   required
-                  placeholder="What worked well? What could we do better?"
+                  placeholder={t("messagePlaceholder")}
                   className={`mt-2 min-h-36 resize-y py-3.5 sm:min-h-43 ${fieldClasses}`}
                 />
                 <p className="mt-3 text-xs sm:text-[13px]">
-                  A little context helps us understand your feedback.
+                  {t("messageHint")}
                 </p>
               </div>
             </div>
 
             <p className="mt-6 text-xs sm:mt-8 sm:text-[13px]">
-              If you'd like a response, include your email. You can leave both
-              contact fields blank.
+              {t("optionalHint")}
             </p>
 
             <div className="mt-6 sm:mt-7">
@@ -228,7 +212,7 @@ export default function FeedbackSection() {
                 type="submit"
                 disabled={sending}
               >
-                {sending ? "Submitting..." : "Submit feedback"}
+                {sending ? t("submitting") : t("submit")}
               </PrimaryButton>
             </div>
           </form>

@@ -1,17 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronDown, Globe, MapPin, Mail, Phone, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { MapPin, Mail, Phone, X } from "lucide-react";
 
 import { Logo, LogoLight } from "@/components/icons";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetClose,
@@ -20,7 +12,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { contactDetails, languages, navLinks } from "@/lib/data/all_data";
+import { Link, usePathname } from "@/i18n/navigation";
+import { contactDetails, navLinks } from "@/lib/data/all_data";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 type MainNavbarProps = {
   type?: "dark" | "light";
@@ -28,7 +22,7 @@ type MainNavbarProps = {
 
 export default function MainNavbar({ type = "light" }: MainNavbarProps) {
   const pathname = usePathname();
-  const [language, setLanguage] = useState(languages[0]);
+  const t = useTranslations("Common");
 
   return (
     <header
@@ -40,7 +34,7 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
           <SheetTrigger asChild>
             <button
               type="button"
-              aria-label="Open menu"
+              aria-label={t("openMenu")}
               className="flex size-10 items-center justify-center justify-self-start rounded-md text-background transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer group"
             >
               <svg
@@ -66,9 +60,9 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
             side="left"
             className="w-full! max-w-full gap-0 overflow-y-auto bg-background p-0 sm:max-w-100 [&>button.absolute]:hidden"
           >
-            <SheetTitle className="sr-only">Main menu</SheetTitle>
+            <SheetTitle className="sr-only">{t("mainMenu")}</SheetTitle>
             <SheetDescription className="sr-only">
-              Site navigation and contact details
+              {t("siteNavigation")}
             </SheetDescription>
 
             {/* Header: logo + close */}
@@ -79,7 +73,7 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
               <SheetClose asChild>
                 <button
                   type="button"
-                  aria-label="Close menu"
+                  aria-label={t("closeMenu")}
                   className="absolute top-5 right-5 flex size-6 items-center justify-center rounded-full border border-muted-foreground text-heading transition-colors hover:border-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer"
                 >
                   <X className="size-3.5" />
@@ -88,9 +82,9 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
             </div>
 
             {/* Links */}
-            <nav aria-label="Main" className="px-6 pt-3">
+            <nav aria-label={t("mainNavigation")} className="px-6 pt-3">
               <ul className="flex flex-col gap-2 md:gap-3">
-                {navLinks.map(({ title, href }) => {
+                {navLinks.map(({ titleKey, href }) => {
                   const isActive = pathname === href;
                   return (
                     <li key={href}>
@@ -104,7 +98,7 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
                               : "font-normal text-heading"
                           }`}
                         >
-                          {title}
+                          {t(titleKey)}
                         </Link>
                       </SheetClose>
                     </li>
@@ -117,7 +111,9 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
 
             {/* Contact */}
             <div className="px-6 pt-8 pb-10">
-              <h2 className="text-xl md:text-2xl font-normal">Contact Us</h2>
+              <h2 className="text-xl md:text-2xl font-normal">
+                {t("contactUs")}
+              </h2>
 
               <ul className="mt-3 md:mt-5 flex flex-col gap-3 md:gap-5 text-base text-heading">
                 <li>
@@ -141,7 +137,7 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
                 <li className="flex items-start gap-3">
                   <MapPin className="mt-0.5 size-4 md:size-5 shrink-0" />
                   <span className="text-sm md:text-base">
-                    {contactDetails.location.value}
+                    {t("officeLocation")}
                   </span>
                 </li>
               </ul>
@@ -152,7 +148,7 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
         {/* Center: logo */}
         <Link
           href="/"
-          aria-label="Water Warriors AI home"
+          aria-label={t("logoHome")}
           className="justify-self-center"
         >
           {type === "light" ? (
@@ -163,42 +159,7 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
         </Link>
 
         {/* Right: language dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              aria-label="Select language"
-              className={`flex items-center gap-1.5 justify-self-end rounded-md px-1 py-2 text-sm ${type === "light" ? "text-background" : "text-foreground"} transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:text-base cursor-pointer ring-0!`}
-            >
-              <Globe className="size-5" />
-              <span className="hidden sm:inline">{language.title}</span>
-              <ChevronDown className="size-4" />
-            </button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            align="end"
-            sideOffset={10}
-            className="min-w-40 rounded-2xl border-0 bg-popover p-3 shadow-xl"
-          >
-            {languages.map((lang) => {
-              const isActive = lang.value === language.value;
-              return (
-                <DropdownMenuItem
-                  key={lang.value}
-                  onSelect={() => setLanguage(lang)}
-                  className={`cursor-pointer justify-center rounded-lg py-2.5 text-base focus:bg-muted ${
-                    isActive
-                      ? "font-semibold text-primary focus:text-primary"
-                      : "font-normal text-heading"
-                  }`}
-                >
-                  {lang.title}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <LanguageSwitcher type={type} />
       </div>
     </header>
   );

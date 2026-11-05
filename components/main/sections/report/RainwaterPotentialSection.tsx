@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 
 import { Children, Family, Tanker, Tree, WaterDrop } from "@/components/icons";
@@ -20,45 +21,35 @@ interface RainwaterPotentialSectionProps {
   assumptions?: string;
 }
 
-const defaultImpacts: ImpactStat[] = [
-  {
-    label: "Daily Water Needs",
-    value: "8 Families",
-    note: "for a full year*",
-    Icon: Family,
-  },
-  {
-    label: "Trees Supported",
-    value: "1,738 Trees",
-    note: "for a full year*",
-    Icon: Tree,
-  },
-  {
-    label: "Water Tankers",
-    value: "126 Trips",
-    note: "of 5,000L each*",
-    Icon: Tanker,
-  },
-  {
-    label: "Schools & Hygiene",
-    value: "634 Children",
-    note: "for a full year*",
-    Icon: Children,
-  },
+const impactItems: { Icon: ComponentType; index: 0 | 1 | 2 | 3 }[] = [
+  { Icon: Family, index: 0 },
+  { Icon: Tree, index: 1 },
+  { Icon: Tanker, index: 2 },
+  { Icon: Children, index: 3 },
 ];
 
-const defaultAssumptions =
-  "* Assumptions: Family of 4 using 50L/person/day · Standard tanker = 5,000L · Trees Supported uses an illustrative Water Warriors equivalence of 365L/tree/year, not a universal scientific requirement · Schools & Hygiene uses 5L/child/school day based on WHO/UNICEF day-school guidance (drinking, personal hygiene, food preparation, cleaning and laundry; excluding toilet flushing and showers) x 200 school days, with the 200-day academic year being a Water Warriors assumption.";
-
-export default function RainwaterPotentialSection({
+export default async function RainwaterPotentialSection({
   harvestableLitres = "5,02,293 Litres",
   harvestableInWords = "(Five lakh two thousand two hundred ninety-three litres)",
   calculation = "(560.49 sq.m x 995.74 mm x 0.9 = 5,02,293 Litres)",
   source = "*Source: Google Gemini",
   annualSavingLitres = "6,34,672",
-  impacts = defaultImpacts,
-  assumptions = defaultAssumptions,
+  impacts,
+  assumptions,
 }: RainwaterPotentialSectionProps) {
+  const t = await getTranslations("Report");
+  const tCommon = await getTranslations("Common");
+  const tAbout = await getTranslations("About");
+  const resolvedImpacts =
+    impacts ??
+    impactItems.map(({ Icon, index }) => ({
+      label: t(`impacts.${index}.label`),
+      value: t(`impacts.${index}.value`),
+      note: t(`impacts.${index}.note`),
+      Icon,
+    }));
+  const resolvedAssumptions = assumptions ?? t("assumptions");
+
   return (
     <section className="container-y-pad overflow-hidden bg-[linear-gradient(180deg,var(--secondary)_0%,rgba(255,255,255,0)_30%,#FFF_100%)]">
       <div className="my-container-x">
@@ -66,11 +57,10 @@ export default function RainwaterPotentialSection({
         <div className="grid items-start gap-8 lg:grid-cols-2">
           <div>
             <h2 className="text-3xl leading-[1.1] font-semibold sm:text-4xl lg:text-5xl xl:text-[52px]">
-              Rainwater Harvesting Potential
+              {t("potentialTitle")}
             </h2>
             <p className="mt-4 text-base leading-normal sm:mt-5">
-              Based on the above parameters, your selected location has the
-              potential to harvest approximately
+              {t("potentialDescription")}
             </p>
 
             {/* Harvest figure card */}
@@ -92,7 +82,7 @@ export default function RainwaterPotentialSection({
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm text-heading sm:text-base">
-                    Selected Catchment Area
+                    {t("catchmentLabel")}
                   </p>
                   <p className="mt-1 font-heading text-2xl font-semibold text-heading sm:text-3xl lg:text-4xl">
                     {harvestableLitres}
@@ -112,15 +102,14 @@ export default function RainwaterPotentialSection({
             <div className="relative aspect-[1.435] w-full overflow-hidden rounded-3xl sm:rounded-4xl">
               <Image
                 src="/section-images/rain-collect.png"
-                alt="Rainwater flowing from a downpipe into a green storage tank in a garden"
+                alt={tCommon("rainCollectAlt")}
                 fill
                 sizes="(min-width: 1024px) 590px, 100vw"
                 className="object-cover"
               />
             </div>
             <figcaption className="mt-3 text-sm sm:mt-4">
-              From rainfall to a resource: a different way to look at the water
-              that reaches your roof.
+              {tAbout("missionCaption")}
             </figcaption>
           </figure>
         </div>
@@ -130,16 +119,13 @@ export default function RainwaterPotentialSection({
         {/* Impact */}
         <div>
           <h2 className="text-2xl leading-tight font-semibold sm:text-3xl lg:text-4xl">
-            The Impact Of Saving {annualSavingLitres} Litres Of Rainwater Per
-            Year
+            {t("impactTitle", { litres: annualSavingLitres })}
           </h2>
-          <p className="mt-2 text-sm sm:text-base">
-            Conserving this much water annually can make a huge difference!
-          </p>
+          <p className="mt-2 text-sm sm:text-base">{t("impactDescription")}</p>
         </div>
 
         <ul className="mt-14 grid gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-14 grid-cols-2 lg:grid-cols-4">
-          {impacts.map(({ label, value, note, Icon }) => (
+          {resolvedImpacts.map(({ label, value, note, Icon }) => (
             <li
               key={label}
               className="relative rounded-3xl bg-secondary/40 px-4 pt-14 pb-5 text-center"
@@ -166,7 +152,7 @@ export default function RainwaterPotentialSection({
         </ul>
 
         <p className="mt-8 rounded-2xl border border-border p-5 text-sm leading-6.5 sm:rounded-3xl sm:p-6 sm:text-[15px]">
-          {assumptions}
+          {resolvedAssumptions}
         </p>
       </div>
     </section>

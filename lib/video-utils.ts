@@ -12,8 +12,8 @@ export function getYouTubeId(url: string): string | null {
 }
 
 /** "2026-10-15" -> "Oct 15" (formatted in UTC so the day never shifts by time zone) */
-export function formatShortDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
+export function formatShortDate(iso: string, locale = "en") {
+  return new Date(iso).toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     timeZone: "UTC",

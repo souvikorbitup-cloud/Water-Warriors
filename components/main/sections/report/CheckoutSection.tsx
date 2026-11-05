@@ -1,12 +1,13 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
 import { BadgePercent, FileText, MapPin, Star } from "lucide-react";
 
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 import SampleReportModal from "@/components/main/shared/modal/SampleReportModal";
+import { Link } from "@/i18n/navigation";
 
 interface CheckoutSectionProps {
   planName?: string;
@@ -20,13 +21,15 @@ interface CheckoutSectionProps {
 const formatPrice = (value: number) => `₹ ${value.toFixed(2)}`;
 
 export default function CheckoutSection({
-  planName = "Plus plan",
-  planDescription = "More features for scaling",
+  planName,
+  planDescription,
   subtotal = 99,
   discount = 0,
   onApplyCoupon,
   onProceed,
 }: CheckoutSectionProps) {
+  const t = useTranslations("Checkout");
+  const tCommon = useTranslations("Common");
   const [coupon, setCoupon] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
   const total = Math.max(subtotal - discount, 0);
@@ -56,7 +59,7 @@ export default function CheckoutSection({
         <div className="relative h-60 overflow-hidden rounded-2xl border border-border sm:h-80 sm:rounded-4xl lg:h-110">
           <Image
             src="/map.png"
-            alt="Map showing your selected rooftop area"
+            alt={tCommon("mapSelectedAreaAlt")}
             fill
             sizes="(min-width: 1200px) 1800px, 100vw"
             className="object-cover"
@@ -70,17 +73,18 @@ export default function CheckoutSection({
               <MapPin className="size-5" strokeWidth={1.5} aria-hidden />
             </span>
             <p className="mt-4 text-sm text-paragraph sm:mt-5 sm:text-[15px]">
-              Is your selected area not quite right?{" "}
-              <Link
-                href="/#save-water"
-                className="font-semibold text-heading hover:text-primary"
-              >
-                Update it here.
-              </Link>
+              {t.rich("updateArea", {
+                link: (chunks) => (
+                  <Link
+                    href="/#save-water"
+                    className="font-semibold text-heading hover:text-primary"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
-            <p className="mt-2 text-xs sm:text-[13px]">
-              Note: Selecting this link takes you back to the home page.
-            </p>
+            <p className="mt-2 text-xs sm:text-[13px]">{t("updateNote")}</p>
           </div>
 
           <div className="rounded-2xl border border-border bg-background p-5 sm:rounded-3xl sm:p-6">
@@ -88,14 +92,14 @@ export default function CheckoutSection({
               <FileText className="size-5" strokeWidth={1.5} aria-hidden />
             </span>
             <p className="mt-4 text-sm text-paragraph sm:mt-5 sm:text-[15px]">
-              See your potential water savings.
+              {t("seeSavings")}
             </p>
             <button
               type="button"
               onClick={() => setReportOpen(true)}
               className="mt-2 inline-block cursor-pointer text-left text-sm font-semibold text-heading underline decoration-heading underline-offset-4 hover:text-primary hover:decoration-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring sm:text-[15px]"
             >
-              View a sample report
+              {t("viewSample")}
             </button>
           </div>
         </div>
@@ -104,11 +108,10 @@ export default function CheckoutSection({
         <div className="mt-8 grid items-start gap-6 sm:mt-10 lg:mt-14 lg:grid-cols-2 lg:gap-8">
           <div className="rounded-2xl bg-secondary/35 p-6 sm:rounded-3xl sm:p-9">
             <h2 className="text-3xl leading-[1.15] font-semibold sm:text-4xl lg:text-5xl xl:text-[52px]">
-              Get Your Complete Report
+              {t("completeTitle")}
             </h2>
             <p className="mt-4 text-sm leading-6.5 text-heading sm:mt-5 sm:text-base">
-              Check your order summary and apply any available discounts before
-              checkout.
+              {t("completeDescription")}
             </p>
           </div>
 
@@ -117,21 +120,21 @@ export default function CheckoutSection({
             <div className="overflow-hidden rounded-2xl bg-background sm:rounded-3xl">
               <div className="bg-foreground/3 px-5 pt-6 pb-9 sm:px-6.5 sm:pt-7 sm:pb-10">
                 <h3 className="text-2xl font-semibold text-heading sm:text-3xl">
-                  {planName}
+                  {planName ?? t("planName")}
                 </h3>
                 <p className="mt-1 text-sm text-paragraph sm:text-base">
-                  {planDescription}
+                  {planDescription ?? t("planDescription")}
                 </p>
               </div>
 
               <div className="relative -mt-5 rounded-t-2xl bg-background px-5 pt-6 pb-6 sm:-mt-6 sm:rounded-t-3xl sm:px-6.5 sm:pt-7 sm:pb-7">
                 <dl className="space-y-3 text-sm sm:space-y-4 sm:text-base">
                   <div className="flex items-center justify-between">
-                    <dt className="text-heading">Subtotal</dt>
+                    <dt className="text-heading">{t("subtotal")}</dt>
                     <dd className="text-paragraph">{formatPrice(subtotal)}</dd>
                   </div>
                   <div className="flex items-center justify-between">
-                    <dt className="text-heading">Discount</dt>
+                    <dt className="text-heading">{t("discount")}</dt>
                     <dd className="text-paragraph">{formatPrice(discount)}</dd>
                   </div>
                 </dl>
@@ -140,7 +143,7 @@ export default function CheckoutSection({
 
                 <div className="flex items-center justify-between">
                   <p className="text-lg font-semibold text-heading sm:text-xl">
-                    Total to pay
+                    {t("total")}
                   </p>
                   <p className="font-heading text-xl font-semibold text-heading sm:text-2xl">
                     {formatPrice(total)}
@@ -161,15 +164,15 @@ export default function CheckoutSection({
                     type="text"
                     value={coupon}
                     onChange={(e) => setCoupon(e.target.value)}
-                    placeholder="Enter coupon code"
-                    aria-label="Coupon code"
+                    placeholder={t("couponPlaceholder")}
+                    aria-label={t("couponLabel")}
                     className="min-w-0 flex-1 bg-transparent text-sm text-heading outline-none placeholder:text-muted-foreground sm:text-base"
                   />
                   <button
                     type="submit"
                     className="h-10 shrink-0 rounded-lg border border-border bg-foreground/3 px-4 text-sm text-heading transition-colors hover:bg-muted sm:h-11 sm:px-5 sm:text-base cursor-pointer"
                   >
-                    Apply code
+                    {t("applyCode")}
                   </button>
                 </form>
 
@@ -179,7 +182,7 @@ export default function CheckoutSection({
                   onClick={onProceed}
                   className="mt-5 w-full sm:mt-6"
                 >
-                  Proceed to payment
+                  {t("proceed")}
                 </PrimaryButton>
               </div>
             </div>
@@ -192,10 +195,7 @@ export default function CheckoutSection({
             className="mt-0.5 size-4 shrink-0 fill-current sm:mt-0"
             aria-hidden
           />
-          <p className="text-heading">
-            Measurements are approximate and provided for reference purposes
-            only. We do not retain or store your data.
-          </p>
+          <p className="text-heading">{t("disclaimer")}</p>
         </div>
       </div>
 

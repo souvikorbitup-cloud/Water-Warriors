@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import gsap from "gsap";
@@ -15,10 +16,12 @@ import "swiper/css";
 import "swiper/css/effect-fade";
 
 export interface TeamSectionMember {
+  translationKey:
+    | "rajeshSeshadri"
+    | "jaiPrakash"
+    | "anandRajuMudunuri"
+    | "subashChandraReddy";
   full_name: string;
-  job_role: string;
-  tag: string[];
-  description: string;
   avatar_url: string;
 }
 
@@ -72,6 +75,8 @@ export default function TeamSection({
   // Direction hint from button clicks (disambiguates 2-member sliders).
   const directionHintRef = useRef<{ dir: Direction; at: number } | null>(null);
 
+  const t = useTranslations("Leadership");
+  const tMembers = useTranslations("Leadership.teamMembers");
   const [activeIndex, setActiveIndex] = useState(0);
 
   /**
@@ -344,7 +349,7 @@ export default function TeamSection({
             <button
               type="button"
               onClick={() => goTo("next")}
-              aria-label={`Show next: ${nextMember.full_name}`}
+              aria-label={t("showNext", { name: nextMember.full_name })}
               className="group flex w-full items-center overflow-hidden rounded-2xl bg-foreground/25 text-left transition-colors duration-300 hover:bg-foreground/35 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none lg:order-1 lg:block lg:w-60 lg:shrink-0"
             >
               {/* Preview Image */}
@@ -373,7 +378,7 @@ export default function TeamSection({
                 </p>
 
                 <p className="mt-0.5 text-sm text-paragraph">
-                  {nextMember.job_role}
+                  {tMembers(`${nextMember.translationKey}.role`)}
                 </p>
               </div>
             </button>
@@ -449,7 +454,7 @@ export default function TeamSection({
                         reveal,
                       )}
                     >
-                      {member.job_role}
+                      {tMembers(`${member.translationKey}.role`)}
                     </p>
 
                     <ul
@@ -458,14 +463,14 @@ export default function TeamSection({
                         reveal,
                       )}
                     >
-                      {member.tag.filter(Boolean).map((tag) => (
+                      {tMembers(`${member.translationKey}.tagline`) && (
                         <li
-                          key={tag}
+                          key={member.translationKey}
                           className="rounded-full border border-heading/80 px-3 py-1 text-sm text-paragraph sm:px-4 sm:py-1.5 sm:text-[15px]"
                         >
-                          {tag}
+                          {tMembers(`${member.translationKey}.tagline`)}
                         </li>
-                      ))}
+                      )}
                     </ul>
 
                     <p
@@ -474,7 +479,7 @@ export default function TeamSection({
                         reveal,
                       )}
                     >
-                      {member.description}
+                      {tMembers(`${member.translationKey}.description`)}
                     </p>
 
                     {members.length > 1 && (
@@ -487,8 +492,8 @@ export default function TeamSection({
                         <button
                           type="button"
                           onClick={() => goTo("prev")}
-                          aria-label="Previous team member"
-                          title="Previous"
+                          aria-label={t("previousMember")}
+                          title={t("previous")}
                           className="group/arrow flex size-9 items-center justify-center rounded-full border border-heading text-heading transition-all duration-300 hover:scale-105 hover:bg-heading hover:text-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer"
                         >
                           <ArrowLeft className="size-4 transition-transform duration-300 group-hover/arrow:-translate-x-0.5" />
@@ -497,8 +502,8 @@ export default function TeamSection({
                         <button
                           type="button"
                           onClick={() => goTo("next")}
-                          aria-label="Next team member"
-                          title="Next"
+                          aria-label={t("nextMember")}
+                          title={t("next")}
                           className="group/arrow flex size-9 items-center justify-center rounded-full border border-heading text-heading transition-all duration-300 hover:scale-105 hover:bg-heading hover:text-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer"
                         >
                           <ArrowRight className="size-4 transition-transform duration-300 group-hover/arrow:translate-x-0.5" />

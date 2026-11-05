@@ -2,11 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/icons";
 import { isValidName, isValidIndianPhone } from "@/lib/auth/validation";
+import { Link } from "@/i18n/navigation";
 import PrimaryButton from "../main/shared/button/PrimaryButton";
 
 interface ProfileCompletionFormProps {
@@ -22,6 +23,7 @@ export function ProfileCompletionForm({
   email,
   redirectTo,
 }: ProfileCompletionFormProps) {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -32,11 +34,11 @@ export function ProfileCompletionForm({
     e.preventDefault();
 
     if (!isValidName(firstName) || !isValidName(lastName)) {
-      toast.error("Please enter a valid first and last name.");
+      toast.error(t("invalidName"));
       return;
     }
     if (!isValidIndianPhone(mobile)) {
-      toast.error("Please enter a valid Indian phone number.");
+      toast.error(t("invalidPhone"));
       return;
     }
 
@@ -51,17 +53,15 @@ export function ProfileCompletionForm({
       const body = await res.json();
 
       if (!res.ok) {
-        toast.error(
-          body?.message ?? "Could not save your profile. Please try again.",
-        );
+        toast.error(body?.message ?? t("saveError"));
         return;
       }
 
-      toast.success("Profile completed.");
+      toast.success(t("profileCompleted"));
       router.replace(redirectTo || "/admin/profile");
       router.refresh();
     } catch {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("genericError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -76,18 +76,17 @@ export function ProfileCompletionForm({
           <Link
             href="/"
             className="mx-auto mb-8 block w-fit"
-            aria-label="Go to Water Warriors AI home"
+            aaria-label={t("goHome")}
           >
             <Logo className="h-16 w-auto object-contain sm:h-24" />
           </Link>
           <div className="mb-6 text-center sm:mb-8">
             <h1 className="font-heading text-2xl font-bold text-heading sm:text-3xl">
-              Complete your profile
+              {t("completeTitle")}
             </h1>
 
             <p className="mt-2 text-sm text-paragraph sm:text-base">
-              Signed in as{" "}
-              <span className="font-semibold text-heading">{email}</span>
+              {t("signedInAs", { email })}
             </p>
           </div>
 
@@ -98,12 +97,12 @@ export function ProfileCompletionForm({
                   htmlFor="firstName"
                   className="mb-2 block font-heading text-sm font-bold text-heading"
                 >
-                  First name
+                  {t("firstName")}
                 </label>
 
                 <Input
                   id="firstName"
-                  placeholder="e.g. Priya"
+                  placeholder={t("firstNamePlaceholder")}
                   required
                   disabled={isSubmitting}
                   value={firstName}
@@ -117,12 +116,12 @@ export function ProfileCompletionForm({
                   htmlFor="lastName"
                   className="mb-2 block font-heading text-sm font-bold text-heading"
                 >
-                  Last name
+                  {t("lastName")}
                 </label>
 
                 <Input
                   id="lastName"
-                  placeholder="e.g. Sharma"
+                  placeholder={t("lastNamePlaceholder")}
                   required
                   disabled={isSubmitting}
                   value={lastName}
@@ -137,14 +136,14 @@ export function ProfileCompletionForm({
                 htmlFor="mobile"
                 className="mb-2 block font-heading text-sm font-bold text-heading"
               >
-                Mobile number
+                {t("mobile")}
               </label>
 
               <Input
                 id="mobile"
                 type="tel"
                 inputMode="tel"
-                placeholder="98765 43210"
+                placeholder={t("mobilePlaceholder")}
                 required
                 disabled={isSubmitting}
                 value={mobile}
@@ -160,7 +159,7 @@ export function ProfileCompletionForm({
               className="w-full text-center"
               full
             >
-              {isSubmitting ? "Saving…" : "Finish setup"}
+              {isSubmitting ? t("saving") : t("finish")}
             </PrimaryButton>
           </form>
         </div>

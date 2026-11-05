@@ -1,0 +1,704 @@
+{
+  "Metadata": {
+    "titleDefault": "Water Warriors AI | Rainwater Harvesting",
+    "titleTemplate": "%s | Water Warriors AI",
+    "description": "Discover your property's rainwater harvesting potential and explore practical ways to conserve water with Water Warriors AI.",
+    "openGraphDescription": "Explore your property's rainwater harvesting potential with Water Warriors AI.",
+    "twitterDescription": "Discover your property's rainwater harvesting potential with Water Warriors AI.",
+    "homeTitle": "Home",
+    "homeDescription": "Discover your property's rainwater harvesting potential and get a customized report at a nominal cost.",
+    "aboutTitle": "About Us",
+    "aboutDescription": "We help homeowners, offices and buildings discover their rainwater-harvesting potential, one property at a time.",
+    "leadershipTitle": "Leadership",
+    "leadershipDescription": "Meet the leadership and technical advisors behind Water Warriors AI.",
+    "educationTitle": "Education",
+    "educationDescription": "Learn how rainwater harvesting works, explore DIY guides, and keep your system working.",
+    "contactTitle": "Contact Us",
+    "contactDescription": "Have a question about your property's potential or your report? Tell us what's on your mind.",
+    "feedbackTitle": "Feedback",
+    "feedbackDescription": "Share what worked, what could be clearer and how we can improve your rainwater-harvesting journey.",
+    "privacyTitle": "Privacy Policy",
+    "privacyDescription": "Learn how Water Warriors AI collects, uses, stores and protects your personal information.",
+    "reportTitle": "Rainwater Report",
+    "reportDescription": "Explore your customized rainwater-harvesting potential report.",
+    "checkoutTitle": "Checkout",
+    "checkoutDescription": "Get your complete rainwater-harvesting report.",
+    "signInTitle": "Sign In",
+    "signInDescription": "Sign in to Water Warriors AI with a one-time email code."
+  },
+  "Common": {
+    "home": "Home",
+    "aboutUs": "About Us",
+    "leadership": "Leadership",
+    "feedback": "Feedback",
+    "contact": "Contact",
+    "contactUs": "Contact Us",
+    "education": "Education",
+    "privacyPolicy": "Privacy Policy",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mainMenu": "Main menu",
+    "siteNavigation": "Site navigation and contact details",
+    "logoHome": "Water Warriors AI home",
+    "selectLanguage": "Select language",
+    "breadcrumb": "Breadcrumb",
+    "loading": "Loading...",
+    "backToHome": "Back to Home",
+    "contactSupport": "Contact Support",
+    "visitorsSoFar": "Visitors so far: {count}",
+    "cookieSettings": "Cookie settings",
+    "copyright": "© {year} Water Warriors AI. All rights reserved. All proprietary technology and processes featured on this site are protected under national and international patent pending status. Unauthorized reproduction or use is strictly prohibited.",
+    "footerDescription": "Understand your property's rainwater harvesting potential and explore practical ways to make every drop count.",
+    "officeLocation": "Office location available on request.",
+    "mainNavigation": "Main navigation",
+    "footerNavigation": "Footer navigation",
+    "patentNotice": "All proprietary technology and processes featured on this site are protected under national and international patent pending status. Unauthorized reproduction or use is strictly prohibited.",
+    "cookieTitle": "Cookies for site analytics",
+    "cookieDescription": "We'd like to use Google Analytics cookies to understand how people use Water Warriors, such as which pages are visited and whether reports are created. We don't use them for ads. See our <privacyPolicy>Privacy Policy</privacyPolicy>.",
+    "cookieSaveError": "We couldn't save your choice. Please check your browser settings and try again.",
+    "decline": "Decline",
+    "accept": "Accept",
+    "close": "Close",
+    "underConstruction": "Under Construction",
+    "underConstructionDescription": "{pageName} is currently being built and will be available soon.",
+    "thisPage": "This page",
+    "heroBannerAlt": "Hero banner",
+    "patentBadgeAlt": "Patent badge",
+    "mapSelectedAreaAlt": "Map showing your selected rooftop area",
+    "rainCollectAlt": "Rainwater flowing from a downpipe into a green storage tank in a garden"
+  },
+  "LanguageSwitcher": {
+    "en": "English",
+    "hi": "हिन्दी",
+    "bn": "বাংলা"
+  },
+  "CTA": {
+    "title": "Your Rooftop. A New Possibility.",
+    "description": "Start with your location and rooftop area. Discover your property's rainwater-harvesting potential with a customized report at a nominal cost.",
+    "button": "Discover how much water you could save",
+    "disclaimer": "All measurements are approximate and intended for reference only."
+  },
+  "NotFound": {
+    "title": "404 - Page Not Found",
+    "description": "The page you are looking for could not be found.",
+    "heading": "Page Not Found",
+    "body": "The page you are looking for may have been moved, deleted, or never existed."
+  },
+  "Unauthorized": {
+    "title": "Access Denied",
+    "description": "You don't have permission to view this page. If you believe this is a mistake, please contact your administrator.",
+    "backToProfile": "Back to Profile"
+  },
+  "Home": {
+    "heroTitle": "Hey, <highlight>Water Warrior</highlight>!",
+    "heroHighlight": "Water Warrior",
+    "heroDescription": "Millions of liters of rainwater go to waste every year. Discover your property's rainwater harvesting potential and get a customized report at a nominal cost.",
+    "heroCta": "Discover how much water you could save",
+    "intro": "Every year, millions of liters of fresh rainwater go to waste because we do not divert it appropriately. This site helps you understand the rainwater harvesting potential that your home, office, or building premises can provide-turning unused rainfall into a powerful, sustainable resource. To help you take the next step, we provide a comprehensive customized report for a nominal cost.",
+    "viewSampleReport": "View a sample report here",
+    "demoButton": "Click here for a demo",
+    "demoTitle": "Demo video",
+    "demoUnavailable": "The demo video isn't available yet. Please check back soon.",
+    "testimonialsTitle": "What Our Users Say",
+    "diyTitle": "Step-by-Step DIY Guides"
+  },
+  "Location": {
+    "privacyNote": "We value your privacy and never store your data.",
+    "title": "Select Your Location",
+    "nameLabel": "To include your name (optional) on the final report, please enter it below.",
+    "namePlaceholder": "Name (Optional)",
+    "instructionPin": "Select the <mapIcon>map icon</mapIcon> to pinpoint your location, or simply enter your location in the search bar to get started.",
+    "mapIcon": "map icon",
+    "instructionPen": "Select the <penIcon>pen-icon</penIcon> and tap on the map to place points (at least 4) across your roof-top / openarea.",
+    "penIcon": "pen-icon",
+    "mapsFailed": "Google Maps failed to load. Check your API key.",
+    "loadingMap": "Loading map",
+    "searchPlaceholder": "Search by address or coordinates",
+    "searchLabel": "Search by address or coordinates",
+    "search": "Search",
+    "suggestionsLabel": "Location suggestions",
+    "searchingPlaces": "Searching places...",
+    "suggestionsUnavailable": "Suggestions are unavailable right now.",
+    "placesUnavailable": "Place suggestions are unavailable right now.",
+    "noMapLocation": "The selected place has no map location.",
+    "couldNotLoadPlace": "Could not load the selected place. Try again.",
+    "exitFullScreen": "Exit full screen",
+    "expandMap": "Expand map to full screen",
+    "stopPlacing": "Stop placing points",
+    "placePoints": "Place points on the map",
+    "useLocation": "Use my current location",
+    "clearPoints": "Clear points",
+    "switchToMap": "Switch to map view",
+    "switchToSatellite": "Switch to satellite view",
+    "pointsPlaced": "{count} / {min} points placed",
+    "disclaimer": "All measurements are approximate and intended for reference only. We value your privacy and never store your data."
+  },
+  "Testimonials": {
+    "0": {
+      "job_role": "Education Creator",
+      "message": "The experience has been amazing! The platform is easy to use, well-designed, and offers everything I need. It has made my daily work much more efficient."
+    },
+    "1": {
+      "job_role": "Digital Marketing Specialist",
+      "message": "I absolutely love the simplicity and attention to detail. Everything works smoothly, and the overall experience has exceeded my expectations."
+    },
+    "2": {
+      "job_role": "Content Creator",
+      "message": "A fantastic experience from start to finish! The quality, usability, and thoughtful features make this platform stand out. Highly recommended!"
+    },
+    "3": {
+      "job_role": "Business Consultant",
+      "message": "This has made things so much easier for me. I appreciate the smooth experience, professional approach, and excellent attention to user needs."
+    },
+    "4": {
+      "job_role": "Entrepreneur",
+      "message": "I'm genuinely impressed! The experience is seamless, the design is beautiful, and everything feels thoughtfully put together. Looking forward to using it more!"
+    }
+  },
+  "About": {
+    "bannerHeading": "Every Rooftop",
+    "bannerHighlight": "Holds a Possibility.",
+    "bannerDescription": "We help homeowners, offices and buildings discover their rainwater-harvesting potential, one property at a time.",
+    "missionTitle": "A Water Conscious Future Starts at Home.",
+    "missionP1": "Rain falls on our roofs, yet its potential often goes unnoticed. We believe understanding that potential is a meaningful first step towards making better use of the water around us.",
+    "missionP2": "Our mission is to make rainwater-harvesting potential easier to explore. Water Warriors AI brings location and rooftop area together to help homeowners, offices and buildings see what could be possible for their property.",
+    "missionQuote": "Make the first step towards rainwater harvesting an informed one.",
+    "missionCaption": "From rainfall to a resource: a different way to look at the water that reaches your roof.",
+    "ourMission": "Our Mission",
+    "missionCard": "Water Warriors is a tool designed to help homeowners, building managers, and sustainability advocates understand the rainwater harvesting potential of their properties. Every year, billions of litres of fresh rainwater are lost to runoff because we lack the tools to visualize its potential. We are changing that.",
+    "resourceTitle": "A Resource Worth a Second Look.",
+    "resourceDescription": "A more thoughtful relationship with water can begin with the rain that already falls on your property.",
+    "highlights": {
+      "0": {
+        "title": "Rain is an opportunity",
+        "description": "Rainwater reaches the places where we live and work. Harvesting begins by recognising it as a resource, rather than simply letting it flow away."
+      },
+      "1": {
+        "title": "Every property is different",
+        "description": "Location and collection area matter. Looking at your own rooftop makes the conversation about rainwater more relevant to your home or building."
+      },
+      "2": {
+        "title": "Awareness comes first",
+        "description": "Understanding what might be possible helps, you ask better questions and take a more considered approach to rainwater harvesting."
+      }
+    },
+    "howTitle": "From a Location To a Clearer Picture.",
+    "howDescription": "You don't need to begin with all the answers. Start with your property, select its collection area and explore its rainwater-harvesting potential.",
+    "steps": {
+      "0": {
+        "title": "Find your property",
+        "description": "Use the map icon to pinpoint your location, or enter your location in the search bar."
+      },
+      "1": {
+        "title": "Mark your rooftop",
+        "description": "Choose the pen icon and place at least four points across your rooftop or open area on the map."
+      },
+      "2": {
+        "title": "Explore the potential",
+        "description": "Get a customized report at free of cost to understand your property’s rainwater-harvesting potential."
+      }
+    },
+    "designTitle": "Thoughtful By Design.",
+    "designDescription": "We focus on a useful starting point, not a one-size-fits-all answer.",
+    "principles": {
+      "0": {
+        "title": "Property-first thinking",
+        "description": "A home, an office or a building — start with the place that matters to you."
+      },
+      "1": {
+        "title": "Clarity over complexity",
+        "description": "A focused journey from finding your location to understanding your potential."
+      },
+      "2": {
+        "title": "Honest about estimates",
+        "description": "All measurements are approximate and intended for reference only."
+      }
+    }
+  },
+  "Leadership": {
+    "bannerHeading": "Every rooftop",
+    "bannerHighlight": "holds a possibility.",
+    "bannerDescription": "We help homeowners, offices and buildings discover their rainwater-harvesting potential, one property at a time.",
+    "leadershipTitle": "Leadership Team",
+    "advisorsTitle": "Technical Advisors Team",
+    "previousMember": "Previous team member",
+    "nextMember": "Next team member",
+    "previous": "Previous",
+    "next": "Next",
+    "showNext": "Show next: {name}",
+    "teamMembers": {
+      "rajeshSeshadri": {
+        "role": "Founder & CEO",
+        "tagline": "Environmentalist at heart, IT by profession.",
+        "description": "My commitment to the environment isn't just an interest; it's a calling. After spearheading numerous CSR initiatives—planting trees on a massive scale and building infrastructure to harvest and recharge our precious groundwater—I saw something that changed me. I witnessed the staggering, heartbreaking waste of rainwater in our communities. I knew right then that simply observing the problem wasn't enough; it demanded relentless action. That realization became the catalyst for Water Warriors. Capturing this wasted resource and turning this crisis into a sustainable future isn't just a project for me—it is my life's mission."
+      },
+      "jaiPrakash": {
+        "role": "Chief Technology Officer",
+        "tagline": "Technology for a sustainable tomorrow.",
+        "description": "Driving technology and innovation to create meaningful environmental impact. Focused on building scalable digital solutions, intelligent systems, and technology-driven strategies that make rainwater harvesting more accessible and effective. At Water Warriors, the goal is to combine technology, innovation, and sustainability to create lasting change."
+      },
+      "anandRajuMudunuri": {
+        "role": "Technical Advisor, Water Warriors AI",
+        "tagline": "Making every drop count.",
+        "description": "Anand takes industrial climate goals from ambition to audited outcomes. With 15+ years of experience, he has advised EU and Indian clients on GHG accounting, disclosure, net-zero strategy and climate risk. He has developed climate adaptation frameworks, delivered capacity building programs, and built tools that became client-facing services. Conceptualization and execution of carbon projects, including mangrove restoration, biogas and plantation, and their subsequent registration under Gold Standard® certification has been his major accomplishment. At Water Warriors AI, he brings this climate and decarbonisation expertise to one purpose: making every drop count."
+      },
+      "subashChandraReddy": {
+        "role": "Technical Advisor",
+        "tagline": "Expertise driving sustainable innovation.",
+        "description": "Bringing technical knowledge and industry insights to support innovative water conservation initiatives. Focused on exploring practical solutions, strengthening technical strategies, and helping communities adopt sustainable rainwater harvesting practices."
+      }
+    }
+  },
+  "Education": {
+    "bannerHeading": "Every rooftop",
+    "bannerHighlight": "holds a possibility.",
+    "bannerDescription": "We help homeowners, offices and buildings discover their rainwater-harvesting potential, one property at a time.",
+    "howItWorks": "How It Works",
+    "step": "Step {number}",
+    "steps": {
+      "0": {
+        "title": "Catch",
+        "description": "Your roof collects the rain that falls on it — the larger the roof, the more water you can capture."
+      },
+      "1": {
+        "title": "Channel",
+        "description": "Gutters and downpipes carry the water away from the roof edge to a single collection point."
+      },
+      "2": {
+        "title": "Clean",
+        "description": "A first-flush diverter sends the dirtiest first rain away, and a mesh or sand filter removes leaves and grit."
+      },
+      "3": {
+        "title": "Store or Recharge",
+        "description": "The clean water is either stored in a tank for later use or guided into the ground through a recharge pit."
+      }
+    },
+    "twoWaysTitle": "Two Ways to Use Rainwater",
+    "option1Title": "Option 1: Store It for Use",
+    "option1Description": "Collect rainwater in a covered tank or sump and use it for gardening, cleaning, flushing and other non-drinking needs. It reduces the water you draw from taps, borewells or tankers.",
+    "option2Title": "Option 2: Recharge the Ground",
+    "option2Description": "Direct rainwater into a recharge pit, trench or old well so it soaks back into the soil. This helps replenish the groundwater that borewells in your neighbourhood depend on.",
+    "diyTitle": "Step-by-Step DIY Guides",
+    "keepTitle": "Keep It Working",
+    "tipLabel": "Tip {number}:",
+    "tips": {
+      "0": "Clean roofs, gutters and downpipes before the rainy season starts.",
+      "1": "Check and wash filters and first-flush diverters after heavy storms.",
+      "2": "Keep tanks covered and screened to keep out debris, insects and sunlight.",
+      "3": "Inspect recharge pits each year and clear silt so water keeps soaking in."
+    },
+    "comingSoonTitle": "More Learning Is on the Way",
+    "comingSoon": "Coming Soon"
+  },
+  "DiyGuides": {
+    "0": "How to Build a Simple Rainwater Harvesting System at Home",
+    "1": "DIY Rainwater Collection: A Beginner's Step-by-Step Guide",
+    "2": "How to Create an Affordable Rainwater Storage System",
+    "3": "Easy DIY Rooftop Rainwater Harvesting Techniques",
+    "4": "Rainwater Filtration: Make Your Own Water Filter at Home"
+  },
+  "Video": {
+    "play": "Play video: {title}",
+    "playVideo": "Play video",
+    "pause": "Pause video",
+    "resume": "Resume video",
+    "duration": "{minutes} min"
+  },
+  "Contact": {
+    "bannerHeading": "Let's Talk",
+    "bannerHighlight": "Rainwater",
+    "bannerDescription": "Have a question about your property's potential or your report? Tell us what's on your mind.",
+    "helpTitle": "How Can We Help?",
+    "helpDescription": "Whether you're exploring rainwater harvesting for the first time or have a question about a report, use the form to share your inquiry.",
+    "directionTitle": "Let's point you in the right direction.",
+    "topics": {
+      "0": {
+        "title": "Property assessment",
+        "description": "Questions about finding your location or selecting your rooftop area."
+      },
+      "1": {
+        "title": "Report questions",
+        "description": "Help understanding your customized rainwater-harvesting report."
+      },
+      "2": {
+        "title": "General feedback",
+        "description": "Share your thoughts about Water Warriors AI and your experience."
+      }
+    },
+    "formTitle": "Send us a message",
+    "formDescription": "Tell us a little about your question. Fields marked * are required.",
+    "name": "Name *",
+    "namePlaceholder": "Your name",
+    "email": "Email *",
+    "emailPlaceholder": "Your email address",
+    "message": "Message *",
+    "messagePlaceholder": "How can we help? Share the details of your question here.",
+    "hint": "For a property question, mention the location and the step you're asking about. For a report question, tell us which part you'd like to understand.",
+    "sending": "Sending...",
+    "send": "Send message",
+    "success": "Thanks! Your message has been sent.",
+    "error": "Could not send your message. Please try again.",
+    "faqTitle": "Before you get in touch.",
+    "faqDescription": "A few useful answers about exploring your property’s potential.",
+    "faqs": {
+      "0": {
+        "question": "What do I need to get started?",
+        "answer": "Start with your property’s location. Use the map icon or location search, then select the pen icon to mark at least four points across your rooftop or open area."
+      },
+      "1": {
+        "question": "Can I explore an office or a building?",
+        "answer": "Yes. Whether it’s a home, an office or a building, select its location and mark the rooftop or open area you’d like to explore."
+      },
+      "2": {
+        "question": "Is there a cost for the report?",
+        "answer": "The customized report is available at a nominal cost. You can explore your location and rooftop on the map before deciding."
+      },
+      "3": {
+        "question": "Are the measurements exact?",
+        "answer": "No. All measurements are approximate and intended for reference only. We value your privacy and never store your data."
+      }
+    }
+  },
+  "Feedback": {
+    "bannerHeading": "Your experience matters.",
+    "bannerHighlight": "Help us make it better.",
+    "bannerDescription": "Share what worked, what could be clearer and how we can improve your rainwater-harvesting journey.",
+    "introTitle": "A Better Journey Starts With You.",
+    "introDescription": "Whether you're finding your property, marking a rooftop or exploring a report, we'd like to hear about your experience with Water Warriors AI.",
+    "formTitle": "Share your feedback",
+    "formDescription": "Fields marked * are required. Your name and email are optional.",
+    "topicLabel": "Feedback topic *",
+    "topicPlaceholder": "Select a topic",
+    "topicRequired": "Please select a feedback topic.",
+    "topics": {
+      "property": "Property assessment",
+      "report": "Report questions",
+      "general": "General feedback",
+      "other": "Something else"
+    },
+    "ratingLabel": "How was your overall experience? *",
+    "ratingHint": "Choose one rating, from 1 (poor) to 5 (excellent).",
+    "ratings": {
+      "1": "Poor",
+      "2": "Fair",
+      "3": "Good",
+      "4": "Very good",
+      "5": "Excellent"
+    },
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "message": "Your feedback *",
+    "messagePlaceholder": "What worked well? What could we do better?",
+    "messageHint": "A little context helps us understand your feedback.",
+    "optionalHint": "If you'd like a response, include your email. You can leave both contact fields blank.",
+    "submitting": "Submitting...",
+    "submit": "Submit feedback",
+    "success": "Thank you! Your feedback has been submitted.",
+    "error": "Could not submit your feedback. Please try again."
+  },
+  "SampleReport": {
+    "title": "Sample report",
+    "cantSee": "Can't see the PDF?",
+    "openNewTab": "Open it in a new tab"
+  },
+  "Report": {
+    "greeting": "Hey, <name></name>",
+    "thankYou": "Thank you for taking the first step toward conserving water—for yourself and for future generations.",
+    "catchmentLabel": "Selected Catchment Area",
+    "rainfallLabel": "Average Annual Rainfall",
+    "potentialTitle": "Rainwater Harvesting Potential",
+    "potentialDescription": "Based on the above parameters, your selected location has the potential to harvest approximately",
+    "impactTitle": "The Impact Of Saving {litres} Litres Of Rainwater Per Year",
+    "impactDescription": "Conserving this much water annually can make a huge difference!",
+    "impacts": {
+      "0": {
+        "label": "Daily Water Needs",
+        "value": "8 Families",
+        "note": "for a full year*"
+      },
+      "1": {
+        "label": "Trees Supported",
+        "value": "1,738 Trees",
+        "note": "for a full year*"
+      },
+      "2": {
+        "label": "Water Tankers",
+        "value": "126 Trips",
+        "note": "of 5,000L each*"
+      },
+      "3": {
+        "label": "Schools & Hygiene",
+        "value": "634 Children",
+        "note": "for a full year*"
+      }
+    },
+    "assumptions": "* Assumptions: Family of 4 using 50L/person/day · Standard tanker = 5,000L · Trees Supported uses an illustrative Water Warriors equivalence of 365L/tree/year, not a universal scientific requirement · Schools & Hygiene uses 5L/child/school day based on WHO/UNICEF day-school guidance (drinking, personal hygiene, food preparation, cleaning and laundry; excluding toilet flushing and showers) x 200 school days, with the 200-day academic year being a Water Warriors assumption.",
+    "rechargeTitle": "Why Rainwater Recharge Matters.",
+    "rechargeIntro": "Harvesting approximately {litres} litres of rainwater annually at your location in {location}, represents a substantial potential for augmenting your household water supply. This significant volume could be strategically utilized for various non-potable needs, reducing the demand on other sources.",
+    "rechargeHighlights": {
+      "0": "For instance, this collected water may be used for outdoor tasks like watering gardens and landscaping, as well as for indoor uses such as toilet flushing, potentially leading to noticeable reductions in household water-related expenses over time.",
+      "1": "Beyond direct consumption, directing this considerable amount of rainwater into the ground can play a vital role in local groundwater recharge. This process helps to replenish underground water reserves, supporting the natural water cycle in your immediate area.",
+      "2": "Such efforts contribute to overall water resilience for the region, minimizing stormwater runoff and fostering a more sustainable approach to managing this precious resource."
+    },
+    "forecastTitle": "Your Next Five-Month Rainfall Harvesting Projection",
+    "forecastPeriod": "(November 2026 - March 2027)",
+    "month": "Month",
+    "forecastedRainfall": "Forecasted Average Rainfall (mm)",
+    "harvestingPotential": "Rainwater Harvesting Potential (Litres)*",
+    "grandTotal": "Grand Total",
+    "tip": "Don't let the next rain go to waste. Harvest it, divert it, and conserve it with proven rainwater harvesting techniques—turning every drop into a lasting water resource for your home.",
+    "forecastNote": "*Forecast rainfall values are based on Open-Meteo seasonal forecast data. Long-range forecasts are indicative and actual rainfall may vary.",
+    "forecastSource": "Source: Open-Meteo Seasonal Forecast API (ECMWF seasonal forecast).",
+    "disclaimer": "*Measurements are approximate and provided for reference purposes only. We do not retain or store your data.",
+    "ctaTitle": "Turn Every Drop of Rain into a Sustainable Future!",
+    "ctaText": "Discover your rainwater harvesting potential, save water, and make every drop count with Water Warriors AI.",
+    "downloadPdf": "Download PDF Report",
+    "printPdf": "Download High-Quality PDF",
+    "anotherReport": "Ready For Another Report?",
+    "measureAnother": "Measure Another Rooftop"
+  },
+  "Checkout": {
+    "updateArea": "Is your selected area not quite right? <link>Update it here.</link>",
+    "updateLink": "Update it here.",
+    "updateNote": "Note: Selecting this link takes you back to the home page.",
+    "seeSavings": "See your potential water savings.",
+    "viewSample": "View a sample report",
+    "completeTitle": "Get Your Complete Report",
+    "completeDescription": "Check your order summary and apply any available discounts before checkout.",
+    "planName": "Plus plan",
+    "planDescription": "More features for scaling",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "total": "Total to pay",
+    "couponPlaceholder": "Enter coupon code",
+    "couponLabel": "Coupon code",
+    "applyCode": "Apply code",
+    "proceed": "Proceed to payment",
+    "disclaimer": "Measurements are approximate and provided for reference purposes only. We do not retain or store your data."
+  },
+  "Auth": {
+    "signInSubheading": "To <signIn>Sign In</signIn> enter your email to receive a one-time code.",
+    "signIn": "Sign In",
+    "email": "Email address",
+    "emailPlaceholder": "e.g. priya@brigadesociety.org",
+    "sending": "Sending code...",
+    "continue": "Continue",
+    "otpLabel": "Enter the 6-digit code",
+    "sentTo": "Sent to: {email}",
+    "verifying": "Verifying...",
+    "verify": "Verify & continue",
+    "changeEmail": "Change email",
+    "resendCode": "Resend code",
+    "resendIn": "Resend in {seconds}s",
+    "completeTitle": "Complete your profile",
+    "signedInAs": "Signed in as {email}",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "mobile": "Mobile number",
+    "firstNamePlaceholder": "e.g. Priya",
+    "lastNamePlaceholder": "e.g. Sharma",
+    "mobilePlaceholder": "98765 43210",
+    "invalidName": "Please enter a valid first and last name.",
+    "invalidPhone": "Please enter a valid Indian phone number.",
+    "saveError": "Could not save your profile. Please try again.",
+    "profileCompleted": "Profile completed.",
+    "genericError": "Something went wrong. Please try again.",
+    "saving": "Saving…",
+    "finish": "Finish setup",
+    "goHome": "Go to Water Warriors AI home"
+  },
+  "Privacy": {
+    "bannerHeading": "Privacy",
+    "bannerHighlight": "Policy",
+    "bannerDescription": "This policy explains what information Water Warriors AI LLP (“Water Warriors”, “we”) handles when you use this website, why, who else receives it, and the choices you have.",
+    "lastUpdated": "Last updated: 27 October 2026",
+    "inShortTitle": "In short",
+    "inShort": {
+      "0": "You don't need an account to use the calculator.",
+      "1": "The area you draw stays in your browser. We send its location to the services that do the calculations, but we don't store it on our servers.",
+      "2": "We use Google Analytics cookies only if you accept them. Google may also set cookies for maps and, when ads are shown, for advertising.",
+      "3": "We don't sell your information."
+    },
+    "handleTitle": "What we handle and why",
+    "handled": {
+      "0": {
+        "title": "The area you draw",
+        "body": "When you draw a rooftop or open area on the map, its outline, size and location are kept in your browser for the current session. To produce your results, the location and size are sent to the services listed below for rainfall, groundwater and local impact analysis. We don't keep them on our servers, except that groundwater extraction results are cached for 24 hours under a scrambled code of the area's shape, so a repeat request is faster."
+      },
+      "1": {
+        "title": "Your name",
+        "body": "If you type your name for the greeting, it stays in your browser for the current session and isn't sent to us."
+      },
+      "2": {
+        "title": "Saved rooftops",
+        "body": "Rooftops you save on the Measure page are stored only on your device."
+      },
+      "3": {
+        "title": "Paid reports",
+        "body": "Payments are handled by Razorpay. Your card, UPI or bank details go to Razorpay, not to us. We receive the order and payment IDs to confirm the payment. The infographic is created from your report figures by the image service selected for the site (getimg.ai or Google Gemini)."
+      },
+      "4": {
+        "title": "PDF reports",
+        "body": "Download PDF Report is created entirely in your browser. Print to PDF sends a copy of your report page to Browserless or to our own server at Amazon Web Services, which turns it into a PDF using a single-use link that expires shortly afterwards."
+      },
+      "5": {
+        "title": "Contact and feedback",
+        "body": "When you send a message, what you enter (for example your name, email, phone number, organisation and message) is emailed to us through Resend. It isn't stored in our database. We keep the email as long as we need it to reply and follow up."
+      },
+      "6": {
+        "title": "Visitor counter",
+        "body": "The footer shows how many people have visited and from which countries. To find your country, our server sends your IP address to ipwho.is or ipapi.co. We store only the country count, not your IP address, and your browser keeps a note so you're counted once."
+      },
+      "7": {
+        "title": "Site analytics",
+        "body1": "We use Google Analytics to understand how the site is used: which pages are visited, the device and browser, roughly where visitors are (country and city, worked out by Google from the IP address), how they arrived, and actions such as drawing an area (sent as a size band, never the exact area or its location), creating or downloading a report (with the city and state), starting or completing a payment (with the amount), and sending a contact or feedback form (never its contents). Admin pages are not measured.",
+        "body2": "We ask before Google Analytics uses cookies. If you decline, or until you choose, it receives only cookieless signals that don't identify your browser. You can change your choice at any time with <cookieSettings>Cookie settings</cookieSettings> at the bottom of any page. We have turned off Google signals and ad personalisation for analytics. See <googlePrivacy>Google's Privacy Policy</googlePrivacy>, or install the <optOut>Google Analytics opt-out add-on</optOut>."
+      },
+      "8": {
+        "title": "Advertising",
+        "body": "When ads are switched on for this site, they are provided by Google AdSense. Google and its partners use cookies to show ads based on your visits to this and other websites. You can read <googleInfo>how Google uses information from sites that use its services</googleInfo> and turn off personalised ads in <adCenter>My Ad Center</adCenter>. Ads never appear in your PDF reports."
+      },
+      "9": {
+        "title": "Server logs",
+        "body": "Our hosting and back-end providers keep standard technical logs, such as IP address, browser type and time of request, to run the site securely."
+      }
+    },
+    "googlePrivacy": "Google's Privacy Policy",
+    "optOut": "Google Analytics opt-out add-on",
+    "googleInfo": "how Google uses information from sites that use its services",
+    "adCenter": "My Ad Center",
+    "recipientsTitle": "Who receives information",
+    "recipientsIntro": "These services process information on our behalf to provide the features above. Some of them process it outside India.",
+    "columns": {
+      "service": "Service",
+      "whatFor": "What for",
+      "whatReceives": "What it receives",
+      "item": "Item",
+      "keptFor": "Kept for",
+      "purpose": "Purpose"
+    },
+    "recipients": {
+      "0": {
+        "name": "Google (Maps Platform)",
+        "for": "Map, place search, address lookup and the map image in your report",
+        "receives": "Your IP address, the area you draw and its location"
+      },
+      "1": {
+        "name": "Google (Gemini AI and Earth Engine)",
+        "for": "Groundwater and local impact analysis, and the paid infographic if Gemini is selected",
+        "receives": "The location and size of the area, and the report figures"
+      },
+      "2": {
+        "name": "Google (Analytics)",
+        "for": "Understanding how the site is used",
+        "receives": "Pages viewed, the actions listed above, device and browser, approximate location from your IP address, and analytics cookies if you accept them"
+      },
+      "3": {
+        "name": "Google (AdSense)",
+        "for": "Advertising, when ads are switched on for this site",
+        "receives": "Cookies and similar identifiers, your IP address and the pages you view"
+      },
+      "4": {
+        "name": "Open-Meteo",
+        "for": "Historical and seasonal rainfall",
+        "receives": "Your IP address and the location's coordinates"
+      },
+      "5": {
+        "name": "Supabase",
+        "for": "Our back end: runs the calculations above and stores site settings",
+        "receives": "Your IP address and the data each calculation needs"
+      },
+      "6": {
+        "name": "Razorpay",
+        "for": "Payment for the paid report",
+        "receives": "The payment details you enter in Razorpay's checkout"
+      },
+      "7": {
+        "name": "getimg.ai",
+        "for": "The paid infographic, if this model is selected",
+        "receives": "The report figures (area, location name, rainfall, litres)"
+      },
+      "8": {
+        "name": "Browserless or Amazon Web Services (AWS)",
+        "for": "Creating the Print to PDF version of your report",
+        "receives": "A copy of your report page"
+      },
+      "9": {
+        "name": "Resend",
+        "for": "Delivering Contact and Feedback messages to our inbox",
+        "receives": "What you enter in the form"
+      },
+      "10": {
+        "name": "ipwho.is and ipapi.co",
+        "for": "Finding your country for the visitor counter",
+        "receives": "Your IP address"
+      },
+      "11": {
+        "name": "flagcdn.com",
+        "for": "Country flag images in the visitor counter",
+        "receives": "Your IP address"
+      },
+      "12": {
+        "name": "Lovable and Amazon Web Services",
+        "for": "Hosting the website",
+        "receives": "Standard server logs (IP address, browser, time)"
+      }
+    },
+    "cookiesTitle": "Cookies and browser storage",
+    "cookiesIntro": "We don't set cookies ourselves. The site uses your browser's storage for the items below. “Session” items are deleted when you close the tab; “Device” items stay until you clear your browser data.",
+    "storage": {
+      "0": {
+        "name": "site_authenticated",
+        "kept": "Session",
+        "purpose": "Remembers that you signed in to the site"
+      },
+      "1": {
+        "name": "water_warrior_* (polygon points, location, name, map view, report access)",
+        "kept": "Session",
+        "purpose": "Carries the area you drew, its location, the name you typed and your map view from page to page"
+      },
+      "2": {
+        "name": "rooftop-projects",
+        "kept": "Device",
+        "purpose": "Rooftops you save on the Measure page"
+      },
+      "3": {
+        "name": "ww_analytics_consent",
+        "kept": "Device",
+        "purpose": "Remembers whether you accepted or declined analytics cookies"
+      },
+      "4": {
+        "name": "water_warrior_country_counted",
+        "kept": "Device",
+        "purpose": "Makes sure you are counted only once in the visitor counter"
+      }
+    },
+    "cookiesOutro": "If you accept analytics cookies, Google Analytics sets the _ga cookie and one named after our property (_ga_ followed by an ID), which last up to 2 years. Google Maps and, when ads are shown, Google AdSense may set their own cookies, as described in Google's policies.",
+    "retentionTitle": "How long we keep information",
+    "retention": {
+      "0": "Session items in your browser: until you close the tab.",
+      "1": "Groundwater extraction cache: 24 hours.",
+      "2": "Print to PDF links: single use, expiring within minutes.",
+      "3": "Contact and feedback emails: as long as needed to reply and follow up.",
+      "4": "Visitor counts: country totals only, kept indefinitely.",
+      "5": "Google Analytics data: 14 months, then deleted by Google."
+    },
+    "rightsTitle": "Your choices and rights",
+    "rights": {
+      "0": "You can clear the site's browser storage at any time in your browser settings.",
+      "1": "You can accept or decline analytics cookies with Cookie settings at the bottom of any page.",
+      "2": "You can block or delete cookies in your browser, and turn off personalised ads in My Ad Center.",
+      "3": "Under India's Digital Personal Data Protection Act, 2023 and similar laws, you can ask us what personal data we hold about you, ask us to correct or delete it, and raise a grievance. We will respond within a reasonable time."
+    },
+    "childrenTitle": "Children",
+    "children": "This site is intended for adults. We don't knowingly collect personal data from children under 18. If you believe a child has sent us personal data, please contact us and we will delete it.",
+    "securityTitle": "Security",
+    "security": "Information is sent over encrypted connections (HTTPS), and access to our back end is limited to the people who run the site. No method of transmission or storage is completely secure, but we take reasonable steps to protect your information.",
+    "changesTitle": "Changes to this policy",
+    "changes": "We will update this page when our practices change and revise the date at the top.",
+    "contactTitle": "Contact us",
+    "contact": "For questions, requests about your data or grievances, please write to us through the <contactUs>Contact Us</contactUs> page and choose “Question”."
+  }
+}

@@ -1,7 +1,10 @@
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Clock } from "lucide-react";
 
-export default function ComingSoonSection() {
+export default async function ComingSoonSection() {
+  const t = await getTranslations("Education");
+
   return (
     <section className="relative isolate overflow-hidden bg-secondary/35 container-y-pad">
       {/* Decorative background shapes */}
@@ -29,12 +32,12 @@ export default function ComingSoonSection() {
       <div className="my-container-x">
         <div className="mx-auto flex flex-col items-center text-center">
           <h2 className="text-3xl leading-tight font-semibold sm:text-4xl lg:text-5xl">
-            More Learning Is on the Way
+            {t("comingSoonTitle")}
           </h2>
 
           <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground sm:mt-8 sm:px-4.5 sm:py-2">
             <Clock className="size-4" aria-hidden />
-            Coming Soon
+            {t("comingSoon")}
           </span>
         </div>
       </div>

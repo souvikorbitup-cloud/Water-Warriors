@@ -29,6 +29,7 @@ import {
   Star,
 } from "lucide-react";
 
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +50,7 @@ const MAP_OPTIONS: google.maps.MapOptions = {
 const COORDS_REGEX = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/;
 
 export default function LocationSection() {
+  const t = useTranslations("Location");
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-maps-script",
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
@@ -102,7 +104,7 @@ export default function LocationSection() {
           if (requestId !== suggestionRequestRef.current) return;
           console.error("Failed to fetch Google Places suggestions.", error);
           setSuggestions([]);
-          setSuggestionError("Suggestions are unavailable right now.");
+          setSuggestionError(t("suggestionsUnavailable"));
           setIsSearchingPlaces(false);
         },
       );
@@ -112,7 +114,7 @@ export default function LocationSection() {
       window.clearTimeout(timeoutId);
       suggestionRequestRef.current += 1;
     };
-  }, [isPlacesLoaded, isSearchFocused, query]);
+  }, [isPlacesLoaded, isSearchFocused, query, t]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -125,7 +127,7 @@ export default function LocationSection() {
       (error: unknown) => {
         console.error("Failed to load Google Places library.", error);
         if (isActive) {
-          setPlacesLoadError("Place suggestions are unavailable right now.");
+          setPlacesLoadError(t("placesUnavailable"));
         }
       },
     );
@@ -133,7 +135,7 @@ export default function LocationSection() {
     return () => {
       isActive = false;
     };
-  }, [isLoaded]);
+  }, [isLoaded, t]);
 
   // Escape exits fullscreen + lock page scroll while expanded
   useEffect(() => {
@@ -211,7 +213,7 @@ export default function LocationSection() {
       }
 
       if (!coordinates) {
-        setSuggestionError("The selected place has no map location.");
+        setSuggestionError(t("noMapLocation"));
         return;
       }
 
@@ -226,7 +228,7 @@ export default function LocationSection() {
       }
     } catch (error) {
       console.error("Failed to load the selected Google Place.", error);
-      setSuggestionError("Could not load the selected place. Try again.");
+      setSuggestionError(t("couldNotLoadPlace"));
     }
   };
 
@@ -270,16 +272,19 @@ export default function LocationSection() {
   };
 
   return (
-    <section className="container-y-pad bg-[linear-gradient(180deg,var(--secondary)_0%,rgba(255,255,255,0)_20%,#FFF_100%)]" id="save-water">
+    <section
+      className="container-y-pad bg-[linear-gradient(180deg,var(--secondary)_0%,rgba(255,255,255,0)_20%,#FFF_100%)]"
+      id="save-water"
+    >
       <div className="my-container-x">
         {/* Heading + name field */}
         <div className="grid items-end gap-6 md:grid-cols-2 md:gap-10">
           <div>
             <p className="inline-block border-b border-heading pb-1 text-sm text-heading">
-              We value your privacy and never store your data.
+              {t("privacyNote")}
             </p>
             <h2 className="mt-1 text-3xl leading-tight font-semibold sm:text-4xl lg:text-[40px]">
-              Select Your Location
+              {t("title")}
             </h2>
           </div>
 
@@ -288,14 +293,13 @@ export default function LocationSection() {
               htmlFor="report-name"
               className="block text-sm text-paragraph"
             >
-              To include your name (optional) on the final report, please enter
-              it below.
+              {t("nameLabel")}
             </label>
             <Input
               id="report-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Name (Optional)"
+              placeholder={t("namePlaceholder")}
               className="mt-2 h-10.5 rounded-md border-border bg-background! px-3 text-sm"
             />
           </div>
@@ -306,19 +310,25 @@ export default function LocationSection() {
           <p className="flex items-start gap-3">
             <MapPin className="mt-1 size-3.5 shrink-0 text-heading" />
             <span>
-              Select the{" "}
-              <strong className="font-semibold text-heading">map icon</strong>{" "}
-              to pinpoint your location, or simply enter your location in the
-              search bar to get started.
+              {t.rich("instructionPin", {
+                mapIcon: (chunks) => (
+                  <strong className="font-semibold text-heading">
+                    {chunks}
+                  </strong>
+                ),
+              })}
             </span>
           </p>
           <p className="flex items-start gap-3">
             <PenTool className="mt-1 size-3.5 shrink-0 text-heading" />
             <span>
-              Select the{" "}
-              <strong className="font-semibold text-heading">pen-icon</strong>{" "}
-              and tap on the map to place points (at least 4) across your
-              roof-top / openarea.
+              {t.rich("instructionPen", {
+                penIcon: (chunks) => (
+                  <strong className="font-semibold text-heading">
+                    {chunks}
+                  </strong>
+                ),
+              })}
             </span>
           </p>
         </div>
@@ -335,12 +345,12 @@ export default function LocationSection() {
           >
             {loadError ? (
               <p className="flex size-full items-center justify-center p-4 text-center text-sm text-destructive">
-                Google Maps failed to load. Check your API key.
+                {t("mapsFailed")}
               </p>
             ) : !isLoaded ? (
               <div
                 className="size-full animate-pulse bg-muted"
-                aria-label="Loading map"
+                aria-label={t("loadingMap")}
               />
             ) : (
               <GoogleMap
@@ -421,8 +431,8 @@ export default function LocationSection() {
                   }}
                   onBlur={() => setIsSearchFocused(false)}
                   onKeyDown={handleSearchKeyDown}
-                  placeholder="Search by address or coordinates"
-                  aria-label="Search by address or coordinates"
+                  placeholder={t("searchPlaceholder")}
+                  aria-label={t("searchLabel")}
                   role="combobox"
                   aria-autocomplete="list"
                   aria-expanded={isSearchFocused && suggestions.length > 0}
@@ -436,8 +446,8 @@ export default function LocationSection() {
                 />
                 <button
                   type="submit"
-                  aria-label="Search"
-                  title="Search"
+                  aria-label={t("search")}
+                  title={t("search")}
                   className="flex size-8.5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
                 >
                   <ArrowRight className="size-4" />
@@ -450,12 +460,12 @@ export default function LocationSection() {
                   <div
                     id="location-search-suggestions"
                     role="listbox"
-                    aria-label="Location suggestions"
+                    aria-label={t("suggestionsLabel")}
                     className="mt-2 overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg"
                   >
                     {isSearchingPlaces && suggestions.length === 0 && (
                       <p className="px-4 py-3 text-sm text-muted-foreground">
-                        Searching places...
+                        {t("searchingPlaces")}
                       </p>
                     )}
                     {suggestions.map((suggestion, index) => {
@@ -528,9 +538,7 @@ export default function LocationSection() {
 
             {/* Fullscreen toggle (top right) */}
             <MapControl
-              label={
-                isFullscreen ? "Exit full screen" : "Expand map to full screen"
-              }
+              label={isFullscreen ? t("exitFullScreen") : t("expandMap")}
               pressed={isFullscreen}
               onClick={() => setIsFullscreen((v) => !v)}
               className="top-3 right-3 sm:top-4 sm:right-4"
@@ -546,9 +554,7 @@ export default function LocationSection() {
             {/* Drawing / locate / reset tools (left) */}
             <div className="absolute top-20 left-3 flex flex-col gap-3.5 sm:top-34 sm:left-5">
               <MapControl
-                label={
-                  isDrawing ? "Stop placing points" : "Place points on the map"
-                }
+                label={isDrawing ? t("stopPlacing") : t("placePoints")}
                 pressed={isDrawing}
                 onClick={() => setIsDrawing((v) => !v)}
                 positioned={false}
@@ -556,14 +562,14 @@ export default function LocationSection() {
                 <PenTool className="size-4.5" />
               </MapControl>
               <MapControl
-                label="Use my current location"
+                label={t("useLocation")}
                 onClick={handleLocate}
                 positioned={false}
               >
                 <LocateFixed className="size-4.5" />
               </MapControl>
               <MapControl
-                label="Clear points"
+                label={t("clearPoints")}
                 onClick={handleReset}
                 disabled={points.length === 0}
                 positioned={false}
@@ -574,9 +580,7 @@ export default function LocationSection() {
 
             {/* Satellite / map toggle (bottom left) */}
             <MapControl
-              label={
-                isSatellite ? "Switch to map view" : "Switch to satellite view"
-              }
+              label={isSatellite ? t("switchToMap") : t("switchToSatellite")}
               pressed={isSatellite}
               onClick={() => setIsSatellite((v) => !v)}
               className="bottom-3 left-3 sm:bottom-4 sm:left-4"
@@ -592,7 +596,7 @@ export default function LocationSection() {
             {/* Points counter */}
             {isDrawing && (
               <p className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-background px-3 py-1.5 text-xs whitespace-nowrap text-heading shadow-md sm:bottom-4 sm:text-sm">
-                {points.length} / {MIN_POINTS} points placed
+                {t("pointsPlaced", { count: points.length, min: MIN_POINTS })}
               </p>
             )}
           </div>
@@ -601,10 +605,7 @@ export default function LocationSection() {
         {/* Disclaimer */}
         <div className="mt-5 flex items-start gap-3 rounded-xl bg-primary px-4 py-5 text-sm text-primary-foreground sm:items-center sm:px-5 sm:py-6 sm:text-base">
           <Star className="mt-0.5 size-3.5 shrink-0 fill-current sm:mt-0" />
-          <p className="text-primary-foreground">
-            All measurements are approximate and intended for reference only. We
-            value your privacy and never store your data.
-          </p>
+          <p className="text-primary-foreground">{t("disclaimer")}.</p>
         </div>
       </div>
     </section>

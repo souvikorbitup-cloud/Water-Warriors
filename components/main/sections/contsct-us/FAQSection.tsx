@@ -1,33 +1,14 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { CircleMinus, CirclePlus } from "lucide-react";
 import { Accordion } from "radix-ui";
 
-const faqs = [
-  {
-    question: "What do I need to get started?",
-    answer:
-      "Start with your property’s location. Use the map icon or location search, then select the pen icon to mark at least four points across your rooftop or open area.",
-  },
-  {
-    question: "Can I explore an office or a building?",
-    answer:
-      "Yes. Whether it’s a home, an office or a building, select its location and mark the rooftop or open area you’d like to explore.",
-  },
-  {
-    question: "Is there a cost for the report?",
-    answer:
-      "The customized report is available at a nominal cost. You can explore your location and rooftop on the map before deciding.",
-  },
-  {
-    question: "Are the measurements exact?",
-    answer:
-      "No. All measurements are approximate and intended for reference only. We value your privacy and never store your data.",
-  },
-];
+const faqIndices = [0, 1, 2, 3] as const;
 
 export default function FAQSection() {
+  const t = useTranslations("Contact");
   return (
     <section className="container-y-pad relative isolate overflow-hidden bg-secondary/35">
       {/* Decorative background shapes */}
@@ -57,11 +38,10 @@ export default function FAQSection() {
           {/* Left: heading */}
           <div>
             <h2 className="text-3xl leading-[1.15] font-semibold sm:text-4xl lg:text-5xl xl:text-[52px]">
-              Before you get <br className="hidden lg:block" />
-              in touch.
+              {t("faqTitle")}
             </h2>
             <p className="mt-4 max-w-85 text-base leading-normal sm:mt-6 lg:text-lg">
-              A few useful answers about exploring your property’s potential.
+              {t("faqDescription")}
             </p>
           </div>
 
@@ -72,16 +52,16 @@ export default function FAQSection() {
             defaultValue="item-0"
             className="w-full"
           >
-            {faqs.map(({ question, answer }, index) => (
+            {faqIndices.map((index) => (
               <Accordion.Item
-                key={question}
+                key={index}
                 value={`item-${index}`}
                 className="not-last:border-b border-border first:pt-0"
               >
                 <Accordion.Header asChild>
                   <h3>
                     <Accordion.Trigger className="group flex w-full cursor-pointer items-center justify-between gap-4 py-5 text-left font-heading text-lg leading-snug font-semibold text-heading transition-colors hover:text-heading/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:py-6 sm:text-xl lg:text-2xl">
-                      {question}
+                      {t(`faqs.${index}.question`)}
                       <CirclePlus
                         aria-hidden
                         strokeWidth={1.5}
@@ -98,7 +78,7 @@ export default function FAQSection() {
 
                 <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                   <p className="pr-8 pb-5 text-sm leading-6.5 sm:pr-12 sm:text-[15px]">
-                    {answer}
+                    {t(`faqs.${index}.answer`)}
                   </p>
                 </Accordion.Content>
               </Accordion.Item>

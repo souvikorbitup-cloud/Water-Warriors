@@ -1,12 +1,15 @@
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 
-export default function CTASection({
+export default async function CTASection({
   classes = "bg-secondary/35",
 }: {
   classes?: string;
 }) {
+  const t = await getTranslations("CTA");
+
   return (
     <section
       className={`container-y-pad relative isolate overflow-hidden ${classes}`}
@@ -24,13 +27,11 @@ export default function CTASection({
       <div className="my-container-x">
         <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <h2 className="text-3xl leading-tight font-semibold sm:text-4xl lg:text-5xl">
-            Your Rooftop. A New Possibility.
+            {t("title")}
           </h2>
 
           <p className="mt-4 max-w-150 text-sm leading-6 sm:mt-6 sm:text-base">
-            Start with your location and rooftop area. Discover your
-            property&rsquo;s rainwater-harvesting potential with a customized
-            report at a nominal cost.
+            {t("description")}
           </p>
 
           {/* On small screens the label may wrap onto two lines instead of overflowing */}
@@ -38,12 +39,13 @@ export default function CTASection({
             btnType="solid-primary"
             className="mt-8 min-h-11 max-w-full items-stretch text-left whitespace-normal sm:mt-10 sm:items-center sm:text-center sm:whitespace-nowrap"
             href="/#save-water"
+            localized
           >
-            Discover how much water you could save
+            {t("button")}
           </PrimaryButton>
 
           <p className="mt-5 text-xs text-paragraph sm:mt-7 sm:text-[13px]">
-            All measurements are approximate and intended for reference only.
+            {t("disclaimer")}
           </p>
         </div>
       </div>

@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 type BreadcrumbColor = "dark" | "light";
@@ -36,9 +37,11 @@ export default function Breadcrumb({
   align = "center",
   className,
 }: BreadcrumbProps) {
+  const t = useTranslations("Common");
+
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label={t("breadcrumb")}
       className={cn(
         "mb-3 sm:mb-6 inline-flex rounded-full px-4 py-1.5 font-body text-xs sm:text-sm backdrop-blur-sm md:px-5",
         breadcrumbVariants[color],

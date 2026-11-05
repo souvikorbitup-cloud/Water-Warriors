@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Wrench } from "lucide-react";
 import PrimaryButton from "./button/PrimaryButton";
 
@@ -6,10 +7,12 @@ type UnderConstructionProps = {
   classes?: string;
 };
 
-export default function UnderConstruction({
-  pageName = "This page",
+export default async function UnderConstruction({
+  pageName,
   classes = "min-h-screen",
 }: UnderConstructionProps) {
+  const t = await getTranslations("Common");
+
   return (
     <main
       className={`flex ${classes} items-center justify-center bg-white px-6`}
@@ -22,16 +25,18 @@ export default function UnderConstruction({
         </div>
 
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl text-primary">
-          Under Construction
+          {t("underConstruction")}
         </h1>
 
         <p className="mt-4 text-lg text-paragraph">
-          <b>{pageName}</b> is currently being built and will be available soon.
+          {t("underConstructionDescription", {
+            pageName: pageName ?? t("thisPage"),
+          })}
         </p>
 
         <div className="mt-8 flex items-center justify-center gap-4">
-          <PrimaryButton href="/" btnType="solid-primary">
-            Back to Home
+          <PrimaryButton href="/" localized btnType="solid-primary">
+            {t("backToHome")}
           </PrimaryButton>
         </div>
       </div>

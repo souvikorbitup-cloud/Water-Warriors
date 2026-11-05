@@ -1,13 +1,17 @@
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 
 import { Groundwater } from "@/components/icons";
 
-export default function TwoWaysSection() {
+export default async function TwoWaysSection() {
+  const t = await getTranslations("Education");
+  const tCommon = await getTranslations("Common");
+
   return (
     <section className="container-y-pad overflow-hidden bg-secondary/35">
       <div className="my-container-x">
         <h2 className="text-center text-3xl leading-tight font-semibold sm:text-4xl lg:text-5xl">
-          Two Ways to Use Rainwater
+          {t("twoWaysTitle")}
         </h2>
 
         <div className="mt-8 grid gap-6 sm:mt-12 md:grid-cols-2 lg:gap-8">
@@ -16,7 +20,7 @@ export default function TwoWaysSection() {
             <div className="relative aspect-3/2 w-full sm:aspect-2/1">
               <Image
                 src="/section-images/rain-collect.png"
-                alt="Rainwater flowing from a downpipe into a green storage tank in a garden"
+                alt={tCommon("rainCollectAlt")}
                 fill
                 sizes="(min-width: 1200px) 590px, (min-width: 768px) 50vw, 100vw"
                 className="object-cover"
@@ -25,12 +29,10 @@ export default function TwoWaysSection() {
 
             <div className="p-5 sm:p-7">
               <h3 className="text-xl font-semibold text-heading sm:text-2xl lg:text-[26px]">
-                Option 1: Store It for Use
+                {t("option1Title")}
               </h3>
               <p className="mt-3 text-sm leading-6.5 sm:text-[15px]">
-                Collect rainwater in a covered tank or sump and use it for
-                gardening, cleaning, flushing and other non-drinking needs. It
-                reduces the water you draw from taps, borewells or tankers.
+                {t("option1Description")}
               </p>
             </div>
           </article>
@@ -46,12 +48,10 @@ export default function TwoWaysSection() {
 
             <div className="p-5 sm:p-7">
               <h3 className="text-xl font-semibold text-heading sm:text-2xl lg:text-[26px]">
-                Option 2: Recharge the Ground
+                {t("option2Title")}
               </h3>
               <p className="mt-3 text-sm leading-6.5 sm:text-[15px]">
-                Direct rainwater into a recharge pit, trench or old well so it
-                soaks back into the soil. This helps replenish the groundwater
-                that borewells in your neighbourhood depend on.
+                {t("option2Description")}
               </p>
             </div>
           </article>

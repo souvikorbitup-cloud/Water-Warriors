@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Quote } from "lucide-react";
 import { A11y, Autoplay, Pagination } from "swiper/modules";
@@ -10,43 +11,36 @@ import "swiper/css/pagination";
 
 const testimonials = [
   {
+    key: "0",
     full_name: "Isabella Marin",
-    job_role: "Education Creator",
-    message:
-      "The experience has been amazing! The platform is easy to use, well-designed, and offers everything I need. It has made my daily work much more efficient.",
     img_url: "https://randomuser.me/api/portraits/women/44.jpg",
   },
   {
+    key: "1",
     full_name: "Daniel Cooper",
-    job_role: "Digital Marketing Specialist",
-    message:
-      "I absolutely love the simplicity and attention to detail. Everything works smoothly, and the overall experience has exceeded my expectations.",
     img_url: "https://randomuser.me/api/portraits/men/32.jpg",
   },
   {
+    key: "2",
     full_name: "Sophia Williams",
-    job_role: "Content Creator",
-    message:
-      "A fantastic experience from start to finish! The quality, usability, and thoughtful features make this platform stand out. Highly recommended!",
     img_url: "https://randomuser.me/api/portraits/women/68.jpg",
   },
   {
+    key: "3",
     full_name: "Michael Anderson",
-    job_role: "Business Consultant",
-    message:
-      "This has made things so much easier for me. I appreciate the smooth experience, professional approach, and excellent attention to user needs.",
     img_url: "https://randomuser.me/api/portraits/men/75.jpg",
   },
   {
+    key: "4",
     full_name: "Olivia Bennett",
-    job_role: "Entrepreneur",
-    message:
-      "I'm genuinely impressed! The experience is seamless, the design is beautiful, and everything feels thoughtfully put together. Looking forward to using it more!",
     img_url: "https://randomuser.me/api/portraits/women/79.jpg",
   },
-];
+] as const;
 
 export default function TestimonialSection() {
+  const t = useTranslations("Home");
+  const tTestimonials = useTranslations("Testimonials");
+
   return (
     <section className="container-y-pad overflow-hidden bg-secondary/45 relative">
       {/* Background image overlay */}
@@ -62,7 +56,7 @@ export default function TestimonialSection() {
       />
       <div className="my-container-x relative z-10">
         <h2 className="text-center text-3xl leading-tight font-semibold sm:text-4xl lg:text-5xl">
-          What Our Users Say
+          {t("testimonialsTitle")}
         </h2>
 
         <div className="relative mx-auto mt-8 max-w-135 sm:mt-10">
@@ -92,12 +86,12 @@ export default function TestimonialSection() {
               bulletActiveClass: "size-2.5! bg-primary!",
             }}
           >
-            {testimonials.map(({ full_name, job_role, message, img_url }) => (
+            {testimonials.map(({ key, full_name, img_url }) => (
               <SwiperSlide key={full_name}>
                 <figure className="flex flex-col items-center px-9 text-center sm:px-16 lg:px-17.5">
                   <blockquote>
                     <p className="text-sm leading-6 text-heading sm:text-base">
-                      {message}
+                      {tTestimonials(`${key}.message`)}
                     </p>
                   </blockquote>
 
@@ -115,7 +109,7 @@ export default function TestimonialSection() {
                         {full_name}
                       </p>
                       <p className="text-sm text-paragraph sm:text-base">
-                        {job_role}
+                        {tTestimonials(`${key}.job_role`)}
                       </p>
                     </div>
                   </figcaption>

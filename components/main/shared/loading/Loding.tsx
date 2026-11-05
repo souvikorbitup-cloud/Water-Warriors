@@ -1,7 +1,7 @@
-export default function Loding() {
+export default function Loding({ label = "Loading..." }: { label?: string }) {
   return (
     <div
-      aria-label="Loading..."
+      aria-label={label}
       role="status"
       className="flex items-center space-x-2"
     >

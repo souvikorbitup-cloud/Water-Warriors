@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Link as LocalizedLink } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ interface PrimaryButtonProps {
 
   // If href is provided, the button renders as a Link
   href?: string;
+  localized?: boolean;
 
   btnType?: ButtonType;
   size?: ButtonSize;
@@ -83,6 +85,7 @@ const isShaped = (type: ButtonType): type is ShapedType =>
 export default function PrimaryButton({
   children,
   href,
+  localized = false,
   btnType = "solid-secondary",
   size = "md",
   onClick,
@@ -130,18 +133,23 @@ export default function PrimaryButton({
 
   // Render as Link
   if (href) {
+    const linkProps = {
+      href,
+      onClick,
+      "aria-disabled": disabled,
+      className: cn(
+        buttonClasses,
+        disabled && "pointer-events-none cursor-not-allowed opacity-50",
+      ),
+      children: content,
+    };
+
+    if (localized) {
+      return <LocalizedLink {...linkProps} />;
+    }
+
     return (
-      <Link
-        href={href}
-        onClick={onClick}
-        aria-disabled={disabled}
-        className={cn(
-          buttonClasses,
-          disabled && "pointer-events-none cursor-not-allowed opacity-50",
-        )}
-      >
-        {content}
-      </Link>
+      <Link {...linkProps} />
     );
   }
 

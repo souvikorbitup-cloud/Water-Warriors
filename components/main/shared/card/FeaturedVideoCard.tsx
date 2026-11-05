@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { Play, Pause } from "lucide-react";
 
@@ -14,8 +15,7 @@ export interface FeaturedVideoCardProps {
   title: string;
   /** ISO date, e.g. "2026-10-15" */
   publishDate: string;
-  /** e.g. "10 min" */
-  duration: string;
+  duration: number;
   className?: string;
   /**
    * Controlled mode: when `playing` is passed, the parent decides which card is playing.
@@ -36,6 +36,8 @@ export default function FeaturedVideoCard({
   playing,
   onPlay,
 }: FeaturedVideoCardProps) {
+  const t = useTranslations("Video");
+  const locale = useLocale();
   const [localPlaying, setLocalPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -123,14 +125,16 @@ export default function FeaturedVideoCard({
           </h3>
 
           <p className="mt-1.5 flex items-center text-xs text-background sm:mt-2 sm:text-sm lg:text-base">
-            <time dateTime={publishDate}>{formatShortDate(publishDate)}</time>
+            <time dateTime={publishDate}>
+              {formatShortDate(publishDate, locale)}
+            </time>
 
             <span
               aria-hidden
               className="mx-2 inline-block h-3.5 w-px bg-current sm:h-4"
             />
 
-            <span>{duration}</span>
+            <span>{t("duration", { minutes: duration })}</span>
           </p>
         </div>
 
@@ -145,8 +149,8 @@ export default function FeaturedVideoCard({
           <button
             type="button"
             onClick={handlePlay}
-            aria-label={`Play video: ${title}`}
-            title="Play video"
+            aria-label={t("play", { title })}
+            title={t("playVideo")}
             className="absolute top-1/2 right-4 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-background text-heading transition-transform duration-300 hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:right-5 sm:size-11.25"
           >
             <Play className="size-4.5 fill-current sm:size-5" />
@@ -158,8 +162,8 @@ export default function FeaturedVideoCard({
           <button
             type="button"
             onClick={isPaused ? handleResume : handlePause}
-            aria-label={isPaused ? "Resume video" : "Pause video"}
-            title={isPaused ? "Resume video" : "Pause video"}
+            aria-label={isPaused ? t("resume") : t("pause")}
+            title={isPaused ? t("resume") : t("pause")}
             className="pointer-events-auto absolute top-1/2 right-4 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-background text-heading transition-transform duration-300 hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:right-5 sm:size-11.25"
           >
             {isPaused ? (

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 
 import { Card, CardContent } from "@/components/ui/card";
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";

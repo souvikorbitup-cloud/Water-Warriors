@@ -2,10 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/icons";
 import { useOTPFlow } from "@/lib/hooks/use-otp-flow";
+import { Link } from "@/i18n/navigation";
 import PrimaryButton from "../main/shared/button/PrimaryButton";
 
 interface OTPAuthFormProps {
@@ -14,6 +15,7 @@ interface OTPAuthFormProps {
 }
 
 export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
+  const t = useTranslations("Auth");
   const {
     step,
     email,
@@ -49,16 +51,17 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
           <Link
             href="/"
             className="mx-auto mb-4 block w-fit"
-            aria-label="Go to Water Warriors AI home"
+            aria-label={t("goHome")}
           >
             <Logo className="h-16 w-auto object-contain sm:h-24" />
           </Link>
           <div className="mb-6 text-center sm:mb-8">
-            {subheading && (
-              <p className="mt-2 text-sm text-paragraph sm:text-base">
-                {subheading}
-              </p>
-            )}
+            <p className="mt-2 text-sm text-paragraph sm:text-base">
+              {subheading ??
+                t.rich("signInSubheading", {
+                  signIn: (chunks) => <b>{chunks}</b>,
+                })}
+            </p>
           </div>
 
           {step === "enter-email" ? (
@@ -68,7 +71,7 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
                   htmlFor="email"
                   className="mb-2 block font-heading text-sm font-bold text-heading"
                 >
-                  Email address
+                  {t("email")}
                 </label>
 
                 <Input
@@ -76,7 +79,7 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
                   type="email"
                   inputMode="email"
                   autoComplete="email"
-                  placeholder="e.g. priya@brigadesociety.org"
+                  placeholder={t("emailPlaceholder")}
                   required
                   disabled={isSending}
                   value={emailInput}
@@ -92,7 +95,7 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
                 className="w-full text-center"
                 full
               >
-                {isSending ? "Sending code..." : "Continue"}
+                {isSending ? t("sending") : t("continue")}
               </PrimaryButton>
             </form>
           ) : (
@@ -102,12 +105,11 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
                   htmlFor="otp"
                   className="mb-2 block font-heading text-sm font-bold text-heading"
                 >
-                  Enter the 6-digit code
+                  {t("otpLabel")}
                 </label>
 
                 <p className="mb-3 text-sm text-paragraph">
-                  Sent to:{" "}
-                  <span className="font-semibold text-heading">{email}</span>
+                  {t("sentTo", { email })}
                 </p>
 
                 <Input
@@ -136,7 +138,7 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
                 className="w-full text-center"
                 full
               >
-                {isVerifying ? "Verifying..." : "Verify & continue"}
+                {isVerifying ? t("verifying") : t("verify")}
               </PrimaryButton>
 
               <div className="flex items-center justify-between gap-3 text-sm">
@@ -146,7 +148,7 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
                   disabled={isVerifying}
                   className="cursor-pointer font-medium text-paragraph underline decoration-paragraph/50 underline-offset-4 transition-colors hover:decoration-heading disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Change email
+                  {t("changeEmail")}
                 </button>
 
                 <button
@@ -155,7 +157,9 @@ export function OTPAuthForm({ onVerified, subheading }: OTPAuthFormProps) {
                   disabled={!canResend || isSending}
                   className="cursor-pointer font-semibold text-primary underline decoration-primary/50 underline-offset-4 transition-colors hover:decoration-primary disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {canResend ? "Resend code" : `Resend in ${cooldown}s`}
+                  {canResend
+                    ? t("resendCode")
+                    : t("resendIn", { seconds: cooldown })}
                 </button>
               </div>
             </form>

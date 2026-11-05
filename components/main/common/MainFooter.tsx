@@ -1,11 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { LogoLight } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { footerNavLinks, socialLinks } from "@/lib/data/all_data";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useState, useSyncExternalStore } from "react";
 import PrimaryButton from "../shared/button/PrimaryButton";
 
@@ -14,6 +14,7 @@ type MainFooterProps = {
 };
 
 type AnalyticsConsent = "accepted" | "declined";
+const COPYRIGHT_YEAR = new Date().getFullYear();
 
 const ANALYTICS_CONSENT_KEY = "ww_analytics_consent";
 const ANALYTICS_CONSENT_CHANGE_EVENT = "ww-analytics-consent-change";
@@ -39,6 +40,7 @@ function needsAnalyticsConsent() {
 }
 
 export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
+  const t = useTranslations("Common");
   const router = useRouter();
   const pathname = usePathname();
   const [cookieSettingsOpen, setCookieSettingsOpen] = useState(false);
@@ -62,9 +64,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
       setCookieSettingsOpen(false);
     } catch (error) {
       console.error("Unable to save analytics cookie preference", error);
-      setConsentSaveError(
-        "We couldn't save your choice. Please check your browser settings and try again.",
-      );
+      setConsentSaveError(t("cookieSaveError"));
     }
   };
 
@@ -104,14 +104,13 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
             </Link>
 
             <p className="mt-8 max-w-140 text-sm leading-6 text-background sm:mt-10 sm:text-base">
-              Lorem ipsum dolor sit amet, consectetur sectetu ipsum dolor
-              slit.Lorem i sdefa amet, consectetur sectetu ipsum dolor slit.
+              {t("footerDescription")}
             </p>
 
             {/* Nav links */}
-            <nav aria-label="Footer" className="mt-8 sm:mt-10">
+            <nav aria-label={t("footerNavigation")} className="mt-8 sm:mt-10">
               <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-x-8 lg:gap-x-7.5">
-                {footerNavLinks.map(({ title, href }) => {
+                {footerNavLinks.map(({ titleKey, href }) => {
                   const isActive = pathname === href;
                   return (
                     <li key={href}>
@@ -122,7 +121,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
                           isActive ? "text-primary" : "text-background"
                         }`}
                       >
-                        {title}
+                        {t(titleKey)}
                       </Link>
                     </li>
                   );
@@ -133,7 +132,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
                     onClick={openCookieSettings}
                     className={`text-sm font-normal transition-colors hover:text-primary sm:text-base text-background bg-transparent hover:bg-transparent cursor-pointer`}
                   >
-                    Cookie settings
+                    {t("cookieSettings")}
                   </Button>
                 </li>
               </ul>
@@ -174,7 +173,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
 
             {/* Visitor counter */}
             <div className="mt-8 rounded-md border border-secondary px-2.5 py-1.5 text-sm font-medium text-secondary animate-color-transition sm:mt-10 sm:text-base">
-              Visitors so far: {visitorCount}
+              {t("visitorsSoFar", { count: visitorCount })}
             </div>
           </div>
 
@@ -186,10 +185,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
 
           {/* Copyright */}
           <p className="mx-auto max-w-250 py-8 text-center text-xs leading-5 text-primary sm:py-10 sm:text-sm sm:leading-6 lg:text-base">
-            &copy; {new Date().getFullYear()} Water Warriors AI. All rights
-            reserved. All proprietary technology and processes featured on this
-            site are protected under national and international patent pending
-            status. Unauthorized reproduction or use is strictly prohibited.
+            {t("copyright", { year: COPYRIGHT_YEAR })}
           </p>
         </div>
       </footer>
@@ -205,23 +201,22 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
               id="analytics-consent-title"
               className="text-lg font-semibold text-heading sm:text-xl"
             >
-              Cookies for site analytics
+              {t("cookieTitle")}
             </h2>
             <p
               id="analytics-consent-description"
               className="mt-2 text-sm leading-6 text-paragraph sm:text-base"
             >
-              We&apos;d like to use Google Analytics cookies to understand how
-              people use Water Warriors, such as which pages are visited and
-              whether reports are created. We don&apos;t use them for ads. See
-              our{" "}
-              <Button
-                className="font-semibold text-heading hover:text-primary underline decoration-primary decoration-2 underline-offset-4 bg-transparent hover:bg-transparent p-0 cursor-pointer text-sm sm:text-base"
-                onClick={() => router.push("/privacy-policy")}
-              >
-                Privacy Policy
-              </Button>
-              .
+              {t.rich("cookieDescription", {
+                privacyPolicy: (chunks) => (
+                  <Button
+                    className="font-semibold text-heading hover:text-primary underline decoration-primary decoration-2 underline-offset-4 bg-transparent hover:bg-transparent p-0 cursor-pointer text-sm sm:text-base"
+                    onClick={() => router.push("/privacy-policy")}
+                  >
+                    {chunks}
+                  </Button>
+                ),
+              })}
             </p>
             {consentSaveError && (
               <p className="mt-3 text-sm text-destructive" role="alert">
@@ -235,14 +230,14 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
                 className="border-border"
                 onClick={() => saveAnalyticsConsent("declined")}
               >
-                Decline
+                {t("decline")}
               </PrimaryButton>
               <PrimaryButton
                 type="button"
                 btnType="solid-primary"
                 onClick={() => saveAnalyticsConsent("accepted")}
               >
-                Accept
+                {t("accept")}
               </PrimaryButton>
             </div>
           </section>

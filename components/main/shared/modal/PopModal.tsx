@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 
 export default function PopModal({
@@ -18,6 +19,8 @@ export default function PopModal({
   className?: string;
   light?: boolean;
 }) {
+  const t = useTranslations("Common");
+
   useEffect(() => {
     if (!open) return;
 
@@ -51,7 +54,7 @@ export default function PopModal({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t("close")}
           className={`absolute top-3 right-3 z-10 flex size-9 items-center justify-center rounded-full ${light ? "bg-gray-100 text-gray-400 hover:bg-gray-200" : "bg-black/60 text-white hover:bg-black/80"} transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer`}
         >
           <X className="size-5" />

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
@@ -38,21 +39,25 @@ function StatCard({
   );
 }
 
-export default function ReportOverviewSection({
+export default async function ReportOverviewSection({
   name = "Water Warrior",
   catchmentArea = "760 sq. metres",
   annualRainfall = "995.74 mm per year",
 }: ReportOverviewSectionProps) {
+  const t = await getTranslations("Report");
+  const tCommon = await getTranslations("Common");
+
   return (
     <section className="container-y-pad overflow-hidden">
       <div className="my-container-x">
         <div className="mx-auto flex flex-col items-center text-center">
           <h1 className="text-4xl leading-tight font-normal text-heading sm:text-5xl lg:text-6xl xl:text-[64px]">
-            Hey, <span className="font-semibold">{name}!</span>
+            {t.rich("greeting", {
+              name: () => <span className="font-semibold">{name}!</span>,
+            })}
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-heading sm:mt-4 sm:text-base">
-            Thank you for taking the first step toward conserving water—for
-            yourself and for future generations.
+            {t("thankYou")}
           </p>
         </div>
 
@@ -60,7 +65,7 @@ export default function ReportOverviewSection({
         <div className="relative mt-8 h-52 overflow-hidden rounded-2xl border border-border sm:mt-10 sm:h-72 sm:rounded-4xl lg:mt-12 lg:h-90">
           <Image
             src="/map.png"
-            alt="Map showing your selected rooftop area"
+            alt={tCommon("mapSelectedAreaAlt")}
             fill
             sizes="(min-width: 1200px) 1200px, 100vw"
             className="object-cover"
@@ -71,12 +76,12 @@ export default function ReportOverviewSection({
         <div className="mt-6 grid gap-4 sm:mt-8 md:grid-cols-2 lg:gap-8">
           <StatCard
             icon={<House />}
-            label="Selected Catchment Area"
+            label={t("catchmentLabel")}
             value={catchmentArea}
           />
           <StatCard
             icon={<Cloud />}
-            label="Average Annual Rainfall"
+            label={t("rainfallLabel")}
             value={annualRainfall}
           />
         </div>

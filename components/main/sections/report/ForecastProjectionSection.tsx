@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Download, Lightbulb, Printer } from "lucide-react";
 import PrimaryButton from "../../shared/button/PrimaryButton";
 
@@ -25,7 +26,7 @@ interface ForecastProjectionSectionProps {
   onPrint?: () => void;
 }
 
-const defaultRows: ForecastRow[] = [
+const sampleRows: ForecastRow[] = [
   { month: "November 2026", rainfall: "31.2 mm", potential: "19,886 L" },
   { month: "December 2026", rainfall: "10.3 mm", potential: "6,565 L" },
   { month: "January 2027", rainfall: "8.3 mm", potential: "5,290 L" },
@@ -39,31 +40,50 @@ const defaultRows: ForecastRow[] = [
   },
 ];
 
-export default function ForecastProjectionSection({
-  title = "Your Next Five-Month Rainfall Harvesting Projection",
-  period = "(November 2026 - March 2027)",
-  rows = defaultRows,
-  tip = "Don't let the next rain go to waste. Harvest it, divert it, and conserve it with proven rainwater harvesting techniques—turning every drop into a lasting water resource for your home.",
-  forecastNote = "*Forecast rainfall values are based on Open-Meteo seasonal forecast data. Long-range forecasts are indicative and actual rainfall may vary.",
-  forecastSource = "Source: Open-Meteo Seasonal Forecast API (ECMWF seasonal forecast).",
-  disclaimer = "*Measurements are approximate and provided for reference purposes only. We do not retain or store your data.",
-  ctaTitle = "Turn Every Drop of Rain into a Sustainable Future!",
-  ctaText = "Discover your rainwater harvesting potential, save water, and make every drop count with Water Warriors AI.",
-  downloadLabel = "Download PDF Report",
-  printLabel = "Download High-Quality PDF",
+export default async function ForecastProjectionSection({
+  title,
+  period,
+  rows,
+  tip,
+  forecastNote,
+  forecastSource,
+  disclaimer,
+  ctaTitle,
+  ctaText,
+  downloadLabel,
+  printLabel,
   onDownload,
   onPrint,
 }: ForecastProjectionSectionProps) {
+  const t = await getTranslations("Report");
+  const resolvedTitle = title ?? t("forecastTitle");
+  const resolvedPeriod = period ?? t("forecastPeriod");
+  const resolvedTip = tip ?? t("tip");
+  const resolvedForecastNote = forecastNote ?? t("forecastNote");
+  const resolvedForecastSource = forecastSource ?? t("forecastSource");
+  const resolvedDisclaimer = disclaimer ?? t("disclaimer");
+  const resolvedCtaTitle = ctaTitle ?? t("ctaTitle");
+  const resolvedCtaText = ctaText ?? t("ctaText");
+  const resolvedDownloadLabel = downloadLabel ?? t("downloadPdf");
+  const resolvedPrintLabel = printLabel ?? t("printPdf");
+  const resolvedRows =
+    rows ??
+    sampleRows.map((row, index) =>
+      index === sampleRows.length - 1
+        ? { ...row, month: t("grandTotal") }
+        : row,
+    );
+
   return (
     <section className="container-y-pad overflow-hidden bg-linear-to-b from-secondary/40 to-background to-30%">
       <div className="my-container-x">
         {/* Heading */}
         <div className="mx-auto flex flex-col items-center text-center">
           <h2 className="max-w-3xl text-3xl leading-[1.1] font-semibold sm:text-4xl lg:text-5xl xl:text-[52px]">
-            {title}
+            {resolvedTitle}
           </h2>
           <p className="mt-5 rounded-full border border-border bg-background px-6 py-2.5 text-base text-paragraph sm:mt-6 sm:py-3 sm:text-lg lg:px-7 lg:py-2 lg:text-base">
-            {period}
+            {resolvedPeriod}
           </p>
         </div>
 
@@ -73,41 +93,43 @@ export default function ForecastProjectionSection({
             <thead>
               <tr className="bg-primary text-heading">
                 <th className="w-[28%] px-3 py-3 text-xs leading-tight font-semibold sm:w-[25%] sm:px-8 sm:py-4 sm:text-lg lg:text-xl">
-                  Month
+                  {t("month")}
                 </th>
                 <th className="w-[32%] px-3 py-3 text-xs leading-tight font-semibold sm:w-[35%] sm:px-8 sm:py-4 sm:text-lg lg:text-xl">
-                  Forecasted Average Rainfall (mm)
+                  {t("forecastedRainfall")}
                 </th>
                 <th className="px-3 py-3 text-xs leading-tight font-semibold sm:px-8 sm:py-4 sm:text-lg lg:text-xl">
-                  Rainwater Harvesting Potential (Litres)*
+                  {t("harvestingPotential")}
                 </th>
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ month, rainfall, potential, highlight }, i) => (
-                <tr
-                  key={`${month}-${i}`}
-                  className={
-                    highlight
-                      ? "bg-secondary font-semibold text-heading"
-                      : i % 2 === 1
-                        ? "bg-foreground/5 text-paragraph"
-                        : "bg-background text-paragraph"
-                  }
-                >
-                  <td
-                    className={`border-r border-paragraph/60 px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg ${highlight ? "" : "font-medium"}`}
+              {resolvedRows.map(
+                ({ month, rainfall, potential, highlight }, i) => (
+                  <tr
+                    key={`${month}-${i}`}
+                    className={
+                      highlight
+                        ? "bg-secondary font-semibold text-heading"
+                        : i % 2 === 1
+                          ? "bg-foreground/5 text-paragraph"
+                          : "bg-background text-paragraph"
+                    }
                   >
-                    {month}
-                  </td>
-                  <td className="border-r border-paragraph/60 px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg">
-                    {rainfall}
-                  </td>
-                  <td className="px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg">
-                    {potential}
-                  </td>
-                </tr>
-              ))}
+                    <td
+                      className={`border-r border-paragraph/60 px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg ${highlight ? "" : "font-medium"}`}
+                    >
+                      {month}
+                    </td>
+                    <td className="border-r border-paragraph/60 px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg">
+                      {rainfall}
+                    </td>
+                    <td className="px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg">
+                      {potential}
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>
@@ -120,18 +142,20 @@ export default function ForecastProjectionSection({
             strokeWidth={1.5}
           />
           <p className="text-base leading-normal text-heading sm:text-lg lg:text-base">
-            {tip}
+            {resolvedTip}
           </p>
         </div>
 
         {/* Notes */}
         <div className="mt-8 space-y-4 sm:mt-10 sm:space-y-5 lg:mt-8 lg:space-y-4">
           <div className="rounded-3xl border border-border bg-background p-6 text-sm leading-relaxed sm:px-8 sm:py-6 sm:text-base lg:rounded-2xl lg:py-5 lg:text-[15px]">
-            <p>{forecastNote}</p>
-            <p className="mt-2 font-semibold lg:mt-3">{forecastSource}</p>
+            <p>{resolvedForecastNote}</p>
+            <p className="mt-2 font-semibold lg:mt-3">
+              {resolvedForecastSource}
+            </p>
           </div>
           <p className="rounded-3xl border border-border bg-background p-6 text-sm leading-relaxed sm:px-8 sm:py-6 sm:text-base lg:rounded-2xl lg:py-5 lg:text-[15px]">
-            {disclaimer}
+            {resolvedDisclaimer}
           </p>
         </div>
 
@@ -151,11 +175,11 @@ export default function ForecastProjectionSection({
 
           {/* Content */}
           <h3 className="max-w-[75%] text-xl leading-tight font-semibold text-white sm:max-w-md sm:text-3xl lg:max-w-2xl lg:text-[40px] lg:leading-[1.2]">
-            {ctaTitle}
+            {resolvedCtaTitle}
           </h3>
 
           <p className="mt-3 max-w-[62%] text-sm leading-normal text-white sm:mt-4 sm:max-w-md sm:text-base lg:mt-5 lg:max-w-140">
-            {ctaText}
+            {resolvedCtaText}
           </p>
         </div>
 
@@ -166,14 +190,14 @@ export default function ForecastProjectionSection({
             onClick={onDownload}
             endIcon={<Download className="size-4.5" strokeWidth={1.5} />}
           >
-            {downloadLabel}
+            {resolvedDownloadLabel}
           </PrimaryButton>
           <PrimaryButton
             btnType="outline"
             onClick={onPrint}
             endIcon={<Printer className="size-4.5" strokeWidth={1.5} />}
           >
-            {printLabel}
+            {resolvedPrintLabel}
           </PrimaryButton>
         </div>
       </div>
