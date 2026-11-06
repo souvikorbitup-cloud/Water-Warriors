@@ -11,9 +11,16 @@ import {
 import { toast } from "sonner";
 
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
+import SubmissionSuccessModal from "@/components/main/shared/modal/SubmissionSuccessModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { readApiError } from "@/lib/submissions/api-error";
+import {
+  contactSubmissionSchema,
+  firstZodErrorMessage,
+  zodErrorToFieldErrors,
+} from "@/lib/submissions/schemas";
 
 const topics: { Icon: LucideIcon; index: 0 | 1 | 2 }[] = [
   { Icon: MapPin, index: 0 },
@@ -27,24 +34,50 @@ const fieldClasses =
 export default function ContactSection() {
   const t = useTranslations("Contact");
   const [sending, setSending] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
-    const data = Object.fromEntries(new FormData(form));
+    if (sending) return;
 
+    const form = event.currentTarget;
+    const raw = Object.fromEntries(new FormData(form));
+    const parsed = contactSubmissionSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      const errors = zodErrorToFieldErrors(parsed.error);
+      setFieldErrors(errors);
+      toast.error(firstZodErrorMessage(parsed.error));
+      return;
+    }
+
+    setFieldErrors({});
     setSending(true);
     try {
       // TODO: point this at your own contact endpoint
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(parsed.data),
       });
-      if (!response.ok) throw new Error("Request failed");
+      if (!response.ok) {
+        const { message, fieldErrors: apiFieldErrors } = await readApiError(
+          response,
+          t("error"),
+        );
+        if (apiFieldErrors) setFieldErrors(apiFieldErrors);
+        if (response.status === 429) {
+          toast.warning(message);
+        } else {
+          toast.error(message);
+        }
+        return;
+      }
 
       toast.success(t("success"));
       form.reset();
+      setConfirmed(true);
     } catch {
       toast.error(t("error"));
     } finally {
@@ -91,6 +124,7 @@ export default function ContactSection() {
           {/* Right: form */}
           <form
             onSubmit={handleSubmit}
+            noValidate
             className="rounded-2xl border border-border bg-card p-5 sm:rounded-3xl sm:p-7 lg:p-9"
           >
             <h2 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
@@ -111,11 +145,16 @@ export default function ContactSection() {
                 <Input
                   id="contact-name"
                   name="name"
-                  required
                   autoComplete="name"
+                  aria-invalid={Boolean(fieldErrors.name)}
                   placeholder={t("namePlaceholder")}
                   className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
                 />
+                {fieldErrors.name && (
+                  <p className="mt-1.5 text-xs text-destructive">
+                    {fieldErrors.name}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -129,11 +168,16 @@ export default function ContactSection() {
                   id="contact-email"
                   name="email"
                   type="email"
-                  required
+                  aria-invalid={Boolean(fieldErrors.email)}
                   autoComplete="email"
                   placeholder={t("emailPlaceholder")}
                   className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
                 />
+                {fieldErrors.email && (
+                  <p className="mt-1.5 text-xs text-destructive">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -146,10 +190,15 @@ export default function ContactSection() {
                 <Textarea
                   id="contact-message"
                   name="message"
-                  required
+                  aria-invalid={Boolean(fieldErrors.message)}
                   placeholder={t("messagePlaceholder")}
                   className={`mt-2 min-h-36 resize-y py-3.5 sm:min-h-41 ${fieldClasses}`}
                 />
+                {fieldErrors.message && (
+                  <p className="mt-1.5 text-xs text-destructive">
+                    {fieldErrors.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -169,6 +218,14 @@ export default function ContactSection() {
           </form>
         </div>
       </div>
+
+      <SubmissionSuccessModal
+        open={confirmed}
+        onClose={() => setConfirmed(false)}
+        title={t("confirmTitle")}
+        description={t("confirmDescription")}
+        closeLabel={t("confirmClose")}
+      />
     </section>
   );
 }

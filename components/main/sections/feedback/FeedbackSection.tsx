@@ -6,6 +6,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
+import SubmissionSuccessModal from "@/components/main/shared/modal/SubmissionSuccessModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,6 +17,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { readApiError } from "@/lib/submissions/api-error";
+import {
+  feedbackSubmissionSchema,
+  firstZodErrorMessage,
+  zodErrorToFieldErrors,
+} from "@/lib/submissions/schemas";
 
 const topicKeys = ["property", "report", "general", "other"] as const;
 const ratingValues = ["1", "2", "3", "4", "5"] as const;
@@ -28,18 +35,26 @@ const labelClasses = "text-sm font-medium text-heading sm:text-base";
 export default function FeedbackSection() {
   const t = useTranslations("Feedback");
   const [sending, setSending] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   const [topic, setTopic] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
+    if (sending) return;
 
-    if (!topic) {
-      toast.error(t("topicRequired"));
+    const form = event.currentTarget;
+    const raw = { ...Object.fromEntries(new FormData(form)), topic };
+    const parsed = feedbackSubmissionSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      const errors = zodErrorToFieldErrors(parsed.error);
+      setFieldErrors(errors);
+      toast.error(firstZodErrorMessage(parsed.error));
       return;
     }
 
-    const data = { ...Object.fromEntries(new FormData(form)), topic };
+    setFieldErrors({});
 
     setSending(true);
     try {
@@ -47,13 +62,26 @@ export default function FeedbackSection() {
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(parsed.data),
       });
-      if (!response.ok) throw new Error("Request failed");
+      if (!response.ok) {
+        const { message, fieldErrors: apiFieldErrors } = await readApiError(
+          response,
+          t("error"),
+        );
+        if (apiFieldErrors) setFieldErrors(apiFieldErrors);
+        if (response.status === 429) {
+          toast.warning(message);
+        } else {
+          toast.error(message);
+        }
+        return;
+      }
 
       toast.success(t("success"));
       form.reset();
       setTopic("");
+      setConfirmed(true);
     } catch {
       toast.error(t("error"));
     } finally {
@@ -90,6 +118,7 @@ export default function FeedbackSection() {
           {/* Right: form */}
           <form
             onSubmit={handleSubmit}
+            noValidate
             className="rounded-2xl border border-border bg-card p-5 sm:rounded-3xl sm:p-7 lg:p-9"
           >
             <h2 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
@@ -108,6 +137,7 @@ export default function FeedbackSection() {
                 <Select value={topic} onValueChange={setTopic} name="topic">
                   <SelectTrigger
                     id="feedback-topic"
+                    aria-invalid={Boolean(fieldErrors.topic)}
                     className={`mt-2 h-12! w-full sm:h-13! ${fieldClasses}`}
                   >
                     <SelectValue placeholder={t("topicPlaceholder")} />
@@ -124,6 +154,11 @@ export default function FeedbackSection() {
                     ))}
                   </SelectContent>
                 </Select>
+                {fieldErrors.topic && (
+                  <p className="mt-1.5 text-xs text-destructive">
+                    {fieldErrors.topic}
+                  </p>
+                )}
               </div>
 
               {/* Rating */}
@@ -136,7 +171,6 @@ export default function FeedbackSection() {
                         type="radio"
                         name="rating"
                         value={value}
-                        required
                         className="peer sr-only"
                       />
                       <span className="flex flex-col items-center justify-center gap-1 rounded-lg border border-input bg-background px-1 py-3 text-center transition-colors hover:border-primary peer-checked:border-primary peer-checked:bg-secondary peer-focus-visible:ring-2 peer-focus-visible:ring-ring sm:gap-2.5 sm:py-6">
@@ -153,6 +187,11 @@ export default function FeedbackSection() {
                 <p id="rating-hint" className="mt-3 text-xs sm:text-[13px]">
                   {t("ratingHint")}
                 </p>
+                {fieldErrors.rating && (
+                  <p className="mt-1.5 text-xs text-destructive">
+                    {fieldErrors.rating}
+                  </p>
+                )}
               </fieldset>
 
               {/* Name + email */}
@@ -166,8 +205,14 @@ export default function FeedbackSection() {
                     name="name"
                     autoComplete="name"
                     placeholder={t("namePlaceholder")}
+                    aria-invalid={Boolean(fieldErrors.name)}
                     className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
                   />
+                  {fieldErrors.name && (
+                    <p className="mt-1.5 text-xs text-destructive">
+                      {fieldErrors.name}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="feedback-email" className={labelClasses}>
@@ -179,8 +224,14 @@ export default function FeedbackSection() {
                     type="email"
                     autoComplete="email"
                     placeholder={t("emailPlaceholder")}
+                    aria-invalid={Boolean(fieldErrors.email)}
                     className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
                   />
+                  {fieldErrors.email && (
+                    <p className="mt-1.5 text-xs text-destructive">
+                      {fieldErrors.email}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -192,13 +243,18 @@ export default function FeedbackSection() {
                 <Textarea
                   id="feedback-message"
                   name="message"
-                  required
+                  aria-invalid={Boolean(fieldErrors.message)}
                   placeholder={t("messagePlaceholder")}
                   className={`mt-2 min-h-36 resize-y py-3.5 sm:min-h-43 ${fieldClasses}`}
                 />
                 <p className="mt-3 text-xs sm:text-[13px]">
                   {t("messageHint")}
                 </p>
+                {fieldErrors.message && (
+                  <p className="mt-1.5 text-xs text-destructive">
+                    {fieldErrors.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -218,6 +274,14 @@ export default function FeedbackSection() {
           </form>
         </div>
       </div>
+
+      <SubmissionSuccessModal
+        open={confirmed}
+        onClose={() => setConfirmed(false)}
+        title={t("confirmTitle")}
+        description={t("confirmDescription")}
+        closeLabel={t("confirmClose")}
+      />
     </section>
   );
 }

@@ -338,6 +338,9 @@
     "send": "Send message",
     "success": "Thanks! Your message has been sent.",
     "error": "Could not send your message. Please try again.",
+    "confirmTitle": "Message received",
+    "confirmDescription": "Thank you for getting in touch. We have received your message and will reply by email as soon as we can.",
+    "confirmClose": "Close",
     "faqTitle": "Before you get in touch.",
     "faqDescription": "A few useful answers about exploring your property’s potential.",
     "faqs": {
@@ -396,7 +399,10 @@
     "submitting": "Submitting...",
     "submit": "Submit feedback",
     "success": "Thank you! Your feedback has been submitted.",
-    "error": "Could not submit your feedback. Please try again."
+    "error": "Could not submit your feedback. Please try again.",
+    "confirmTitle": "Feedback received",
+    "confirmDescription": "Thank you for sharing your experience. Your feedback helps us improve Water Warriors AI.",
+    "confirmClose": "Close"
   },
   "SampleReport": {
     "title": "Sample report",

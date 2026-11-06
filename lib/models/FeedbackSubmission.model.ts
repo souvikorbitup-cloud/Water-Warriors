@@ -1,26 +1,18 @@
 import { Schema, model, models, Model, Query, Types } from "mongoose";
 
-/* ------------------------------------------------------------------
-   Types
-------------------------------------------------------------------- */
+import {
+  FEEDBACK_STATUSES,
+  FEEDBACK_TOPICS,
+  type FeedbackStatus,
+  type FeedbackTopic,
+} from "@/lib/submissions/constants";
 
-/** Mirrors `topicKeys` in the feedback form. */
-export const FEEDBACK_TOPICS = [
-  "property",
-  "report",
-  "general",
-  "other",
-] as const;
-export type FeedbackTopic = (typeof FEEDBACK_TOPICS)[number];
-
-export const FEEDBACK_STATUSES = [
-  "new",
-  "reviewed",
-  "resolved",
-  "spam",
-  "archived",
-] as const;
-export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
+export {
+  FEEDBACK_STATUSES,
+  FEEDBACK_TOPICS,
+  type FeedbackStatus,
+  type FeedbackTopic,
+};
 
 export interface IFeedbackSubmission {
   // --- Submitted by the visitor (matches the feedback form) ---

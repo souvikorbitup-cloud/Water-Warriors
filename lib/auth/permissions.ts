@@ -16,6 +16,7 @@ export const PERMISSIONS = {
   AllContactUsSubmissionsView: "allContactUsSubmissions:view",
   AllContactUsSubmissionsEdit: "allContactUsSubmissions:edit",
   AllFeedbackSubmissionsView: "allFeedbackSubmissions:view",
+  AllFeedbackSubmissionsEdit: "allFeedbackSubmissions:edit",
   // Payments
   paymentsView: "payments:view",
 } as const;
@@ -39,6 +40,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     PERMISSIONS.AllContactUsSubmissionsView,
     PERMISSIONS.AllContactUsSubmissionsEdit,
     PERMISSIONS.AllFeedbackSubmissionsView,
+    PERMISSIONS.AllFeedbackSubmissionsEdit,
     // Payments
     PERMISSIONS.paymentsView,
   ],

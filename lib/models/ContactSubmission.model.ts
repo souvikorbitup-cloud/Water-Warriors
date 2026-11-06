@@ -1,17 +1,10 @@
 import { Schema, model, models, Model, Query, Types } from "mongoose";
+import {
+  CONTACT_STATUSES,
+  type ContactStatus,
+} from "@/lib/submissions/constants";
 
-/* ------------------------------------------------------------------
-   Types
-------------------------------------------------------------------- */
-
-export const CONTACT_STATUSES = [
-  "new",
-  "read",
-  "replied",
-  "spam",
-  "archived",
-] as const;
-export type ContactStatus = (typeof CONTACT_STATUSES)[number];
+export { CONTACT_STATUSES, type ContactStatus };
 
 export interface IContactSubmission {
   // --- Submitted by the visitor (matches the form's name / email / message) ---
