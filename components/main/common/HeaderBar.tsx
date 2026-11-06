@@ -1,7 +1,9 @@
-import { getTranslations } from "next-intl/server";
+"use client";
 
-export default async function HeaderBar() {
-  const t = await getTranslations("Common");
+import { useTranslations } from "next-intl";
+
+export default function HeaderBar() {
+  const t = useTranslations("Common");
   return (
     <div className="w-full bg-primary text-primary-foreground relative z-40">
       <div className="my-container-x flex items-center justify-center py-2.5 sm:py-3">
