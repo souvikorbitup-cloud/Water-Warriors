@@ -6,40 +6,20 @@ import { Quote } from "lucide-react";
 import { A11y, Autoplay, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
+import type { PublicTestimonial } from "@/lib/content/constants";
+import { initialsFromName } from "@/lib/content/client-form";
+
 import "swiper/css";
 import "swiper/css/pagination";
 
-const testimonials = [
-  {
-    key: "0",
-    full_name: "Isabella Marin",
-    img_url: "https://randomuser.me/api/portraits/women/44.jpg",
-  },
-  {
-    key: "1",
-    full_name: "Daniel Cooper",
-    img_url: "https://randomuser.me/api/portraits/men/32.jpg",
-  },
-  {
-    key: "2",
-    full_name: "Sophia Williams",
-    img_url: "https://randomuser.me/api/portraits/women/68.jpg",
-  },
-  {
-    key: "3",
-    full_name: "Michael Anderson",
-    img_url: "https://randomuser.me/api/portraits/men/75.jpg",
-  },
-  {
-    key: "4",
-    full_name: "Olivia Bennett",
-    img_url: "https://randomuser.me/api/portraits/women/79.jpg",
-  },
-] as const;
-
-export default function TestimonialSection() {
+export default function TestimonialSection({
+  testimonials,
+}: {
+  testimonials: PublicTestimonial[];
+}) {
   const t = useTranslations("Home");
-  const tTestimonials = useTranslations("Testimonials");
+
+  if (!testimonials.length) return null;
 
   return (
     <section className="container-y-pad overflow-hidden bg-secondary/45 relative">
@@ -73,11 +53,15 @@ export default function TestimonialSection() {
           <Swiper
             modules={[Pagination, Autoplay, A11y]}
             slidesPerView={1}
-            loop
+            loop={testimonials.length > 1}
             autoHeight
             speed={600}
             grabCursor
-            autoplay={{ delay: 5000, disableOnInteraction: false }}
+            autoplay={
+              testimonials.length > 1
+                ? { delay: 5000, disableOnInteraction: false }
+                : false
+            }
             pagination={{
               el: ".testimonial-pagination",
               clickable: true,
@@ -86,30 +70,36 @@ export default function TestimonialSection() {
               bulletActiveClass: "size-2.5! bg-primary!",
             }}
           >
-            {testimonials.map(({ key, full_name, img_url }) => (
-              <SwiperSlide key={full_name}>
+            {testimonials.map((testimonial) => (
+              <SwiperSlide key={testimonial.id}>
                 <figure className="flex flex-col items-center px-9 text-center sm:px-16 lg:px-17.5">
                   <blockquote>
                     <p className="text-sm leading-6 text-heading sm:text-base">
-                      {tTestimonials(`${key}.message`)}
+                      {testimonial.message}
                     </p>
                   </blockquote>
 
                   <figcaption className="mt-6 flex items-center gap-2.5 sm:mt-8">
-                    <Image
-                      src={img_url}
-                      alt={full_name}
-                      width={48}
-                      height={48}
-                      unoptimized
-                      className="size-11 shrink-0 rounded-full border-2 border-primary object-cover sm:size-12"
-                    />
+                    {testimonial.imageUrl ? (
+                      <Image
+                        src={testimonial.imageUrl}
+                        alt={testimonial.fullName}
+                        width={48}
+                        height={48}
+                        unoptimized
+                        className="size-11 shrink-0 rounded-full border-2 border-primary object-cover sm:size-12"
+                      />
+                    ) : (
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-xs font-semibold text-heading sm:size-12">
+                        {initialsFromName(testimonial.fullName)}
+                      </div>
+                    )}
                     <div className="text-left">
                       <p className="font-heading text-base leading-snug font-semibold text-heading sm:text-lg">
-                        {full_name}
+                        {testimonial.fullName}
                       </p>
                       <p className="text-sm text-paragraph sm:text-base">
-                        {tTestimonials(`${key}.job_role`)}
+                        {testimonial.jobRole}
                       </p>
                     </div>
                   </figcaption>

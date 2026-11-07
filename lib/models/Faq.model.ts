@@ -1,5 +1,10 @@
 import { Schema, model, models, Model, Query, Types } from "mongoose";
 import { routing, type AppLocale } from "@/i18n/routing";
+import {
+  FAQ_GROUPS,
+  type FaqGroup,
+  type PublicFaq,
+} from "@/lib/content/constants";
 
 /* ------------------------------------------------------------------
    Constants & types
@@ -10,8 +15,7 @@ import { routing, type AppLocale } from "@/i18n/routing";
  * (messages/*.json -> Contact.faqs). Add a value here when another page
  * gets its own FAQ list; nothing else in the schema has to change.
  */
-export const FAQ_GROUPS = ["contact", "general"] as const;
-export type FaqGroup = (typeof FAQ_GROUPS)[number];
+export { FAQ_GROUPS, type FaqGroup };
 
 /** Single source of truth: the locales next-intl already routes on (en, hi). */
 export const FAQ_LOCALES = routing.locales;
@@ -55,12 +59,7 @@ export interface IFaqMethods {
   restore(): Promise<this>;
 }
 
-/** Flattened, single-language shape the public FAQ section renders. */
-export interface PublicFaq {
-  id: string;
-  question: string;
-  answer: string;
-}
+export type { PublicFaq };
 
 export interface FaqModel extends Model<
   IFaq,

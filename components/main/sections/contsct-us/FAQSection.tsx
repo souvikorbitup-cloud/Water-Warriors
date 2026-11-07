@@ -4,11 +4,13 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { CircleMinus, CirclePlus } from "lucide-react";
 import { Accordion } from "radix-ui";
+import type { PublicFaq } from "@/lib/content/constants";
 
-const faqIndices = [0, 1, 2, 3] as const;
-
-export default function FAQSection() {
+export default function FAQSection({ faqs }: { faqs: PublicFaq[] }) {
   const t = useTranslations("Contact");
+
+  if (!faqs.length) return null;
+
   return (
     <section className="container-y-pad relative isolate overflow-hidden bg-secondary/35">
       {/* Decorative background shapes */}
@@ -49,19 +51,19 @@ export default function FAQSection() {
           <Accordion.Root
             type="single"
             collapsible
-            defaultValue="item-0"
+            defaultValue={faqs[0] ? `item-${faqs[0].id}` : undefined}
             className="w-full"
           >
-            {faqIndices.map((index) => (
+            {faqs.map((faq) => (
               <Accordion.Item
-                key={index}
-                value={`item-${index}`}
+                key={faq.id}
+                value={`item-${faq.id}`}
                 className="not-last:border-b border-border first:pt-0"
               >
                 <Accordion.Header asChild>
                   <h3>
                     <Accordion.Trigger className="group flex w-full cursor-pointer items-center justify-between gap-4 py-5 text-left font-heading text-lg leading-snug font-semibold text-heading transition-colors hover:text-heading/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:py-6 sm:text-xl lg:text-2xl">
-                      {t(`faqs.${index}.question`)}
+                      {faq.question}
                       <CirclePlus
                         aria-hidden
                         strokeWidth={1.5}
@@ -78,7 +80,7 @@ export default function FAQSection() {
 
                 <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                   <p className="pr-8 pb-5 text-sm leading-6.5 sm:pr-12 sm:text-[15px]">
-                    {t(`faqs.${index}.answer`)}
+                    {faq.answer}
                   </p>
                 </Accordion.Content>
               </Accordion.Item>

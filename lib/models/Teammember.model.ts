@@ -1,6 +1,11 @@
 import { Schema, model, models, Model, Query, Types } from "mongoose";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { getCloudinaryUrl } from "@/lib/cloudinary/getCloudinaryUrl";
+import {
+  TEAM_GROUPS,
+  type TeamGroup,
+  type PublicTeamMember,
+} from "@/lib/content/constants";
 
 /* ------------------------------------------------------------------
    Constants & types
@@ -11,8 +16,7 @@ import { getCloudinaryUrl } from "@/lib/cloudinary/getCloudinaryUrl";
  * the static data in lib/data/all_data.ts, so the leadership page can swap
  * its `leadership` / `technicalAdvisors` arrays for `getPublic(group, locale)`.
  */
-export const TEAM_GROUPS = ["leadership", "technical_advisors"] as const;
-export type TeamGroup = (typeof TEAM_GROUPS)[number];
+export { TEAM_GROUPS, type TeamGroup };
 
 /** Single source of truth: the locales next-intl already routes on (en, hi). */
 export const TEAM_LOCALES = routing.locales;
@@ -93,18 +97,7 @@ export interface ITeamMemberVirtuals {
   avatarUrl: string;
 }
 
-/** Flattened, single-language shape the public team section renders. */
-export interface PublicTeamMember {
-  id: string;
-  slug: string;
-  group: TeamGroup;
-  fullName: string;
-  role: string;
-  tagline: string;
-  description: string;
-  /** "" when no avatar - render an initials avatar instead. */
-  avatarUrl: string;
-}
+export type { PublicTeamMember };
 
 export interface TeamMemberModel extends Model<
   ITeamMember,

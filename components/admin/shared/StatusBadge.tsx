@@ -8,6 +8,8 @@ const STATUS_STYLES: Record<string, string> = {
   resolved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   spam: "bg-rose-50 text-rose-700 ring-rose-200",
   archived: "bg-gray-100 text-gray-600 ring-gray-200",
+  published: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  draft: "bg-amber-50 text-amber-700 ring-amber-200",
 };
 
 export default function StatusBadge({ status }: { status: string }) {

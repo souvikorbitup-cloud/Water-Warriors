@@ -1,10 +1,14 @@
+import { connection } from "next/server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 import {
   ContactSection,
   FAQSection,
 } from "@/components/main/sections/contsct-us";
 import MainbannerSection from "@/components/main/shared/banner/MainbannerSection";
 import CTASection from "@/components/main/shared/CTA/CTASection";
+import FAQSectionSkeleton from "@/components/main/sections/contsct-us/FAQSectionSkeleton";
+import { getPublicFaqs } from "@/lib/content/faq-service";
 import { localePageMetadata } from "@/i18n/seo";
 import { getAppLocale } from "@/i18n/get-app-locale";
 
@@ -50,8 +54,16 @@ export default async function ContactUs({ params }: PageProps) {
         ]}
       />
       <ContactSection />
-      <FAQSection />
+      <Suspense fallback={<FAQSectionSkeleton />}>
+        <ContactFaqs locale={locale} />
+      </Suspense>
       <CTASection classes="bg-white" />
     </>
   );
+}
+
+async function ContactFaqs({ locale }: { locale: string }) {
+  await connection();
+  const faqs = await getPublicFaqs("contact", locale);
+  return <FAQSection faqs={faqs} />;
 }

@@ -1,6 +1,7 @@
 import { Schema, model, models, Model, Query, Types } from "mongoose";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { getCloudinaryUrl } from "@/lib/cloudinary/getCloudinaryUrl";
+import type { PublicTestimonial } from "@/lib/content/constants";
 
 /* ------------------------------------------------------------------
    Constants & types
@@ -75,15 +76,7 @@ export interface ITestimonialVirtuals {
   imageUrl: string;
 }
 
-/** Flattened, single-language shape the public slider renders. */
-export interface PublicTestimonial {
-  id: string;
-  fullName: string;
-  jobRole: string;
-  message: string;
-  /** "" when no image - render an initials avatar instead. */
-  imageUrl: string;
-}
+export type { PublicTestimonial };
 
 export interface TestimonialModel extends Model<
   ITestimonial,

@@ -7,6 +7,7 @@ import {
 } from "@/lib/appearance/hero-banner";
 import { getHeroBannerSettings } from "@/lib/services/hero-banner-settings";
 import { getDemoVideoSettings } from "@/lib/services/demo-video-settings";
+import { getPublicTestimonials } from "@/lib/content/testimonial-service";
 import {
   DIYSection,
   HeroSection,
@@ -14,6 +15,7 @@ import {
   LocationSection,
   TestimonialSection,
 } from "@/components/main/sections/home";
+import TestimonialSectionSkeleton from "@/components/main/sections/home/TestimonialSectionSkeleton";
 import { localePageMetadata } from "@/i18n/seo";
 import { getAppLocale } from "@/i18n/get-app-locale";
 
@@ -51,7 +53,9 @@ export default async function Home({ params }: PageProps) {
         <DemoIntro />
       </Suspense>
       <LocationSection />
-      <TestimonialSection />
+      <Suspense fallback={<TestimonialSectionSkeleton />}>
+        <HomeTestimonials locale={locale} />
+      </Suspense>
       <DIYSection />
     </>
   );
@@ -74,4 +78,10 @@ async function DemoIntro() {
   const demoVideoSettings = await getDemoVideoSettings();
 
   return <IntroSection demoVideoUrl={demoVideoSettings.videoUrl} />;
+}
+
+async function HomeTestimonials({ locale }: { locale: string }) {
+  await connection();
+  const testimonials = await getPublicTestimonials(locale);
+  return <TestimonialSection testimonials={testimonials} />;
 }

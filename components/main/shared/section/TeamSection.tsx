@@ -16,13 +16,12 @@ import "swiper/css";
 import "swiper/css/effect-fade";
 
 export interface TeamSectionMember {
-  translationKey:
-    | "rajeshSeshadri"
-    | "jaiPrakash"
-    | "anandRajuMudunuri"
-    | "subashChandraReddy";
+  id: string;
   full_name: string;
   avatar_url: string;
+  role: string;
+  tagline: string;
+  description: string;
 }
 
 interface TeamSectionProps {
@@ -76,7 +75,6 @@ export default function TeamSection({
   const directionHintRef = useRef<{ dir: Direction; at: number } | null>(null);
 
   const t = useTranslations("Leadership");
-  const tMembers = useTranslations("Leadership.teamMembers");
   const [activeIndex, setActiveIndex] = useState(0);
 
   /**
@@ -297,10 +295,14 @@ export default function TeamSection({
       if (direction === "next" && previewImageRef.current) {
         // Measure before React re-renders the preview with the following member.
         const sourceRect = previewImageRef.current.getBoundingClientRect();
-        animateForward(swiper, sourceRect, members[nextRealIndex].avatar_url);
+        animateForward(
+          swiper,
+          sourceRect,
+          members[nextRealIndex].avatar_url || "",
+        );
       } else if (direction === "prev") {
         // The outgoing member's image flies into the preview.
-        animateReverse(swiper, members[previousIndex].avatar_url);
+        animateReverse(swiper, members[previousIndex].avatar_url || "");
       } else {
         cleanupAnimation();
       }
@@ -357,28 +359,34 @@ export default function TeamSection({
                 ref={previewImageRef}
                 className="relative size-20 shrink-0 overflow-hidden sm:size-24 lg:aspect-square lg:size-auto lg:w-full"
               >
-                <Image
-                  key={nextMember.full_name}
-                  src={nextMember.avatar_url}
-                  alt=""
-                  fill
-                  unoptimized
-                  sizes="(min-width: 1024px) 240px, 96px"
-                  className="animate-in fade-in object-cover duration-500 transition-transform ease-out group-hover:scale-110"
-                />
+                {nextMember.avatar_url ? (
+                  <Image
+                    key={nextMember.id}
+                    src={nextMember.avatar_url}
+                    alt=""
+                    fill
+                    unoptimized
+                    sizes="(min-width: 1024px) 240px, 96px"
+                    className="animate-in fade-in object-cover duration-500 transition-transform ease-out group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-foreground/20 text-lg font-semibold text-heading">
+                    {nextMember.full_name.slice(0, 1)}
+                  </div>
+                )}
               </div>
 
               {/* Preview Details */}
               <div className="min-w-0 flex-1 px-4 py-3 lg:px-6 lg:py-4.5">
                 <p
-                  key={nextMember.full_name}
+                  key={nextMember.id}
                   className="animate-in fade-in slide-in-from-bottom-2 duration-500 font-heading text-base leading-snug font-semibold text-heading sm:text-lg"
                 >
                   {nextMember.full_name}
                 </p>
 
                 <p className="mt-0.5 text-sm text-paragraph">
-                  {tMembers(`${nextMember.translationKey}.role`)}
+                  {nextMember.role}
                 </p>
               </div>
             </button>
@@ -413,11 +421,8 @@ export default function TeamSection({
             onSlideChange={handleSlideChange}
             className="w-full min-w-0 lg:order-2 lg:flex-1"
           >
-            {members.map((member, index) => (
-              <SwiperSlide
-                key={`${member.full_name}-${index}`}
-                className="group/slide"
-              >
+            {members.map((member) => (
+              <SwiperSlide key={member.id} className="group/slide">
                 <div className="grid items-start gap-6 md:grid-cols-[220px_1fr] md:gap-8 lg:grid-cols-[319px_1fr]">
                   {/* Member Image */}
                   <div
@@ -427,14 +432,20 @@ export default function TeamSection({
                       revealFade,
                     )}
                   >
-                    <Image
-                      src={member.avatar_url}
-                      alt={member.full_name}
-                      fill
-                      unoptimized
-                      sizes="(min-width: 1024px) 319px, (min-width: 768px) 220px, 288px"
-                      className="object-cover"
-                    />
+                    {member.avatar_url ? (
+                      <Image
+                        src={member.avatar_url}
+                        alt={member.full_name}
+                        fill
+                        unoptimized
+                        sizes="(min-width: 1024px) 319px, (min-width: 768px) 220px, 288px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-foreground/15 text-4xl font-semibold text-heading">
+                        {member.full_name.slice(0, 1)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Member Details */}
@@ -454,7 +465,7 @@ export default function TeamSection({
                         reveal,
                       )}
                     >
-                      {tMembers(`${member.translationKey}.role`)}
+                      {member.role}
                     </p>
 
                     <ul
@@ -463,12 +474,12 @@ export default function TeamSection({
                         reveal,
                       )}
                     >
-                      {tMembers(`${member.translationKey}.tagline`) && (
+                      {member.tagline && (
                         <li
-                          key={member.translationKey}
+                          key={`${member.id}-tagline`}
                           className="rounded-full border border-heading/80 px-3 py-1 text-sm text-paragraph sm:px-4 sm:py-1.5 sm:text-[15px]"
                         >
-                          {tMembers(`${member.translationKey}.tagline`)}
+                          {member.tagline}
                         </li>
                       )}
                     </ul>
@@ -479,7 +490,7 @@ export default function TeamSection({
                         reveal,
                       )}
                     >
-                      {tMembers(`${member.translationKey}.description`)}
+                      {member.description}
                     </p>
 
                     {members.length > 1 && (

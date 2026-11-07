@@ -8,10 +8,13 @@ export const PERMISSIONS = {
   appearanceManage: "appearance:manage",
   // Manage
   AllTeamMembersView: "allTeamMembers:view",
+  AllTeamMembersEdit: "allTeamMembers:edit",
   AllTestimonialsView: "allTestimonials:view",
+  AllTestimonialsEdit: "allTestimonials:edit",
   // Content
   AllDIYGuidesView: "allDIYGuides:view",
   AllFaqsView: "allFaqs:view",
+  AllFaqsEdit: "allFaqs:edit",
   // Submission
   AllContactUsSubmissionsView: "allContactUsSubmissions:view",
   AllContactUsSubmissionsEdit: "allContactUsSubmissions:edit",
@@ -32,10 +35,13 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     PERMISSIONS.appearanceManage,
     // Manage
     PERMISSIONS.AllTeamMembersView,
+    PERMISSIONS.AllTeamMembersEdit,
     PERMISSIONS.AllTestimonialsView,
+    PERMISSIONS.AllTestimonialsEdit,
     // Content
     PERMISSIONS.AllDIYGuidesView,
     PERMISSIONS.AllFaqsView,
+    PERMISSIONS.AllFaqsEdit,
     // Submission
     PERMISSIONS.AllContactUsSubmissionsView,
     PERMISSIONS.AllContactUsSubmissionsEdit,

@@ -23,9 +23,12 @@ const ALL_VALUE = "all";
 export default function SubmissionsFilter({
   search,
   onSearchChange,
+  searchPlaceholder = "Name, email or message",
   status,
   statusOptions,
   onStatusChange,
+  statusLabel = "Status",
+  allStatusLabel = "All statuses",
   sort,
   sortOptions,
   onSortChange,
@@ -34,9 +37,12 @@ export default function SubmissionsFilter({
 }: {
   search: string;
   onSearchChange: (value: string) => void;
+  searchPlaceholder?: string;
   status: string;
   statusOptions: FilterOption[];
   onStatusChange: (value: string) => void;
+  statusLabel?: string;
+  allStatusLabel?: string;
   sort: string;
   sortOptions: FilterOption[];
   onSortChange: (value: string) => void;
@@ -74,7 +80,7 @@ export default function SubmissionsFilter({
               id="submissions-search"
               value={draftSearch}
               onChange={(event) => setDraftSearch(event.target.value)}
-              placeholder="Name, email or message"
+              placeholder={searchPlaceholder}
               className="h-10 pl-9"
             />
           </div>
@@ -82,7 +88,7 @@ export default function SubmissionsFilter({
 
         <div>
           <Label htmlFor="submissions-status" className="text-heading">
-            Status
+            {statusLabel}
           </Label>
           <Select
             value={status || ALL_VALUE}
@@ -94,10 +100,10 @@ export default function SubmissionsFilter({
               id="submissions-status"
               className="mt-2 h-10! w-full"
             >
-              <SelectValue placeholder="All statuses" />
+              <SelectValue placeholder={allStatusLabel} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_VALUE}>All statuses</SelectItem>
+              <SelectItem value={ALL_VALUE}>{allStatusLabel}</SelectItem>
               {statusOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
