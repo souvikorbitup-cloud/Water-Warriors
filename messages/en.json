@@ -105,6 +105,13 @@
     "diyError": "We couldn't load DIY guides right now. Please try again soon."
   },
   "Location": {
+    "undoPoint": "Undo last point",
+    "areaSelected": "Wonderful! You have selected the catchment area.",
+    "reset": "Reset",
+    "next": "Next",
+    "findingBuilding": "Finding building…",
+    "noBuildingFound": "No building found here. Click to place points instead.",
+    "buildingLookupFailed": "Couldn't look up the building. Place points instead.",
     "privacyNote": "We value your privacy and never store your data.",
     "title": "Select Your Location",
     "nameLabel": "To include your name (optional) on the final report, please enter it below.",
@@ -249,13 +256,6 @@
     },
     "comingSoonTitle": "More Learning Is on the Way",
     "comingSoon": "Coming Soon"
-  },
-  "DiyGuides": {
-    "0": "How to Build a Simple Rainwater Harvesting System at Home",
-    "1": "DIY Rainwater Collection: A Beginner's Step-by-Step Guide",
-    "2": "How to Create an Affordable Rainwater Storage System",
-    "3": "Easy DIY Rooftop Rainwater Harvesting Techniques",
-    "4": "Rainwater Filtration: Make Your Own Water Filter at Home"
   },
   "Video": {
     "play": "Play video: {title}",

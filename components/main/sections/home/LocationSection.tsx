@@ -9,13 +9,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import {
-  GoogleMap,
-  Marker,
-  Polygon,
-  Polyline,
-  useJsApiLoader,
-} from "@react-google-maps/api";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import {
   ArrowRight,
   LocateFixed,
@@ -32,11 +26,19 @@ import {
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type LatLng = google.maps.LatLngLiteral;
 
+type LocationSectionProps = {
+  /** Called when the user confirms the selected area with the "Next" button. */
+  onNext?: (data: { name: string; points: LatLng[] }) => void;
+};
+
 const INITIAL_CENTER: LatLng = { lat: 22.6446, lng: 88.3737 };
 const MIN_POINTS = 4;
+// Two map clicks closer together than this are treated as one double-click.
+const DOUBLE_CLICK_MS = 350;
 
 // Google Maps overlay options can't read CSS variables, so the brand yellow (--primary) is repeated here.
 const BRAND_YELLOW = "#F1BB1B";
@@ -49,7 +51,96 @@ const MAP_OPTIONS: google.maps.MapOptions = {
 
 const COORDS_REGEX = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/;
 
-export default function LocationSection() {
+type BuildingStatus = "idle" | "loading" | "notFound" | "error";
+
+// Ray-casting point-in-polygon test (lng = x, lat = y).
+function pointInPolygon(point: LatLng, ring: LatLng[]): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const a = ring[i];
+    const b = ring[j];
+    const crosses =
+      a.lat > point.lat !== b.lat > point.lat &&
+      point.lng <
+        ((b.lng - a.lng) * (point.lat - a.lat)) / (b.lat - a.lat) + a.lng;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+// Public Overpass servers are often at capacity (502/429/504), so we try
+// several of them and retry with exponential backoff before giving up.
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+];
+const OVERPASS_ROUNDS = 2;
+const OVERPASS_TIMEOUT_MS = 8000;
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+
+async function queryOverpass(query: string): Promise<unknown> {
+  let lastError: unknown = new Error("Building lookup failed.");
+
+  for (let round = 0; round < OVERPASS_ROUNDS; round++) {
+    if (round > 0) await sleep(800 * 2 ** (round - 1)); // 0.8s, 1.6s, ...
+
+    for (const endpoint of OVERPASS_ENDPOINTS) {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(
+        () => controller.abort(),
+        OVERPASS_TIMEOUT_MS,
+      );
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          body: new URLSearchParams({ data: query }),
+          signal: controller.signal,
+        });
+        if (response.ok) return await response.json();
+        lastError = new Error(
+          `Overpass ${endpoint} returned status ${response.status}.`,
+        );
+      } catch (error) {
+        lastError = error; // network error, timeout, or non-JSON busy page
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+// Looks up the OpenStreetMap building outline under a map point (Overpass API).
+// Returns the footprint's corners, or null when no building is found there.
+async function fetchBuildingFootprint(point: LatLng): Promise<LatLng[] | null> {
+  const query = `[out:json][timeout:10];way(around:4,${point.lat},${point.lng})["building"];out geom;`;
+  const json = (await queryOverpass(query)) as {
+    elements?: { geometry?: { lat: number; lon: number }[] }[];
+  };
+
+  const rings = (json.elements ?? [])
+    .map((element) =>
+      (element.geometry ?? []).map((g) => ({ lat: g.lat, lng: g.lon })),
+    )
+    .map((ring) => {
+      // OSM rings repeat the first node at the end; drop the duplicate.
+      const first = ring[0];
+      const last = ring[ring.length - 1];
+      return first && last && first.lat === last.lat && first.lng === last.lng
+        ? ring.slice(0, -1)
+        : ring;
+    })
+    .filter((ring) => ring.length >= 3);
+
+  if (rings.length === 0) return null;
+  return rings.find((ring) => pointInPolygon(point, ring)) ?? rings[0];
+}
+
+export default function LocationSection({ onNext }: LocationSectionProps) {
   const t = useTranslations("Location");
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-maps-script",
@@ -58,6 +149,18 @@ export default function LocationSection() {
 
   const mapRef = useRef<google.maps.Map | null>(null);
   const suggestionRequestRef = useRef(0);
+  // Refs mirror the drawing state so the Google Maps listeners (click /
+  // dblclick) never read a stale value between renders.
+  const pointsRef = useRef<LatLng[]>([]);
+  const isDrawingRef = useRef(false);
+  const lastClickRef = useRef(0);
+  // How many points existed before the current click (used by double-click).
+  const priorCountRef = useRef(0);
+  const buildingRequestRef = useRef(0);
+  // The Polygon / Polyline currently drawn on the map (managed natively).
+  const shapeRef = useRef<google.maps.Polygon | google.maps.Polyline | null>(
+    null,
+  );
 
   const [name, setName] = useState("");
   const [query, setQuery] = useState("");
@@ -75,6 +178,10 @@ export default function LocationSection() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [points, setPoints] = useState<LatLng[]>([]);
   const [pin, setPin] = useState<LatLng | null>(null);
+  const [buildingStatus, setBuildingStatus] = useState<BuildingStatus>("idle");
+
+  // The area counts as "selected" as soon as the minimum number of points exist.
+  const isAreaSelected = points.length >= MIN_POINTS;
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
@@ -151,6 +258,43 @@ export default function LocationSection() {
       window.removeEventListener("keydown", onKey);
     };
   }, [isFullscreen]);
+
+  // Draw the outline / area with one native Google Maps shape. It is created
+  // and removed imperatively, so nothing is ever left behind on the map
+  // (the declarative <Polygon>/<Polyline> could leak a stale line).
+  useEffect(() => {
+    shapeRef.current?.setMap(null);
+    shapeRef.current = null;
+
+    const map = mapRef.current;
+    if (!map || points.length < 2) return;
+
+    const isFinished = isAreaSelected && !isDrawing;
+    const shape =
+      points.length >= 3
+        ? new google.maps.Polygon({
+            paths: points,
+            fillColor: BRAND_YELLOW,
+            fillOpacity: isFinished ? 0.45 : 0.3,
+            strokeColor: BRAND_YELLOW,
+            strokeWeight: isFinished ? 3 : 2,
+            clickable: false,
+            map,
+          })
+        : new google.maps.Polyline({
+            path: points,
+            strokeColor: BRAND_YELLOW,
+            strokeWeight: 2,
+            clickable: false,
+            map,
+          });
+    shapeRef.current = shape;
+
+    return () => {
+      shape.setMap(null);
+      if (shapeRef.current === shape) shapeRef.current = null;
+    };
+  }, [points, isDrawing, isAreaSelected, isLoaded]);
 
   const flyTo = (location: LatLng, zoom = 18) => {
     setPin(location);
@@ -260,15 +404,90 @@ export default function LocationSection() {
     );
   };
 
-  const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    if (!isDrawing || !e.latLng) return;
-    const point = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-    setPoints((prev) => [...prev, point]);
+  const updatePoints = (next: LatLng[]) => {
+    pointsRef.current = next;
+    setPoints(next);
   };
 
+  const updateDrawing = (next: boolean) => {
+    isDrawingRef.current = next;
+    setIsDrawing(next);
+  };
+
+  const handleMapClick = (e: google.maps.MapMouseEvent) => {
+    if (!isDrawingRef.current || !e.latLng) return;
+
+    // A double-click fires two click events. Ignore the second one (by timing,
+    // since domEvent.detail isn't reliable) so it doesn't add a duplicate point.
+    const now = Date.now();
+    const isSecondClickOfDoubleClick =
+      now - lastClickRef.current < DOUBLE_CLICK_MS;
+    lastClickRef.current = now;
+    if (isSecondClickOfDoubleClick) return;
+
+    // A new manual click cancels any building lookup still in flight.
+    buildingRequestRef.current += 1;
+    setBuildingStatus("idle");
+
+    priorCountRef.current = pointsRef.current.length;
+    updatePoints([
+      ...pointsRef.current,
+      { lat: e.latLng.lat(), lng: e.latLng.lng() },
+    ]);
+  };
+
+  // Double-click:
+  //  - as the first action (no points yet): select the building under the
+  //    cursor and use its outline as the area;
+  //  - after you've placed points: finish the drawing (needs 4+ points).
+  const handleMapDoubleClick = async (e: google.maps.MapMouseEvent) => {
+    if (!isDrawingRef.current) return;
+    e.stop(); // stop the default double-click zoom
+
+    if (priorCountRef.current === 0 && e.latLng) {
+      const target = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      const requestId = ++buildingRequestRef.current;
+      setBuildingStatus("loading");
+
+      try {
+        const footprint = await fetchBuildingFootprint(target);
+        if (requestId !== buildingRequestRef.current) return;
+
+        if (footprint) {
+          updatePoints(footprint);
+          updateDrawing(false);
+          setBuildingStatus("idle");
+        } else {
+          updatePoints([]); // drop the stray point from the first click
+          setBuildingStatus("notFound");
+        }
+      } catch (error) {
+        if (requestId !== buildingRequestRef.current) return;
+        console.error("Failed to look up the building outline.", error);
+        updatePoints([]);
+        setBuildingStatus("error");
+      }
+      return;
+    }
+
+    if (pointsRef.current.length >= MIN_POINTS) updateDrawing(false);
+  };
+
+  // Undo: remove the last point, one step at a time.
+  const handleUndo = () => {
+    updatePoints(pointsRef.current.slice(0, -1));
+  };
+
+  // Reset: remove the entire selected area.
   const handleReset = () => {
-    setPoints([]);
-    setIsDrawing(false);
+    buildingRequestRef.current += 1;
+    setBuildingStatus("idle");
+    updatePoints([]);
+    updateDrawing(false);
+  };
+
+  const handleNext = () => {
+    onNext?.({ name, points });
   };
 
   return (
@@ -361,41 +580,28 @@ export default function LocationSection() {
                 options={{
                   ...MAP_OPTIONS,
                   draggableCursor: isDrawing ? "crosshair" : undefined,
+                  disableDoubleClickZoom: isDrawing,
                 }}
                 onLoad={onLoad}
                 onClick={handleMapClick}
+                onDblClick={handleMapDoubleClick}
               >
                 {pin && <Marker position={pin} />}
 
-                {points.length >= 3 ? (
-                  <Polygon
-                    paths={points}
-                    options={{
-                      fillColor: BRAND_YELLOW,
-                      fillOpacity: 0.3,
-                      strokeColor: BRAND_YELLOW,
-                      strokeWeight: 2,
-                      clickable: false,
-                    }}
-                  />
-                ) : (
-                  <Polyline
-                    path={points}
-                    options={{
-                      strokeColor: BRAND_YELLOW,
-                      strokeWeight: 2,
-                      clickable: false,
-                    }}
-                  />
-                )}
                 {points.map((p, i) => (
                   <Marker
                     key={`${p.lat}-${p.lng}-${i}`}
                     position={p}
                     clickable={false}
+                    label={{
+                      text: String(i + 1),
+                      color: "#1a1a1a",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                    }}
                     icon={{
                       path: google.maps.SymbolPath.CIRCLE,
-                      scale: 6,
+                      scale: 10,
                       fillColor: BRAND_YELLOW,
                       fillOpacity: 1,
                       strokeColor: "#ffffff",
@@ -444,14 +650,14 @@ export default function LocationSection() {
                   }
                   className="h-full min-w-0 flex-1 bg-transparent text-sm text-heading outline-none placeholder:text-heading"
                 />
-                <button
+                <Button
                   type="submit"
                   aria-label={t("search")}
                   title={t("search")}
                   className="flex size-8.5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
                 >
                   <ArrowRight className="size-4" />
-                </button>
+                </Button>
               </form>
               {isSearchFocused &&
                 (suggestions.length > 0 ||
@@ -473,7 +679,7 @@ export default function LocationSection() {
                       if (!prediction) return null;
 
                       return (
-                        <button
+                        <Button
                           key={prediction.placeId}
                           id={`location-suggestion-${index}`}
                           type="button"
@@ -501,7 +707,7 @@ export default function LocationSection() {
                               </span>
                             )}
                           </span>
-                        </button>
+                        </Button>
                       );
                     })}
                     {suggestionError && (
@@ -512,17 +718,6 @@ export default function LocationSection() {
                         {suggestionError}
                       </p>
                     )}
-                    {/* <div className="flex justify-end border-t border-border bg-background px-3 py-2"> */}
-                    {/* Use Google's hosted attribution asset rather than optimizing or rehosting it. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {/* <img
-                        src="https://maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white3.png"
-                        alt="Powered by Google"
-                        width="120"
-                        height="14"
-                        className="h-3.5 w-auto"
-                      />
-                    </div> */}
                   </div>
                 )}
               {(placesLoadError || suggestionError) &&
@@ -551,12 +746,12 @@ export default function LocationSection() {
               )}
             </MapControl>
 
-            {/* Drawing / locate / reset tools (left) */}
+            {/* Drawing / locate / undo tools (left) */}
             <div className="absolute top-20 left-3 flex flex-col gap-3.5 sm:top-34 sm:left-5">
               <MapControl
                 label={isDrawing ? t("stopPlacing") : t("placePoints")}
                 pressed={isDrawing}
-                onClick={() => setIsDrawing((v) => !v)}
+                onClick={() => updateDrawing(!isDrawingRef.current)}
                 positioned={false}
               >
                 <PenTool className="size-4.5" />
@@ -569,8 +764,8 @@ export default function LocationSection() {
                 <LocateFixed className="size-4.5" />
               </MapControl>
               <MapControl
-                label={t("clearPoints")}
-                onClick={handleReset}
+                label={t("undoPoint")}
+                onClick={handleUndo}
                 disabled={points.length === 0}
                 positioned={false}
               >
@@ -593,11 +788,52 @@ export default function LocationSection() {
               )}
             </MapControl>
 
-            {/* Points counter */}
-            {isDrawing && (
+            {/* Building lookup status */}
+            {buildingStatus !== "idle" && (
+              <p
+                role="status"
+                className="absolute bottom-14 left-1/2 max-w-[90%] -translate-x-1/2 rounded-full bg-background px-3 py-1.5 text-center text-xs text-heading shadow-md sm:bottom-16 sm:text-sm"
+              >
+                {buildingStatus === "loading"
+                  ? t("findingBuilding")
+                  : buildingStatus === "notFound"
+                    ? t("noBuildingFound")
+                    : t("buildingLookupFailed")}
+              </p>
+            )}
+
+            {/* Points counter (hidden once the area is selected) */}
+            {isDrawing && !isAreaSelected && (
               <p className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-background px-3 py-1.5 text-xs whitespace-nowrap text-heading shadow-md sm:bottom-4 sm:text-sm">
                 {t("pointsPlaced", { count: points.length, min: MIN_POINTS })}
               </p>
+            )}
+
+            {/* Area selected card: Reset (clear everything) / Next */}
+            {isAreaSelected && (
+              <div className="absolute right-3 bottom-3 z-20 w-[calc(100%-1.5rem)] max-w-70 rounded-3xl bg-[#171717] p-3 text-center text-white shadow-lg sm:right-4 sm:bottom-4">
+                <p className="px-2 py-3 text-sm leading-7 text-white">
+                  {t("areaSelected")}
+                </p>
+                <div className="flex flex-col gap-2.5">
+                  <Button
+                    type="button"
+                    onClick={handleReset}
+                    className="flex h-10 items-center justify-center gap-2 rounded-lg bg-muted text-sm text-heading transition-colors hover:bg-muted/80 cursor-pointer"
+                  >
+                    {t("reset")}
+                    <RotateCcw className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    className="flex h-10 items-center justify-center gap-2 rounded-lg bg-primary text-sm text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
+                  >
+                    {t("next")}
+                    <ArrowRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -636,7 +872,7 @@ function MapControl({
   positioned?: boolean;
 }) {
   return (
-    <button
+    <Button
       type="button"
       title={label}
       aria-label={label}
@@ -652,6 +888,6 @@ function MapControl({
       )}
     >
       {children}
-    </button>
+    </Button>
   );
 }
