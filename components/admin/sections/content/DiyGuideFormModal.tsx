@@ -395,7 +395,7 @@ export default function DiyGuideFormModal({
               value={videoUrl}
               onChange={(event) => setVideoUrl(event.target.value)}
               disabled={readOnly || saving}
-              placeholder="https://www.youtube.com/watch?v=..."
+              placeholder="YouTube, Vimeo, or direct video URL"
             />
             <FieldError message={fieldErrors["video.externalUrl"]} />
           </div>

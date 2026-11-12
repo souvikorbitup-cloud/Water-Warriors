@@ -7,10 +7,40 @@ import { Play, Pause } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { formatShortDate, getYouTubeId } from "@/lib/video-utils";
+import type { VideoProvider } from "@/lib/models/Diyguide.model";
+
+function getVimeoEmbedUrl(videoUrl: string) {
+  try {
+    const url = new URL(videoUrl);
+    if (!/(^|\.)vimeo\.com$/i.test(url.hostname)) return null;
+
+    const segments = url.pathname.split("/").filter(Boolean);
+    const idIndex = segments.findIndex((segment) => /^\d+$/.test(segment));
+    if (idIndex === -1) return null;
+
+    const params = new URLSearchParams({
+      api: "1",
+      autoplay: "1",
+      playsinline: "1",
+      title: "0",
+      byline: "0",
+      portrait: "0",
+    });
+    const hash =
+      url.searchParams.get("h") ??
+      (idIndex === segments.length - 2 ? segments[idIndex + 1] : null);
+    if (hash) params.set("h", hash);
+
+    return `https://player.vimeo.com/video/${segments[idIndex]}?${params}`;
+  } catch {
+    return null;
+  }
+}
 
 export interface FeaturedVideoCardProps {
-  /** Any YouTube watch / share URL */
+  /** Resolved URL for the selected video provider */
   videoUrl: string;
+  videoProvider: VideoProvider;
   thumbnailUrl: string;
   title: string;
   /** ISO date, e.g. "2026-10-15" */
@@ -28,6 +58,7 @@ export interface FeaturedVideoCardProps {
 
 export default function FeaturedVideoCard({
   videoUrl,
+  videoProvider,
   thumbnailUrl,
   title,
   publishDate,
@@ -42,43 +73,79 @@ export default function FeaturedVideoCard({
   const [isPaused, setIsPaused] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const isControlled = playing !== undefined;
   const isPlaying = isControlled ? playing : localPlaying;
 
   const videoId = getYouTubeId(videoUrl);
+  const vimeoEmbedUrl =
+    videoProvider === "external" ? getVimeoEmbedUrl(videoUrl) : null;
+  const isPlayingYouTube = isPlaying && videoProvider === "youtube" && videoId;
+  const isPlayingVimeo = isPlaying && vimeoEmbedUrl;
+  const isNativeVideo =
+    videoProvider === "cloudinary" ||
+    (videoProvider === "external" && !vimeoEmbedUrl);
+  const isPlayingNativeVideo = isPlaying && isNativeVideo;
 
   const handlePlay = () => {
     if (!isControlled) {
       setLocalPlaying(true);
     }
 
-    setIsPaused(false);
+    setIsPaused(isNativeVideo);
     onPlay?.();
   };
 
   const handlePause = () => {
-    iframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({
-        event: "command",
-        func: "pauseVideo",
-        args: [],
-      }),
-      "https://www.youtube.com",
-    );
+    if (isNativeVideo) {
+      videoRef.current?.pause();
+    } else if (videoProvider === "youtube") {
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({
+          event: "command",
+          func: "pauseVideo",
+          args: [],
+        }),
+        "https://www.youtube.com",
+      );
+    } else {
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ method: "pause" }),
+        "https://player.vimeo.com",
+      );
+    }
 
     setIsPaused(true);
   };
 
   const handleResume = () => {
-    iframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({
-        event: "command",
-        func: "playVideo",
-        args: [],
-      }),
-      "https://www.youtube.com",
-    );
+    if (isNativeVideo) {
+      const video = videoRef.current;
+      if (video) {
+        void video.play().then(
+          () => setIsPaused(false),
+          () => setIsPaused(true),
+        );
+      }
+      return;
+    }
+
+    if (videoProvider === "youtube") {
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({
+          event: "command",
+          func: "playVideo",
+          args: [],
+        }),
+        "https://www.youtube.com",
+      );
+    } else {
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ method: "play" }),
+        "https://player.vimeo.com",
+      );
+    }
 
     setIsPaused(false);
   };
@@ -90,12 +157,34 @@ export default function FeaturedVideoCard({
         className,
       )}
     >
-      {/* Media: thumbnail first, YouTube player after pressing play */}
-      {isPlaying && videoId ? (
+      {/* Media: thumbnail first, player after pressing play */}
+      {isPlayingNativeVideo ? (
+        <video
+          ref={videoRef}
+          className="absolute inset-0 size-full object-cover"
+          src={videoUrl}
+          poster={thumbnailUrl || undefined}
+          title={title}
+          autoPlay
+          controls
+          playsInline
+          onPlay={() => setIsPaused(false)}
+          onPause={() => setIsPaused(true)}
+        />
+      ) : isPlayingYouTube ? (
         <iframe
           ref={iframeRef}
           className="absolute inset-0 size-full"
           src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1&enablejsapi=1&origin=${typeof window !== "undefined" ? window.location.origin : ""}`}
+          title={title}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+        />
+      ) : isPlayingVimeo ? (
+        <iframe
+          ref={iframeRef}
+          className="absolute inset-0 size-full"
+          src={vimeoEmbedUrl}
           title={title}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen

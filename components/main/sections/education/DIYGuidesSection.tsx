@@ -36,6 +36,7 @@ export default function DIYGuidesSection({
               <li key={guide.id}>
                 <FeaturedVideoCard
                   videoUrl={guide.videoUrl}
+                  videoProvider={guide.videoProvider}
                   thumbnailUrl={guide.thumbnailUrl}
                   title={guide.title}
                   publishDate={guide.publishedAt}

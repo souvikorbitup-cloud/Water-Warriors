@@ -47,6 +47,7 @@ export default function DIYSection({
           >
             <FeaturedVideoCard
               videoUrl={featured.videoUrl}
+              videoProvider={featured.videoProvider}
               thumbnailUrl={featured.thumbnailUrl}
               title={featured.title}
               publishDate={featured.publishedAt}
@@ -54,7 +55,7 @@ export default function DIYSection({
             />
 
             {upNext.length > 0 ? (
-              <ul className="flex flex-col justify-between gap-5 lg:gap-6">
+              <ul className="flex flex-col justify-start gap-5 lg:gap-6">
                 {upNext.map((guide) => (
                   <li key={guide.id}>
                     <Link
