@@ -1,3 +1,5 @@
+import { connection } from "next/server";
+import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   ComingSoonSection,
@@ -6,8 +8,10 @@ import {
   KeepItWorkingSection,
   TwoWaysSection,
 } from "@/components/main/sections/education";
+import DIYGuidesSectionSkeleton from "@/components/main/sections/education/DIYGuidesSectionSkeleton";
 import MainbannerSection from "@/components/main/shared/banner/MainbannerSection";
 import CTASection from "@/components/main/shared/CTA/CTASection";
+import { getPublicDiyGuides } from "@/lib/content/diy-guide-service";
 import { localePageMetadata } from "@/i18n/seo";
 import { getAppLocale } from "@/i18n/get-app-locale";
 
@@ -55,10 +59,24 @@ export default async function Education({ params }: PageProps) {
       />
       <HowItWorksStepsSection />
       <TwoWaysSection />
-      <DIYGuidesSection />
+      <Suspense fallback={<DIYGuidesSectionSkeleton />}>
+        <EducationDiyGuides locale={locale} />
+      </Suspense>
       <KeepItWorkingSection />
       <ComingSoonSection />
       <CTASection classes="bg-white" />
     </>
   );
+}
+
+async function EducationDiyGuides({ locale }: { locale: string }) {
+  await connection();
+  let guides = [] as Awaited<ReturnType<typeof getPublicDiyGuides>>;
+  let error = false;
+  try {
+    guides = await getPublicDiyGuides(locale);
+  } catch {
+    error = true;
+  }
+  return <DIYGuidesSection guides={guides} error={error} />;
 }

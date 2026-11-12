@@ -32,6 +32,18 @@ export type PublicFaq = {
   answer: string;
 };
 
+export type PublicDiyGuide = {
+  id: string;
+  slug: string;
+  title: string;
+  videoSource: "upload" | "external";
+  videoProvider: "cloudinary" | "youtube" | "external";
+  videoUrl: string;
+  thumbnailUrl: string;
+  durationMinutes: number | null;
+  publishedAt: string | null;
+};
+
 export const CONTENT_SORT_VALUES = [
   "order:asc",
   "order:desc",
@@ -39,6 +51,8 @@ export const CONTENT_SORT_VALUES = [
   "createdAt:asc",
   "updatedAt:desc",
   "updatedAt:asc",
+  "publishedAt:desc",
+  "publishedAt:asc",
   "fullName:asc",
   "fullName:desc",
 ] as const;
@@ -47,3 +61,5 @@ export type ContentSortValue = (typeof CONTENT_SORT_VALUES)[number];
 
 export const TESTIMONIAL_IMAGE_FOLDER = "testimonials";
 export const TEAM_MEMBER_IMAGE_FOLDER = "team";
+export const DIY_GUIDE_VIDEO_FOLDER = "diy/videos";
+export const DIY_GUIDE_THUMBNAIL_FOLDER = "diy/thumbnails";

@@ -52,6 +52,39 @@ export async function deleteContentImage(publicId: string | null | undefined) {
   }
 }
 
+export const MAX_VIDEO_BYTES = getMaxUploadBytes(
+  process.env.NEXT_PUBLIC_MAX_VIDEO_MEGA_BYTES,
+  200,
+);
+
+export function validateVideoFile(file: File | null): string | null {
+  if (!file || file.size === 0) return null;
+  if (!file.type.startsWith("video/")) {
+    return "Choose a video file.";
+  }
+  if (file.size > MAX_VIDEO_BYTES) {
+    return `Choose a non-empty video under ${MAX_VIDEO_BYTES / MEGABYTE}MB.`;
+  }
+  return null;
+}
+
+export async function uploadContentVideo(file: File, folder: string) {
+  return uploadToCloudinary(
+    Buffer.from(await file.arrayBuffer()),
+    folder,
+    "video",
+  );
+}
+
+export async function deleteContentVideo(publicId: string | null | undefined) {
+  if (!publicId) return;
+  try {
+    await deleteFromCloudinary(publicId, "video");
+  } catch (error) {
+    console.error("Failed to delete content video:", error);
+  }
+}
+
 export function parseBooleanField(value: FormDataEntryValue | null) {
   if (value === null) return undefined;
   if (typeof value === "string") {

@@ -8,6 +8,7 @@ import {
 import { getHeroBannerSettings } from "@/lib/services/hero-banner-settings";
 import { getDemoVideoSettings } from "@/lib/services/demo-video-settings";
 import { getPublicTestimonials } from "@/lib/content/testimonial-service";
+import { getPublicDiyGuides } from "@/lib/content/diy-guide-service";
 import {
   DIYSection,
   HeroSection,
@@ -16,6 +17,7 @@ import {
   TestimonialSection,
 } from "@/components/main/sections/home";
 import TestimonialSectionSkeleton from "@/components/main/sections/home/TestimonialSectionSkeleton";
+import DIYSectionSkeleton from "@/components/main/sections/home/DIYSectionSkeleton";
 import { localePageMetadata } from "@/i18n/seo";
 import { getAppLocale } from "@/i18n/get-app-locale";
 
@@ -56,7 +58,9 @@ export default async function Home({ params }: PageProps) {
       <Suspense fallback={<TestimonialSectionSkeleton />}>
         <HomeTestimonials locale={locale} />
       </Suspense>
-      <DIYSection />
+      <Suspense fallback={<DIYSectionSkeleton />}>
+        <HomeDiyGuides locale={locale} />
+      </Suspense>
     </>
   );
 }
@@ -84,4 +88,16 @@ async function HomeTestimonials({ locale }: { locale: string }) {
   await connection();
   const testimonials = await getPublicTestimonials(locale);
   return <TestimonialSection testimonials={testimonials} />;
+}
+
+async function HomeDiyGuides({ locale }: { locale: string }) {
+  await connection();
+  let guides = [] as Awaited<ReturnType<typeof getPublicDiyGuides>>;
+  let error = false;
+  try {
+    guides = await getPublicDiyGuides(locale, { limit: 4 });
+  } catch {
+    error = true;
+  }
+  return <DIYSection guides={guides} error={error} />;
 }

@@ -14,8 +14,8 @@ export interface FeaturedVideoCardProps {
   thumbnailUrl: string;
   title: string;
   /** ISO date, e.g. "2026-10-15" */
-  publishDate: string;
-  duration: number;
+  publishDate: string | null;
+  duration: number | null;
   className?: string;
   /**
    * Controlled mode: when `playing` is passed, the parent decides which card is playing.
@@ -124,18 +124,26 @@ export default function FeaturedVideoCard({
             {title}
           </h3>
 
-          <p className="mt-1.5 flex items-center text-xs text-background sm:mt-2 sm:text-sm lg:text-base">
-            <time dateTime={publishDate}>
-              {formatShortDate(publishDate, locale)}
-            </time>
+          {(publishDate || duration != null) && (
+            <p className="mt-1.5 flex items-center text-xs text-background sm:mt-2 sm:text-sm lg:text-base">
+              {publishDate ? (
+                <time dateTime={publishDate}>
+                  {formatShortDate(publishDate, locale)}
+                </time>
+              ) : null}
 
-            <span
-              aria-hidden
-              className="mx-2 inline-block h-3.5 w-px bg-current sm:h-4"
-            />
+              {publishDate && duration != null ? (
+                <span
+                  aria-hidden
+                  className="mx-2 inline-block h-3.5 w-px bg-current sm:h-4"
+                />
+              ) : null}
 
-            <span>{t("duration", { minutes: duration })}</span>
-          </p>
+              {duration != null ? (
+                <span>{t("duration", { minutes: duration })}</span>
+              ) : null}
+            </p>
+          )}
         </div>
 
         {/* Vertical divider */}

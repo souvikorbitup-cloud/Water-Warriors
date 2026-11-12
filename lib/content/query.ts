@@ -10,6 +10,12 @@ import type {
   TeamMemberTranslations,
 } from "@/lib/models/Teammember.model";
 import type { FaqTranslations, IFaq } from "@/lib/models/Faq.model";
+import type {
+  DiyGuideTranslations,
+  IDiyGuide,
+  IMediaRef,
+} from "@/lib/models/Diyguide.model";
+import { resolveThumbnail, resolveVideo } from "@/lib/models/Diyguide.model";
 import {
   FAQ_GROUPS,
   TEAM_GROUPS,
@@ -24,6 +30,8 @@ import {
 } from "@/lib/submissions/query";
 import type {
   ContentListResponse,
+  DiyGuideDetail,
+  DiyGuideListItem,
   FaqDetail,
   FaqListItem,
   TeamMemberDetail,
@@ -112,6 +120,25 @@ export function buildTeamMemberFilter(
       `translations.${locale}.tagline`,
       `translations.${locale}.description`,
     ]),
+  ];
+
+  return { ...filter, ...buildSearchFilter(query.search, searchFields) };
+}
+
+export function buildDiyGuideFilter(
+  query: ContentListQueryInput,
+): Record<string, unknown> {
+  const filter: Record<string, unknown> = {
+    ...buildPublishedFilter(query.status),
+  };
+
+  if (query.group === "upload" || query.group === "external") {
+    filter["video.source"] = query.group;
+  }
+
+  const searchFields = [
+    "slug",
+    ...routing.locales.map((locale) => `translations.${locale}.title`),
   ];
 
   return { ...filter, ...buildSearchFilter(query.search, searchFields) };
@@ -211,6 +238,44 @@ export function toFaqDetail(doc: IFaq & { _id: unknown }): FaqDetail {
   return {
     ...toFaqListItem(doc),
     translations: doc.translations as FaqTranslations,
+  };
+}
+
+function durationMinutesFromSeconds(seconds?: number | null) {
+  return seconds ? Math.max(1, Math.round(seconds / 60)) : null;
+}
+
+export function toDiyGuideListItem(
+  doc: IDiyGuide & { _id: unknown },
+): DiyGuideListItem {
+  const translation = doc.translations?.[defaultLocale];
+  const video = resolveVideo(doc.video);
+  return {
+    id: serializeId(doc._id),
+    slug: doc.slug,
+    title: translation?.title ?? "",
+    videoSource: doc.video.source,
+    videoProvider: video.provider,
+    videoUrl: video.url,
+    thumbnailUrl: resolveThumbnail(doc.thumbnail, doc.video),
+    durationSeconds: doc.durationSeconds ?? null,
+    durationMinutes: durationMinutesFromSeconds(doc.durationSeconds),
+    publishedAt: toIsoDate(doc.publishedAt),
+    order: doc.order,
+    isPublished: doc.isPublished,
+    createdAt: toIsoDate(doc.createdAt) ?? "",
+    updatedAt: toIsoDate(doc.updatedAt) ?? "",
+  };
+}
+
+export function toDiyGuideDetail(
+  doc: IDiyGuide & { _id: unknown },
+): DiyGuideDetail {
+  return {
+    ...toDiyGuideListItem(doc),
+    video: doc.video as IMediaRef,
+    thumbnail: (doc.thumbnail as IMediaRef | null | undefined) ?? null,
+    translations: doc.translations as DiyGuideTranslations,
   };
 }
 

@@ -186,6 +186,182 @@ export const faqUpdateSchema = faqInputSchema
     message: "Provide at least one field to update.",
   });
 
+const TITLE_MAX = 200;
+const URL_MAX = 500;
+const DURATION_MAX_SECONDS = 6 * 60 * 60;
+const MEDIA_SOURCES = ["upload", "external"] as const;
+
+const optionalHttpUrl = z.preprocess(
+  (value) => {
+    if (value === null || value === undefined) return null;
+    if (typeof value !== "string") return value;
+    const cleaned = value.trim();
+    return cleaned.length === 0 ? null : cleaned;
+  },
+  z
+    .string()
+    .max(URL_MAX, `URL cannot exceed ${URL_MAX} characters`)
+    .url("URL must start with http:// or https://")
+    .refine(
+      (value) => value.startsWith("http://") || value.startsWith("https://"),
+      "URL must start with http:// or https://",
+    )
+    .nullable(),
+);
+
+const mediaRefSchema = z
+  .object({
+    source: z.enum(MEDIA_SOURCES, { error: "Media source is required" }),
+    publicId: optionalCloudinaryId.optional(),
+    externalUrl: optionalHttpUrl.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.source === "upload") {
+      if (!value.publicId) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["publicId"],
+          message: "Cloudinary id is required for uploads",
+        });
+      }
+    }
+    if (value.source === "external") {
+      if (!value.externalUrl) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["externalUrl"],
+          message: "URL is required for external sources",
+        });
+      }
+    }
+  })
+  .transform((value) =>
+    value.source === "upload"
+      ? {
+          source: value.source,
+          publicId: value.publicId ?? null,
+          externalUrl: null,
+        }
+      : {
+          source: value.source,
+          publicId: null,
+          externalUrl: value.externalUrl ?? null,
+        },
+  );
+
+const optionalThumbnailSchema = z.preprocess((value) => {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "object" && value !== null) {
+    const media = value as {
+      source?: unknown;
+      publicId?: unknown;
+      externalUrl?: unknown;
+    };
+    const hasValue =
+      (typeof media.publicId === "string" &&
+        media.publicId.trim().length > 0) ||
+      (typeof media.externalUrl === "string" &&
+        media.externalUrl.trim().length > 0);
+    if (!hasValue && !media.source) return null;
+  }
+  return value;
+}, mediaRefSchema.nullable());
+
+const optionalDurationSeconds = z.preprocess(
+  (value) => {
+    if (value === "" || value === null || value === undefined) return null;
+    return value;
+  },
+  z.coerce
+    .number({ error: "Duration must be a number" })
+    .int("Duration must be a whole number of seconds")
+    .min(1, "Duration must be at least 1 second")
+    .max(DURATION_MAX_SECONDS, "Duration cannot exceed 6 hours")
+    .nullable(),
+);
+
+const optionalPublishedAt = z.preprocess(
+  (value) => {
+    if (value === "" || value === null || value === undefined) return null;
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? value : value;
+    }
+    const date = new Date(value as string);
+    return Number.isNaN(date.getTime()) ? value : date;
+  },
+  z.date({ error: "Publication date is invalid" }).nullable(),
+);
+
+const diyGuideTranslationSchema = z.object({
+  title: localeText({
+    min: 3,
+    max: TITLE_MAX,
+    requiredMessage: "Title is required",
+    minMessage: "Title must be at least 3 characters",
+    maxMessage: `Title cannot exceed ${TITLE_MAX} characters`,
+  }),
+});
+
+function isYouTubeHttpUrl(url?: string | null) {
+  if (!url) return false;
+  try {
+    return /(^|\.)(youtube\.com|youtu\.be|youtube-nocookie\.com)$/i.test(
+      new URL(url).hostname,
+    );
+  } catch {
+    return false;
+  }
+}
+
+export const diyGuideInputSchema = z
+  .object({
+    slug: z.preprocess((value) => {
+      if (typeof value !== "string") return undefined;
+      const cleaned = value.trim().toLowerCase();
+      return cleaned.length === 0 ? undefined : cleaned;
+    }, z.string().max(120, "Slug cannot exceed 120 characters").regex(SLUG_REGEX, "Slug must be lowercase letters, numbers and hyphens").optional()),
+    video: mediaRefSchema,
+    thumbnail: optionalThumbnailSchema.optional(),
+    durationSeconds: optionalDurationSeconds.optional(),
+    publishedAt: optionalPublishedAt.optional(),
+    order: optionalOrder,
+    isPublished: booleanFromUnknown.optional(),
+    translations: translationsSchema(diyGuideTranslationSchema),
+  })
+  .superRefine((value, ctx) => {
+    const thumbnail = value.thumbnail;
+    const hasThumbnail = Boolean(thumbnail?.publicId || thumbnail?.externalUrl);
+    const youtubeVideo =
+      value.video.source === "external" &&
+      isYouTubeHttpUrl(value.video.externalUrl);
+    if (!hasThumbnail && !youtubeVideo) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["thumbnail"],
+        message: "Thumbnail is required unless the video is a YouTube URL",
+      });
+    }
+  });
+
+export const diyGuideUpdateSchema = z
+  .object({
+    slug: z.preprocess((value) => {
+      if (typeof value !== "string") return undefined;
+      const cleaned = value.trim().toLowerCase();
+      return cleaned.length === 0 ? undefined : cleaned;
+    }, z.string().max(120, "Slug cannot exceed 120 characters").regex(SLUG_REGEX, "Slug must be lowercase letters, numbers and hyphens").optional()),
+    video: mediaRefSchema.optional(),
+    thumbnail: optionalThumbnailSchema.optional(),
+    durationSeconds: optionalDurationSeconds.optional(),
+    publishedAt: optionalPublishedAt.optional(),
+    order: optionalOrder,
+    isPublished: booleanFromUnknown.optional(),
+    translations: translationsSchema(diyGuideTranslationSchema).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "Provide at least one field to update.",
+  });
+
 export const contentListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
@@ -204,6 +380,8 @@ export type TeamMemberInput = z.infer<typeof teamMemberInputSchema>;
 export type TeamMemberUpdateInput = z.infer<typeof teamMemberUpdateSchema>;
 export type FaqInput = z.infer<typeof faqInputSchema>;
 export type FaqUpdateInput = z.infer<typeof faqUpdateSchema>;
+export type DiyGuideInput = z.infer<typeof diyGuideInputSchema>;
+export type DiyGuideUpdateInput = z.infer<typeof diyGuideUpdateSchema>;
 export type ContentListQueryInput = z.infer<typeof contentListQuerySchema>;
 
 export {

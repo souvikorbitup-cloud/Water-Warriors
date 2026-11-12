@@ -100,7 +100,9 @@
     "demoTitle": "Demo video",
     "demoUnavailable": "The demo video isn't available yet. Please check back soon.",
     "testimonialsTitle": "What Our Users Say",
-    "diyTitle": "Step-by-Step DIY Guides"
+    "diyTitle": "Step-by-Step DIY Guides",
+    "diyEmpty": "DIY guides will appear here once they are published.",
+    "diyError": "We couldn't load DIY guides right now. Please try again soon."
   },
   "Location": {
     "privacyNote": "We value your privacy and never store your data.",
@@ -235,6 +237,8 @@
     "option2Title": "Option 2: Recharge the Ground",
     "option2Description": "Direct rainwater into a recharge pit, trench or old well so it soaks back into the soil. This helps replenish the groundwater that borewells in your neighbourhood depend on.",
     "diyTitle": "Step-by-Step DIY Guides",
+    "diyEmpty": "DIY guides will appear here once they are published.",
+    "diyError": "We couldn't load DIY guides right now. Please try again soon.",
     "keepTitle": "Keep It Working",
     "tipLabel": "Tip {number}:",
     "tips": {

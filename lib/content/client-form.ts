@@ -2,6 +2,7 @@ import { routing, type AppLocale } from "@/i18n/routing";
 import type { IFaqTranslation } from "@/lib/models/Faq.model";
 import type { ITeamMemberTranslation } from "@/lib/models/Teammember.model";
 import type { ITestimonialTranslation } from "@/lib/models/Testimonial.model";
+import type { IDiyGuideTranslation } from "@/lib/models/Diyguide.model";
 
 export const CONTENT_LOCALES = routing.locales;
 export type ContentLocale = AppLocale;
@@ -34,6 +35,13 @@ export function emptyTeamTranslations(): Record<
 
 export function emptyFaqTranslations(): Record<ContentLocale, IFaqTranslation> {
   return emptyLocaleRecord(() => ({ question: "", answer: "" }));
+}
+
+export function emptyDiyGuideTranslations(): Record<
+  ContentLocale,
+  IDiyGuideTranslation
+> {
+  return emptyLocaleRecord(() => ({ title: "" }));
 }
 
 export function initialsFromName(name: string) {

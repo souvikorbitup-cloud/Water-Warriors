@@ -141,7 +141,7 @@ export interface DiyGuideModel extends Model<
    URL resolution (shared by the virtuals and the lean-based `getPublic`)
 ------------------------------------------------------------------- */
 
-const isYouTubeUrl = (url?: string | null): boolean => {
+export const isYouTubeUrl = (url?: string | null): boolean => {
   if (!url) return false;
   try {
     return YOUTUBE_HOST_REGEX.test(new URL(url).hostname);
@@ -163,7 +163,7 @@ const getYouTubeId = (url: string): string | null => {
   }
 };
 
-const resolveVideo = (video?: IMediaRef | null) => {
+export const resolveVideo = (video?: IMediaRef | null) => {
   if (!video) return { url: "", provider: "external" as VideoProvider };
   if (video.source === "upload") {
     return {
@@ -178,7 +178,7 @@ const resolveVideo = (video?: IMediaRef | null) => {
   };
 };
 
-const resolveThumbnail = (
+export const resolveThumbnail = (
   thumbnail?: IMediaRef | null,
   video?: IMediaRef | null,
 ): string => {

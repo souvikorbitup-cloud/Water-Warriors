@@ -8,6 +8,13 @@ import type {
   TeamMemberTranslations,
 } from "@/lib/models/Teammember.model";
 import type { IFaqTranslation, FaqTranslations } from "@/lib/models/Faq.model";
+import type {
+  DiyGuideTranslations,
+  IDiyGuideTranslation,
+  IMediaRef,
+  MediaSource,
+  VideoProvider,
+} from "@/lib/models/Diyguide.model";
 
 export type ContentListResponse<T> = {
   items: T[];
@@ -69,8 +76,32 @@ export type FaqDetail = FaqListItem & {
   translations: FaqTranslations;
 };
 
+export type DiyGuideListItem = {
+  id: string;
+  slug: string;
+  title: string;
+  videoSource: MediaSource;
+  videoProvider: VideoProvider;
+  videoUrl: string;
+  thumbnailUrl: string;
+  durationSeconds: number | null;
+  durationMinutes: number | null;
+  publishedAt: string | null;
+  order: number;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type DiyGuideDetail = DiyGuideListItem & {
+  video: IMediaRef;
+  thumbnail: IMediaRef | null;
+  translations: DiyGuideTranslations;
+};
+
 export type {
   ITestimonialTranslation,
   ITeamMemberTranslation,
   IFaqTranslation,
+  IDiyGuideTranslation,
 };

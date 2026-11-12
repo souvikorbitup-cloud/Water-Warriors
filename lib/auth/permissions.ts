@@ -13,6 +13,7 @@ export const PERMISSIONS = {
   AllTestimonialsEdit: "allTestimonials:edit",
   // Content
   AllDIYGuidesView: "allDIYGuides:view",
+  AllDIYGuidesEdit: "allDIYGuides:edit",
   AllFaqsView: "allFaqs:view",
   AllFaqsEdit: "allFaqs:edit",
   // Submission
@@ -40,6 +41,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     PERMISSIONS.AllTestimonialsEdit,
     // Content
     PERMISSIONS.AllDIYGuidesView,
+    PERMISSIONS.AllDIYGuidesEdit,
     PERMISSIONS.AllFaqsView,
     PERMISSIONS.AllFaqsEdit,
     // Submission

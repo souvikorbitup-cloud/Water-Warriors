@@ -3,12 +3,16 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import FeaturedVideoCard from "../../shared/card/FeaturedVideoCard";
-import { diy_guides } from "@/lib/data/all_data";
+import type { PublicDiyGuide } from "@/lib/content/constants";
 
-export default function DIYGuidesSection() {
-  // Only one video can play at a time: starting another one unmounts the previous player
+export default function DIYGuidesSection({
+  guides,
+  error = false,
+}: {
+  guides: PublicDiyGuide[];
+  error?: boolean;
+}) {
   const t = useTranslations("Education");
-  const tGuides = useTranslations("DiyGuides");
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
 
   return (
@@ -18,22 +22,32 @@ export default function DIYGuidesSection() {
           {t("diyTitle")}
         </h2>
 
-        <ul className="mt-8 grid gap-6 sm:mt-12 md:grid-cols-2 lg:gap-8">
-          {diy_guides.map((guide) => (
-            <li key={guide.video_url}>
-              <FeaturedVideoCard
-                videoUrl={guide.video_url}
-                thumbnailUrl={guide.video_thumbnel_url}
-                title={tGuides(guide.translationKey)}
-                publishDate={guide.publish_date}
-                duration={guide.duration}
-                playing={activeVideoUrl === guide.video_url}
-                onPlay={() => setActiveVideoUrl(guide.video_url)}
-                className="sm:aspect-[1.44] lg:aspect-[1.44] lg:h-auto"
-              />
-            </li>
-          ))}
-        </ul>
+        {error ? (
+          <p className="mt-8 text-center text-sm text-muted-foreground sm:mt-12">
+            {t("diyError")}
+          </p>
+        ) : guides.length === 0 ? (
+          <p className="mt-8 text-center text-sm text-muted-foreground sm:mt-12">
+            {t("diyEmpty")}
+          </p>
+        ) : (
+          <ul className="mt-8 grid gap-6 sm:mt-12 md:grid-cols-2 lg:gap-8">
+            {guides.map((guide) => (
+              <li key={guide.id}>
+                <FeaturedVideoCard
+                  videoUrl={guide.videoUrl}
+                  thumbnailUrl={guide.thumbnailUrl}
+                  title={guide.title}
+                  publishDate={guide.publishedAt}
+                  duration={guide.durationMinutes}
+                  playing={activeVideoUrl === guide.id}
+                  onPlay={() => setActiveVideoUrl(guide.id)}
+                  className="sm:aspect-[1.44] lg:aspect-[1.44] lg:h-auto"
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );
