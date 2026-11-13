@@ -40,8 +40,9 @@ the first time billing reads or manages coupons.
 
 Set `GOOGLE_STATIC_MAPS_API_KEY` in `.env.local` and each deployment environment
 to enable Magic Selection. Restrict this server-side key to the Google Maps
-Static Maps API; the interactive map continues to use
-`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+Static Maps API. Checkout map previews load directly from Google Static Maps
+using `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`; enable Static Maps API for that key and
+restrict it to your site's HTTP referrers.
 
 ## Plus checkout
 

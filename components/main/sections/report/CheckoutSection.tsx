@@ -30,14 +30,6 @@ import {
 type PaymentStage = "idle" | "starting" | "verifying";
 type MapPreviewError = "missing-area" | "failed";
 
-type StaticMapImageResponse = {
-  image: string;
-  center: { lat: number; lng: number };
-  zoom: number;
-  size: number;
-  scale: number;
-};
-
 type CreateOrderResponse = {
   orderId: string;
   amount: number;
@@ -60,30 +52,6 @@ function isBillingQuote(value: unknown): value is BillingQuote {
     value.currency === "INR" &&
     "couponCode" in value &&
     (typeof value.couponCode === "string" || value.couponCode === null)
-  );
-}
-
-function isStaticMapImageResponse(
-  value: unknown,
-): value is StaticMapImageResponse {
-  if (typeof value !== "object" || value === null) return false;
-  return (
-    "image" in value &&
-    typeof value.image === "string" &&
-    value.image.startsWith("data:image/png;base64,") &&
-    "center" in value &&
-    typeof value.center === "object" &&
-    value.center !== null &&
-    "lat" in value.center &&
-    typeof value.center.lat === "number" &&
-    "lng" in value.center &&
-    typeof value.center.lng === "number" &&
-    "zoom" in value &&
-    typeof value.zoom === "number" &&
-    "size" in value &&
-    typeof value.size === "number" &&
-    "scale" in value &&
-    typeof value.scale === "number"
   );
 }
 
@@ -126,102 +94,52 @@ async function getApiMessage(
   return fallback;
 }
 
-function projectPoint(
-  point: { lat: number; lng: number },
-  image: StaticMapImageResponse,
-): { x: number; y: number } {
-  const worldSize = 256 * 2 ** image.zoom;
-  const centerX = ((image.center.lng + 180) / 360) * worldSize;
-  const centerSinLatitude = Math.sin((image.center.lat * Math.PI) / 180);
-  const centerY =
-    (0.5 -
-      Math.log((1 + centerSinLatitude) / (1 - centerSinLatitude)) /
-        (4 * Math.PI)) *
-    worldSize;
-  const pointSinLatitude = Math.sin((point.lat * Math.PI) / 180);
-  const pointX = ((point.lng + 180) / 360) * worldSize;
-  const pointY =
-    (0.5 -
-      Math.log((1 + pointSinLatitude) / (1 - pointSinLatitude)) /
-        (4 * Math.PI)) *
-    worldSize;
-
-  return {
-    x: (image.size * image.scale) / 2 + (pointX - centerX) * image.scale,
-    y: (image.size * image.scale) / 2 + (pointY - centerY) * image.scale,
-  };
-}
-
-async function createAreaPreview(
-  points: { lat: number; lng: number }[],
-): Promise<string> {
+function createAreaPreviewUrl(points: { lat: number; lng: number }[]): string {
   const savedCamera = readSavedMapCamera();
-  const center =
-    savedCamera?.center ??
-    points.reduce(
-      (sum, point) => ({
-        lat: sum.lat + point.lat / points.length,
-        lng: sum.lng + point.lng / points.length,
-      }),
-      { lat: 0, lng: 0 },
-    );
-  const zoom = Math.max(15, Math.min(21, savedCamera?.zoom ?? 19));
-  const response = await fetch("/api/detect-building-footprint", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...center, zoom }),
+  let twiceArea = 0;
+  let latitudeSum = 0;
+  let longitudeSum = 0;
+  points.forEach((point, index) => {
+    const nextPoint = points[(index + 1) % points.length];
+    const cross = point.lng * nextPoint.lat - nextPoint.lng * point.lat;
+    twiceArea += cross;
+    latitudeSum += (point.lat + nextPoint.lat) * cross;
+    longitudeSum += (point.lng + nextPoint.lng) * cross;
   });
-  if (!response.ok) {
-    throw new Error(await getApiMessage(response, "Could not load the map."));
+  const center =
+    Math.abs(twiceArea) < 1e-12
+      ? points.reduce(
+          (sum, point) => ({
+            lat: sum.lat + point.lat / points.length,
+            lng: sum.lng + point.lng / points.length,
+          }),
+          { lat: 0, lng: 0 },
+        )
+      : {
+          lat: latitudeSum / (3 * twiceArea),
+          lng: longitudeSum / (3 * twiceArea),
+        };
+  const zoom = Math.max(15, Math.min(21, savedCamera?.zoom ?? 19));
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    throw new Error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not configured.");
   }
 
-  const payload: unknown = await response.json();
-  if (!isStaticMapImageResponse(payload)) {
-    throw new Error("The server returned an invalid map image.");
-  }
-
-  const image = new window.Image();
-  image.src = payload.image;
-  await image.decode();
-
-  const canvas = document.createElement("canvas");
-  canvas.width = image.naturalWidth;
-  canvas.height = image.naturalHeight;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Could not create the map preview.");
-
-  context.drawImage(image, 0, 0);
-  const projectedPoints = points.map((point) => projectPoint(point, payload));
-
-  context.beginPath();
-  context.moveTo(projectedPoints[0].x, projectedPoints[0].y);
-  for (const point of projectedPoints.slice(1)) {
-    context.lineTo(point.x, point.y);
-  }
-  context.closePath();
-  context.fillStyle = "rgba(241, 187, 27, 0.35)";
-  context.strokeStyle = "#F1BB1B";
-  context.lineWidth = Math.max(3, canvas.width / 400);
-  context.fill();
-  context.stroke();
-
-  for (const point of projectedPoints) {
-    context.beginPath();
-    context.arc(
-      point.x,
-      point.y,
-      Math.max(5, canvas.width / 240),
-      0,
-      2 * Math.PI,
-    );
-    context.fillStyle = "#F1BB1B";
-    context.fill();
-    context.lineWidth = 3;
-    context.strokeStyle = "#ffffff";
-    context.stroke();
-  }
-
-  return canvas.toDataURL("image/png");
+  const searchParams = new URLSearchParams({
+    maptype: "roadmap",
+    size: "640x251",
+    scale: "2",
+    center: `${center.lat},${center.lng}`,
+    zoom: String(zoom),
+    path: [
+      "fillcolor:0xFFA50040",
+      "color:0xFF8C00",
+      "weight:2",
+      ...points.map((point) => `${point.lat},${point.lng}`),
+    ].join("|"),
+    key: apiKey,
+  });
+  return `https://maps.googleapis.com/maps/api/staticmap?${searchParams.toString()}`;
 }
 
 export default function CheckoutSection() {
@@ -287,25 +205,28 @@ export default function CheckoutSection() {
       .then(() => {
         const points = readSavedMapPoints();
         if (points.length < 4) {
-          if (active) setMapPreviewError("missing-area");
+          if (active) {
+            setMapPreviewError("missing-area");
+            setMapPreviewLoading(false);
+          }
           return null;
         }
 
         if (active) setSelectedAreaAvailable(true);
-        return createAreaPreview(points);
+        return createAreaPreviewUrl(points);
       })
-      .then((preview) => {
-        if (active && preview) setMapPreview(preview);
+      .then((previewUrl) => {
+        if (active && previewUrl) setMapPreview(previewUrl);
       })
       .catch((error: unknown) => {
         console.error(
           "Could not prepare the selected-area map preview.",
           error,
         );
-        if (active) setMapPreviewError("failed");
-      })
-      .finally(() => {
-        if (active) setMapPreviewLoading(false);
+        if (active) {
+          setMapPreviewError("failed");
+          setMapPreviewLoading(false);
+        }
       });
 
     return () => {
@@ -496,20 +417,37 @@ export default function CheckoutSection() {
       />
 
       <div className="my-container-x">
-        <div className="relative h-60 overflow-hidden rounded-2xl border border-border sm:h-80 sm:rounded-4xl lg:h-110">
-          {mapPreview ? (
-            <Image
-              src={mapPreview}
-              alt={tCommon("mapSelectedAreaAlt")}
-              fill
-              unoptimized
-              sizes="(min-width: 1200px) 1800px, 100vw"
-              className="object-cover"
-            />
+        <div className="relative w-full overflow-hidden rounded-2xl border border-border sm:rounded-4xl">
+          {mapPreview && !mapPreviewError ? (
+            <>
+              <Image
+                src={mapPreview}
+                alt={tCommon("mapSelectedAreaAlt")}
+                width={1800}
+                height={1200}
+                unoptimized
+                sizes="100vw"
+                className="block h-auto w-full object-contain"
+                onLoad={() => setMapPreviewLoading(false)}
+                onError={() => {
+                  setMapPreviewLoading(false);
+                  setMapPreviewError("failed");
+                }}
+              />
+
+              {mapPreviewLoading && (
+                <p
+                  role="status"
+                  className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-background/90 px-4 py-2 text-sm text-heading shadow"
+                >
+                  {t("loadingAreaPreview")}
+                </p>
+              )}
+            </>
           ) : (
             <p
               role={mapPreviewLoading ? "status" : "alert"}
-              className="absolute inset-0 flex items-center justify-center bg-secondary/30 px-6 text-center text-sm text-heading"
+              className="flex min-h-60 w-full items-center justify-center bg-secondary/30 px-6 text-center text-sm text-heading"
             >
               {mapPreviewLoading
                 ? t("loadingAreaPreview")
