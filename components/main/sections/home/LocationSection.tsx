@@ -37,6 +37,9 @@ type LocationSectionProps = {
 };
 
 const INITIAL_CENTER: LatLng = { lat: 22.6446, lng: 88.3737 };
+const INITIAL_ZOOM = 17;
+const MAP_CAMERA_SESSION_KEY = "water-warriors:location-map-camera";
+const MAP_POINTS_SESSION_KEY = "water-warriors:location-map-points";
 const MIN_POINTS = 4;
 // Two map clicks closer together than this are treated as one double-click.
 const DOUBLE_CLICK_MS = 350;
@@ -52,12 +55,103 @@ const MAP_OPTIONS: google.maps.MapOptions = {
 
 const COORDS_REGEX = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/;
 
-type BuildingStatus =
-  | "idle"
-  | "loading"
-  | "notFound"
-  | "error"
-  | "mapRequired";
+type BuildingStatus = "idle" | "loading" | "notFound" | "error" | "mapRequired";
+
+type MapCamera = {
+  center: LatLng;
+  zoom: number;
+};
+
+function readSavedMapCamera(): MapCamera | null {
+  try {
+    const stored = sessionStorage.getItem(MAP_CAMERA_SESSION_KEY);
+    if (!stored) return null;
+
+    const value: unknown = JSON.parse(stored);
+    if (
+      typeof value !== "object" ||
+      value === null ||
+      !("center" in value) ||
+      !("zoom" in value) ||
+      typeof value.center !== "object" ||
+      value.center === null ||
+      !("lat" in value.center) ||
+      !("lng" in value.center) ||
+      typeof value.center.lat !== "number" ||
+      typeof value.center.lng !== "number" ||
+      typeof value.zoom !== "number" ||
+      !Number.isFinite(value.center.lat) ||
+      !Number.isFinite(value.center.lng) ||
+      !Number.isFinite(value.zoom) ||
+      value.center.lat < -85 ||
+      value.center.lat > 85 ||
+      value.center.lng < -180 ||
+      value.center.lng > 180 ||
+      value.zoom < 0 ||
+      value.zoom > 22
+    ) {
+      return null;
+    }
+
+    return {
+      center: { lat: value.center.lat, lng: value.center.lng },
+      zoom: value.zoom,
+    };
+  } catch (error) {
+    console.warn("Could not restore the saved map position.", error);
+    return null;
+  }
+}
+
+function saveMapCamera(camera: MapCamera) {
+  try {
+    sessionStorage.setItem(MAP_CAMERA_SESSION_KEY, JSON.stringify(camera));
+  } catch (error) {
+    console.warn("Could not save the map position for this session.", error);
+  }
+}
+
+function isValidMapPoint(value: unknown): value is LatLng {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("lat" in value) || !("lng" in value)) return false;
+
+  return (
+    typeof value.lat === "number" &&
+    typeof value.lng === "number" &&
+    Number.isFinite(value.lat) &&
+    Number.isFinite(value.lng) &&
+    value.lat >= -90 &&
+    value.lat <= 90 &&
+    value.lng >= -180 &&
+    value.lng <= 180
+  );
+}
+
+function readSavedMapPoints(): LatLng[] {
+  try {
+    const stored = sessionStorage.getItem(MAP_POINTS_SESSION_KEY);
+    if (!stored) return [];
+
+    const value: unknown = JSON.parse(stored);
+    if (!Array.isArray(value) || !value.every(isValidMapPoint)) {
+      console.warn("Ignoring invalid saved map points.");
+      return [];
+    }
+
+    return value;
+  } catch (error) {
+    console.warn("Could not restore the saved map points.", error);
+    return [];
+  }
+}
+
+function saveMapPoints(points: LatLng[]) {
+  try {
+    sessionStorage.setItem(MAP_POINTS_SESSION_KEY, JSON.stringify(points));
+  } catch (error) {
+    console.warn("Could not save the map points for this session.", error);
+  }
+}
 
 // Ray-casting point-in-polygon test (lng = x, lat = y).
 function pointInPolygon(point: LatLng, ring: LatLng[]): boolean {
@@ -202,7 +296,9 @@ async function detectBuildingFromMap(
   });
 
   if (!response.ok) {
-    throw new Error(`Magic Selection image request failed (${response.status}).`);
+    throw new Error(
+      `Magic Selection image request failed (${response.status}).`,
+    );
   }
 
   const bitmap = await createImageBitmap(await response.blob());
@@ -213,7 +309,8 @@ async function detectBuildingFromMap(
     canvas.height = bitmap.height;
 
     const context = canvas.getContext("2d");
-    if (!context) throw new Error("Could not create the roof detection canvas.");
+    if (!context)
+      throw new Error("Could not create the roof detection canvas.");
 
     context.drawImage(bitmap, 0, 0);
     const image = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -238,10 +335,10 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
+  const [isMapReady, setIsMapReady] = useState(false);
   const suggestionRequestRef = useRef(0);
   // Refs mirror the drawing state so the Google Maps listeners (click /
   // dblclick) never read a stale value between renders.
-  const pointsRef = useRef<LatLng[]>([]);
   const isDrawingRef = useRef(false);
   const lastClickRef = useRef(0);
   // How many points existed before the current click (used by double-click).
@@ -266,15 +363,46 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
   const [isSatellite, setIsSatellite] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [points, setPoints] = useState<LatLng[]>([]);
+  const [points, setPoints] = useState<LatLng[]>(() =>
+    typeof window === "undefined" ? [] : readSavedMapPoints(),
+  );
+  const pointsRef = useRef<LatLng[]>(points);
   const [pin, setPin] = useState<LatLng | null>(null);
   const [buildingStatus, setBuildingStatus] = useState<BuildingStatus>("idle");
+  const [mapCamera] = useState<MapCamera>(() => {
+    const savedCamera =
+      typeof window === "undefined" ? null : readSavedMapCamera();
+    return savedCamera ?? { center: INITIAL_CENTER, zoom: INITIAL_ZOOM };
+  });
 
   // The area counts as "selected" as soon as the minimum number of points exist.
   const isAreaSelected = points.length >= MIN_POINTS;
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
+    setIsMapReady(true);
+  }, []);
+
+  const onUnmount = useCallback(() => {
+    mapRef.current = null;
+    setIsMapReady(false);
+  }, []);
+
+  const persistMapCamera = useCallback((camera?: MapCamera) => {
+    if (camera) {
+      saveMapCamera(camera);
+      return;
+    }
+
+    const map = mapRef.current;
+    const center = map?.getCenter();
+    const zoom = map?.getZoom();
+    if (!center || typeof zoom !== "number") return;
+
+    saveMapCamera({
+      center: { lat: center.lat(), lng: center.lng() },
+      zoom,
+    });
   }, []);
 
   useEffect(() => {
@@ -357,7 +485,7 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
     shapeRef.current = null;
 
     const map = mapRef.current;
-    if (!map || points.length < 2) return;
+    if (!map || !isMapReady || points.length < 2) return;
 
     const isFinished = isAreaSelected && !isDrawing;
     const shape =
@@ -384,10 +512,11 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
       shape.setMap(null);
       if (shapeRef.current === shape) shapeRef.current = null;
     };
-  }, [points, isDrawing, isAreaSelected, isLoaded]);
+  }, [points, isDrawing, isAreaSelected, isLoaded, isMapReady]);
 
   const flyTo = (location: LatLng, zoom = 18) => {
     setPin(location);
+    persistMapCamera({ center: location, zoom });
     mapRef.current?.panTo(location);
     mapRef.current?.setZoom(zoom);
   };
@@ -496,6 +625,7 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
 
   const updatePoints = (next: LatLng[]) => {
     pointsRef.current = next;
+    saveMapPoints(next);
     setPoints(next);
   };
 
@@ -505,7 +635,9 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
   };
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    if (!isDrawingRef.current || !e.latLng) return;
+    if (!e.latLng) return;
+    persistMapCamera();
+    if (!isDrawingRef.current) return;
 
     // A double-click fires two click events. Ignore the second one (by timing,
     // since domEvent.detail isn't reliable) so it doesn't add a duplicate point.
@@ -537,6 +669,7 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
     // Prevent the default map context-menu behavior.
     e.stop();
     e.domEvent?.preventDefault();
+    persistMapCamera();
 
     // Cancel any previous building lookup.
     const requestId = ++buildingRequestRef.current;
@@ -560,7 +693,10 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
       try {
         footprint = await detectBuildingFromMap(target, zoom);
       } catch (error) {
-        console.warn("Magic Selection failed; trying the building lookup.", error);
+        console.warn(
+          "Magic Selection failed; trying the building lookup.",
+          error,
+        );
       }
 
       if (!footprint) footprint = await fetchBuildingFootprint(target);
@@ -716,8 +852,8 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
             ) : (
               <GoogleMap
                 mapContainerClassName="size-full"
-                center={INITIAL_CENTER}
-                zoom={17}
+                center={mapCamera.center}
+                zoom={mapCamera.zoom}
                 mapTypeId={isSatellite ? "satellite" : "roadmap"}
                 options={{
                   ...MAP_OPTIONS,
@@ -725,6 +861,8 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
                   disableDoubleClickZoom: isDrawing,
                 }}
                 onLoad={onLoad}
+                onUnmount={onUnmount}
+                onIdle={persistMapCamera}
                 onClick={handleMapClick}
                 onDblClick={handleMapDoubleClick}
                 onRightClick={handleMapRightClick}
@@ -944,9 +1082,9 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
                   ? t("findingBuilding")
                   : buildingStatus === "mapRequired"
                     ? t("magicSelectionRequiresMap")
-                  : buildingStatus === "notFound"
-                    ? t("noBuildingFound")
-                    : t("buildingLookupFailed")}
+                    : buildingStatus === "notFound"
+                      ? t("noBuildingFound")
+                      : t("buildingLookupFailed")}
               </p>
             )}
 
