@@ -27,6 +27,7 @@ import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { detectRoofFromPixels } from "@/lib/data/roof-detection";
 
 type LatLng = google.maps.LatLngLiteral;
 
@@ -51,7 +52,12 @@ const MAP_OPTIONS: google.maps.MapOptions = {
 
 const COORDS_REGEX = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/;
 
-type BuildingStatus = "idle" | "loading" | "notFound" | "error";
+type BuildingStatus =
+  | "idle"
+  | "loading"
+  | "notFound"
+  | "error"
+  | "mapRequired";
 
 // Ray-casting point-in-polygon test (lng = x, lat = y).
 function pointInPolygon(point: LatLng, ring: LatLng[]): boolean {
@@ -76,7 +82,7 @@ const OVERPASS_ENDPOINTS = [
   "https://overpass.private.coffee/api/interpreter",
 ];
 const OVERPASS_ROUNDS = 2;
-const OVERPASS_TIMEOUT_MS = 8000;
+const OVERPASS_TIMEOUT_MS = 12000;
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -84,30 +90,75 @@ const sleep = (ms: number) =>
 async function queryOverpass(query: string): Promise<unknown> {
   let lastError: unknown = new Error("Building lookup failed.");
 
+  const retryableStatuses = new Set([429, 502, 503, 504]);
+
   for (let round = 0; round < OVERPASS_ROUNDS; round++) {
-    if (round > 0) await sleep(800 * 2 ** (round - 1)); // 0.8s, 1.6s, ...
+    let retryAfterMs = 0;
 
     for (const endpoint of OVERPASS_ENDPOINTS) {
       const controller = new AbortController();
+
       const timeoutId = window.setTimeout(
         () => controller.abort(),
         OVERPASS_TIMEOUT_MS,
       );
+
       try {
         const response = await fetch(endpoint, {
           method: "POST",
-          body: new URLSearchParams({ data: query }),
+          headers: {
+            Accept: "application/json",
+          },
+          body: new URLSearchParams({
+            data: query,
+          }),
           signal: controller.signal,
         });
-        if (response.ok) return await response.json();
-        lastError = new Error(
-          `Overpass ${endpoint} returned status ${response.status}.`,
-        );
+
+        if (!response.ok) {
+          const details = await response.text();
+
+          lastError = new Error(
+            `Overpass API ${response.status}: ${details.slice(0, 300)}`,
+          );
+
+          if (retryableStatuses.has(response.status)) {
+            const retryAfter = response.headers.get("Retry-After");
+
+            if (retryAfter) {
+              const seconds = Number(retryAfter);
+              const delay = Number.isFinite(seconds)
+                ? seconds * 1000
+                : Math.max(0, Date.parse(retryAfter) - Date.now());
+
+              retryAfterMs = Math.max(retryAfterMs, delay);
+            }
+          }
+
+          continue;
+        }
+
+        const data = await response.json();
+
+        if (data.remark) {
+          throw new Error(`Overpass query failed: ${data.remark}`);
+        }
+
+        return data;
       } catch (error) {
-        lastError = error; // network error, timeout, or non-JSON busy page
+        lastError = error;
+
+        console.warn(`Building lookup failed on ${endpoint}:`, error);
       } finally {
         window.clearTimeout(timeoutId);
       }
+    }
+
+    // Exponential backoff before retrying the servers.
+    if (round < OVERPASS_ROUNDS - 1) {
+      const backoff = 3000 * Math.pow(2, round);
+
+      await sleep(Math.max(backoff, retryAfterMs));
     }
   }
 
@@ -138,6 +189,45 @@ async function fetchBuildingFootprint(point: LatLng): Promise<LatLng[] | null> {
 
   if (rings.length === 0) return null;
   return rings.find((ring) => pointInPolygon(point, ring)) ?? rings[0];
+}
+
+async function detectBuildingFromMap(
+  point: LatLng,
+  zoom: number,
+): Promise<LatLng[] | null> {
+  const response = await fetch("/api/detect-building-footprint", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...point, zoom }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Magic Selection image request failed (${response.status}).`);
+  }
+
+  const bitmap = await createImageBitmap(await response.blob());
+
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Could not create the roof detection canvas.");
+
+    context.drawImage(bitmap, 0, 0);
+    const image = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    return detectRoofFromPixels(image.data, {
+      width: canvas.width,
+      height: canvas.height,
+      center: point,
+      zoom,
+      scale: 2,
+    });
+  } finally {
+    bitmap.close();
+  }
 }
 
 export default function LocationSection({ onNext }: LocationSectionProps) {
@@ -437,40 +527,92 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
   };
 
   // Double-click:
-  //  - as the first action (no points yet): select the building under the
-  //    cursor and use its outline as the area;
-  //  - after you've placed points: finish the drawing (needs 4+ points).
-  const handleMapDoubleClick = async (e: google.maps.MapMouseEvent) => {
-    if (!isDrawingRef.current) return;
-    e.stop(); // stop the default double-click zoom
+  // Select the building footprint under the clicked map location.
+  const selectBuildingAt = async (
+    e: google.maps.MapMouseEvent,
+    restorePoints?: LatLng[],
+  ) => {
+    if (!isDrawingRef.current || !e.latLng) return;
 
-    if (priorCountRef.current === 0 && e.latLng) {
-      const target = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-      const requestId = ++buildingRequestRef.current;
-      setBuildingStatus("loading");
+    // Prevent the default map context-menu behavior.
+    e.stop();
+    e.domEvent?.preventDefault();
 
-      try {
-        const footprint = await fetchBuildingFootprint(target);
-        if (requestId !== buildingRequestRef.current) return;
+    // Cancel any previous building lookup.
+    const requestId = ++buildingRequestRef.current;
 
-        if (footprint) {
-          updatePoints(footprint);
-          updateDrawing(false);
-          setBuildingStatus("idle");
-        } else {
-          updatePoints([]); // drop the stray point from the first click
-          setBuildingStatus("notFound");
-        }
-      } catch (error) {
-        if (requestId !== buildingRequestRef.current) return;
-        console.error("Failed to look up the building outline.", error);
-        updatePoints([]);
-        setBuildingStatus("error");
-      }
+    if (isSatellite) {
+      setBuildingStatus("mapRequired");
       return;
     }
 
-    if (pointsRef.current.length >= MIN_POINTS) updateDrawing(false);
+    const target = {
+      lat: e.latLng.lat(),
+      lng: e.latLng.lng(),
+    };
+
+    setBuildingStatus("loading");
+
+    try {
+      const zoom = mapRef.current?.getZoom() ?? 17;
+      let footprint: LatLng[] | null = null;
+
+      try {
+        footprint = await detectBuildingFromMap(target, zoom);
+      } catch (error) {
+        console.warn("Magic Selection failed; trying the building lookup.", error);
+      }
+
+      if (!footprint) footprint = await fetchBuildingFootprint(target);
+
+      // Ignore outdated requests.
+      if (requestId !== buildingRequestRef.current) return;
+
+      if (footprint && footprint.length >= MIN_POINTS) {
+        // Select the actual building outline.
+        updatePoints(footprint);
+
+        // Automatically finish drawing.
+        updateDrawing(false);
+
+        setBuildingStatus("idle");
+      } else {
+        // Restore previously drawn points if the lookup fails.
+        if (restorePoints !== undefined) {
+          updatePoints(restorePoints);
+        }
+
+        setBuildingStatus("notFound");
+      }
+    } catch (error) {
+      if (requestId !== buildingRequestRef.current) return;
+
+      console.error("Failed to look up the building outline.", error);
+
+      if (restorePoints !== undefined) {
+        updatePoints(restorePoints);
+      }
+
+      setBuildingStatus("error");
+    }
+  };
+
+  // Double-click: select the building footprint.
+  const handleMapDoubleClick = async (e: google.maps.MapMouseEvent) => {
+    if (!isDrawingRef.current || !e.latLng) return;
+
+    // The first click of a double-click may already have added a point.
+    // Keep the original points so they can be restored if no building is found.
+    const previousPoints = pointsRef.current.slice(0, priorCountRef.current);
+
+    await selectBuildingAt(e, previousPoints);
+  };
+
+  // Right-click: select the building footprint.
+  const handleMapRightClick = async (e: google.maps.MapMouseEvent) => {
+    if (!isDrawingRef.current || !e.latLng) return;
+
+    await selectBuildingAt(e);
   };
 
   // Undo: remove the last point, one step at a time.
@@ -585,6 +727,7 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
                 onLoad={onLoad}
                 onClick={handleMapClick}
                 onDblClick={handleMapDoubleClick}
+                onRightClick={handleMapRightClick}
               >
                 {pin && <Marker position={pin} />}
 
@@ -777,7 +920,10 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
             <MapControl
               label={isSatellite ? t("switchToMap") : t("switchToSatellite")}
               pressed={isSatellite}
-              onClick={() => setIsSatellite((v) => !v)}
+              onClick={() => {
+                setIsSatellite((v) => !v);
+                setBuildingStatus("idle");
+              }}
               className="bottom-3 left-3 sm:bottom-4 sm:left-4"
               shape="square"
             >
@@ -796,6 +942,8 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
               >
                 {buildingStatus === "loading"
                   ? t("findingBuilding")
+                  : buildingStatus === "mapRequired"
+                    ? t("magicSelectionRequiresMap")
                   : buildingStatus === "notFound"
                     ? t("noBuildingFound")
                     : t("buildingLookupFailed")}

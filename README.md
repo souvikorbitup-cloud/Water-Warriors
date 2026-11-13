@@ -33,6 +33,13 @@ Set `COLLECTION_NAME=siteSettings` in `.env.local` and in each deployment
 environment. The admin appearance and hero banner settings are stored as
 separate documents in this MongoDB collection.
 
+## Location selection
+
+Set `GOOGLE_STATIC_MAPS_API_KEY` in `.env.local` and each deployment environment
+to enable Magic Selection. Restrict this server-side key to the Google Maps
+Static Maps API; the interactive map continues to use
+`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
