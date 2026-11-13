@@ -61,7 +61,8 @@ not integrate Supabase. In addition to the Plus checkout settings, configure:
   Geocoding API enabled. Do not use an HTTP-referrer-restricted key for this
   server request; restrict it to the Geocoding API and, where possible, the
   server's IP address.
-- `GEMINI_API_KEY` as a server-only key for hydrogeology analysis.
+- `GEMINI_API_KEY` as a server-only key for the `gemini-3.5-flash-lite`
+  hydrogeology analysis model.
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` with Google Maps Static API enabled and
   restricted to the site's HTTP referrers. Report map images load directly from
   Google Static Maps.

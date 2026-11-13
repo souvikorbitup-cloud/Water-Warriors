@@ -11,6 +11,8 @@ import type {
 
 type JsonRecord = Record<string, unknown>;
 
+const GEMINI_MODEL_ID = "gemini-3.5-flash-lite";
+
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null;
 }
@@ -327,7 +329,7 @@ async function requestHydrogeologyAnalysis(
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_ID}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -370,9 +372,23 @@ async function requestHydrogeologyAnalysis(
   );
 
   if (!response.ok) {
+    const responseText = await response.text();
+    let detail = responseText.trim().slice(0, 240);
+    try {
+      const errorBody: unknown = JSON.parse(responseText);
+      if (
+        isRecord(errorBody) &&
+        isRecord(errorBody.error) &&
+        typeof errorBody.error.message === "string"
+      ) {
+        detail = errorBody.error.message.trim().slice(0, 240);
+      }
+    } catch {
+      // Keep the bounded response text as the diagnostic.
+    }
     const retryable = response.status === 429 || response.status >= 500;
     throw new GeminiGenerationError(
-      `Hydrogeology analysis request failed (${response.status}).`,
+      `Hydrogeology analysis request failed (${response.status})${detail ? `: ${detail}` : "."}`,
       retryable,
     );
   }

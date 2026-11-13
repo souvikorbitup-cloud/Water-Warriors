@@ -354,6 +354,7 @@
   },
   "Report": {
     "greeting": "Hey, <name></name>",
+    "greetingDefault": "Hey, <name>Water Warrior!</name>",
     "greetingGeneric": "Your rainwater harvesting report",
     "thankYou": "Thank you for taking the first step toward conserving water—for yourself and for future generations.",
     "catchmentLabel": "Selected Catchment Area",

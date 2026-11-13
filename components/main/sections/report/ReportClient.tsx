@@ -334,37 +334,41 @@ export default function ReportClient() {
 
   return (
     <>
-      <div
-        className="my-container-x mt-6 print:hidden"
-        role={loadError ? "alert" : "status"}
-        aria-live="polite"
-      >
-        <div className="rounded-2xl border border-border bg-background p-4 text-sm">
-          <div className="flex items-center gap-2 font-semibold text-heading">
-            {!isReady && report?.status !== "failed" && (
-              <LoaderCircle className="size-4 animate-spin" aria-hidden />
+      {report?.status !== "ready" && (
+        <div
+          className="my-container-x mt-6 print:hidden"
+          role={loadError ? "alert" : "status"}
+          aria-live="polite"
+        >
+          <div className="rounded-2xl border border-border bg-background p-4 text-sm">
+            <div className="flex items-center gap-2 font-semibold text-heading">
+              {!isReady && report?.status !== "failed" && (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden />
+              )}
+              {statusMessage}
+            </div>
+            {loadError && <p className="mt-2 text-destructive">{loadError}</p>}
+            {report?.lastError && !isReady && (
+              <p className="mt-2 text-paragraph">{report.lastError}</p>
             )}
-            {statusMessage}
+            {(report?.status === "failed" || Boolean(loadError)) && (
+              <button
+                type="button"
+                onClick={() => void retryGeneration()}
+                disabled={isRetrying}
+                className="mt-3 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50"
+              >
+                {isRetrying ? t("reportRetrying") : t("retryReport")}
+              </button>
+            )}
           </div>
-          {loadError && <p className="mt-2 text-destructive">{loadError}</p>}
-          {report?.lastError && !isReady && (
-            <p className="mt-2 text-paragraph">{report.lastError}</p>
-          )}
-          {(report?.status === "failed" ||
-            (Boolean(loadError) && report?.status !== "ready")) && (
-            <button
-              type="button"
-              onClick={() => void retryGeneration()}
-              disabled={isRetrying}
-              className="mt-3 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50"
-            >
-              {isRetrying ? t("reportRetrying") : t("retryReport")}
-            </button>
-          )}
         </div>
-      </div>
+      )}
       <ReportOverviewSection
         name={report?.customerName || undefined}
+        generationFinished={
+          report?.status === "ready" || report?.status === "failed"
+        }
         catchmentArea={formattedArea}
         annualRainfall={formattedRainfall}
         mapImageUrl={mapImageUrl}

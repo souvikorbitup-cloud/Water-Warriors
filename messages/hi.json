@@ -354,6 +354,7 @@
   },
   "Report": {
     "greeting": "नमस्ते, <name></name>",
+    "greetingDefault": "नमस्ते, <name>Water Warrior!</name>",
     "greetingGeneric": "आपकी वर्षा जल संचयन रिपोर्ट",
     "thankYou": "पानी बचाने की दिशा में पहला कदम उठाने के लिए धन्यवाद—अपने लिए और आने वाली पीढ़ियों के लिए।",
     "catchmentLabel": "चयनित कैचमेंट क्षेत्र",

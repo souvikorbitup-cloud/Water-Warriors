@@ -9,6 +9,7 @@ import { Cloud, House } from "@/components/icons";
 interface ReportOverviewSectionProps {
   /** Shown in the greeting: "Hey, {name}!" */
   name?: string;
+  generationFinished?: boolean;
   catchmentArea?: string;
   annualRainfall?: string;
   mapImageUrl?: string | null;
@@ -47,6 +48,7 @@ function StatCard({
 
 export default function ReportOverviewSection({
   name,
+  generationFinished = false,
   catchmentArea,
   annualRainfall,
   mapImageUrl,
@@ -56,17 +58,26 @@ export default function ReportOverviewSection({
 }: ReportOverviewSectionProps) {
   const t = useTranslations("Report");
   const tCommon = useTranslations("Common");
+  const resolvedName = name?.trim();
 
   return (
     <section className="container-y-pad overflow-hidden">
       <div className="my-container-x">
         <div className="mx-auto flex flex-col items-center text-center">
           <h1 className="text-4xl leading-tight font-normal text-heading sm:text-5xl lg:text-6xl xl:text-[64px]">
-            {name
-              ? t.rich("greeting", {
-                  name: () => <span className="font-semibold">{name}!</span>,
-                })
-              : t("greetingGeneric")}
+            {!generationFinished
+              ? t("greetingGeneric")
+              : resolvedName
+                ? t.rich("greeting", {
+                    name: () => (
+                      <span className="font-semibold">{resolvedName}!</span>
+                    ),
+                  })
+                : t.rich("greetingDefault", {
+                    name: (chunks) => (
+                      <span className="font-semibold">{chunks}</span>
+                    ),
+                  })}
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-heading sm:mt-4 sm:text-base">
             {t("thankYou")}
