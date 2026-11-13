@@ -861,6 +861,8 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
                 onSubmit={handleSearch}
                 className="flex h-11.5 items-center rounded-full bg-background pr-1.5 pl-4 shadow-md"
               >
+                <MapPin className="mr-2.5 size-4 shrink-0 text-muted-foreground" />
+
                 <input
                   type="text"
                   value={query}
@@ -891,8 +893,13 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
                       ? `location-suggestion-${activeSuggestionIndex}`
                       : undefined
                   }
-                  className="h-full min-w-0 flex-1 bg-transparent text-sm text-heading outline-none placeholder:text-heading"
+                  className="h-full min-w-0 flex-1 bg-transparent text-sm text-heading outline-none placeholder:text-muted-foreground"
                 />
+
+                {isSearchingPlaces && (
+                  <div className="mr-2 size-4 shrink-0 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+                )}
+
                 <Button
                   type="submit"
                   aria-label={t("search")}
@@ -902,75 +909,150 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
                   <ArrowRight className="size-4" />
                 </Button>
               </form>
+
+              {/* Suggestions dropdown */}
               {isSearchFocused &&
                 (suggestions.length > 0 ||
                   isSearchingPlaces ||
-                  suggestionError) && (
+                  suggestionError ||
+                  (placesLoadError && query.trim().length >= 2)) && (
                   <div
                     id="location-search-suggestions"
                     role="listbox"
                     aria-label={t("suggestionsLabel")}
-                    className="mt-2 overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg"
+                    className="mt-2 overflow-hidden rounded-xl border border-border/70 bg-background shadow-xl shadow-black/10 animate-in fade-in-0 slide-in-from-top-1 duration-150"
                   >
-                    {isSearchingPlaces && suggestions.length === 0 && (
-                      <p className="px-4 py-3 text-sm text-muted-foreground">
-                        {t("searchingPlaces")}
-                      </p>
-                    )}
-                    {suggestions.map((suggestion, index) => {
-                      const prediction = suggestion.placePrediction;
-                      if (!prediction) return null;
+                    {/* Dropdown header */}
+                    <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5">
+                      <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                        {t("suggestionsLabel")}
+                      </span>
 
-                      return (
-                        <Button
-                          key={prediction.placeId}
-                          id={`location-suggestion-${index}`}
-                          type="button"
-                          role="option"
-                          aria-selected={index === activeSuggestionIndex}
-                          onMouseDown={(event) => event.preventDefault()}
-                          onMouseEnter={() => setActiveSuggestionIndex(index)}
-                          onClick={() =>
-                            void handleSuggestionSelect(suggestion)
-                          }
-                          className={cn(
-                            "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none",
-                            index === activeSuggestionIndex && "bg-accent",
-                          )}
-                        >
-                          <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-medium text-heading">
-                              {prediction.mainText?.text ??
-                                prediction.text.text}
-                            </span>
-                            {prediction.secondaryText && (
-                              <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                                {prediction.secondaryText.text}
+                      {suggestions.length > 0 && (
+                        <span className="text-[11px] text-muted-foreground">
+                          {suggestions.length} results
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Loading state */}
+                    {isSearchingPlaces && suggestions.length === 0 && (
+                      <div className="flex items-center gap-3 px-4 py-5">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                          <div className="size-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-heading">
+                            {t("searchingPlaces")}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            Finding matching locations...
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Suggestion items */}
+                    {suggestions.length > 0 && (
+                      <div className="max-h-72 overflow-y-auto scroll-auto p-1.5">
+                        {suggestions.map((suggestion, index) => {
+                          const prediction = suggestion.placePrediction;
+                          if (!prediction) return null;
+
+                          const isActive = index === activeSuggestionIndex;
+
+                          return (
+                            <Button
+                              key={prediction.placeId}
+                              id={`location-suggestion-${index}`}
+                              type="button"
+                              role="option"
+                              aria-selected={isActive}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onMouseEnter={() =>
+                                setActiveSuggestionIndex(index)
+                              }
+                              onClick={() =>
+                                void handleSuggestionSelect(suggestion)
+                              }
+                              className={cn(
+                                "group flex h-auto min-h-15 w-full items-center justify-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors cursor-pointer",
+                                isActive
+                                  ? "bg-primary/10"
+                                  : "bg-transparent hover:bg-muted/70",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
+                                  isActive
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
+                                )}
+                              >
+                                <MapPin className="size-4" />
                               </span>
-                            )}
-                          </span>
-                        </Button>
-                      );
-                    })}
-                    {suggestionError && (
-                      <p
-                        role="status"
-                        className="px-4 py-3 text-sm text-destructive"
-                      >
-                        {suggestionError}
-                      </p>
+
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-medium leading-5 text-heading">
+                                  {prediction.mainText?.text ??
+                                    prediction.text.text}
+                                </span>
+
+                                {prediction.secondaryText && (
+                                  <span className="mt-0.5 block truncate text-xs leading-4 text-muted-foreground">
+                                    {prediction.secondaryText.text}
+                                  </span>
+                                )}
+                              </span>
+
+                              <ArrowRight
+                                className={cn(
+                                  "size-4 shrink-0 transition-all",
+                                  isActive
+                                    ? "translate-x-0 opacity-100 text-white"
+                                    : "-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:text-primary group-hover:opacity-100",
+                                )}
+                              />
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Error state */}
+                    {suggestionError && suggestions.length === 0 && (
+                      <div className="flex items-start gap-3 px-4 py-4">
+                        <MapPin className="mt-0.5 size-4 shrink-0 text-destructive" />
+                        <p className="text-sm text-destructive">
+                          {suggestionError}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Places API error */}
+                    {placesLoadError &&
+                      suggestions.length === 0 &&
+                      !suggestionError && (
+                        <div className="px-4 py-4">
+                          <p className="text-sm text-destructive">
+                            {placesLoadError}
+                          </p>
+                        </div>
+                      )}
+
+                    {/* Footer */}
+                    {suggestions.length > 0 && (
+                      <div className="flex items-center justify-between border-t border-border/60 bg-muted/30 px-4 py-2">
+                        <span className="text-[10px] text-muted-foreground">
+                          Select a location to move the map
+                        </span>
+                        <span className="text-[10px] font-medium text-muted-foreground">
+                          Google Maps
+                        </span>
+                      </div>
                     )}
                   </div>
-                )}
-              {(placesLoadError || suggestionError) &&
-                suggestions.length === 0 && (
-                  <p
-                    role="status"
-                    className="mt-2 rounded-md bg-background px-3 py-1.5 text-xs text-destructive shadow-md"
-                  >
-                    {placesLoadError ?? suggestionError}
-                  </p>
                 )}
             </div>
 

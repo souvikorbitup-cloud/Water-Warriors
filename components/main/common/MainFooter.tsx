@@ -8,6 +8,10 @@ import Image from "next/image";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useState, useSyncExternalStore } from "react";
 import PrimaryButton from "../shared/button/PrimaryButton";
+import {
+  ANALYTICS_CONSENT_CHANGE_EVENT,
+  ANALYTICS_CONSENT_KEY,
+} from "@/lib/data/analytics-consent";
 
 type MainFooterProps = {
   visitorCount?: number;
@@ -15,9 +19,6 @@ type MainFooterProps = {
 
 type AnalyticsConsent = "accepted" | "declined";
 const COPYRIGHT_YEAR = new Date().getFullYear();
-
-const ANALYTICS_CONSENT_KEY = "ww_analytics_consent";
-const ANALYTICS_CONSENT_CHANGE_EVENT = "ww-analytics-consent-change";
 
 function subscribeToAnalyticsConsent(onChange: () => void) {
   window.addEventListener("storage", onChange);

@@ -1,3 +1,5 @@
+import { ANALYTICS_CONSENT_KEY } from "@/lib/data/analytics-consent";
+
 export const LOCATION_SESSION_KEYS = {
   camera: "water-warriors:location-map-camera",
   points: "water-warriors:location-map-points",
@@ -14,11 +16,22 @@ export type LocationCamera = {
   zoom: number;
 };
 
-export function readSavedMapCamera(): LocationCamera | null {
+function isAnalyticsConsentAccepted(): boolean {
   try {
-    const stored = sessionStorage.getItem(LOCATION_SESSION_KEYS.camera);
-    if (!stored) return null;
+    return (
+      typeof window !== "undefined" &&
+      window.localStorage.getItem(ANALYTICS_CONSENT_KEY) === "accepted"
+    );
+  } catch (error) {
+    console.warn("Could not read analytics consent for map storage.", error);
+    return false;
+  }
+}
 
+function parseSavedMapCamera(stored: string | null): LocationCamera | null {
+  if (!stored) return null;
+
+  try {
     const value: unknown = JSON.parse(stored);
     if (
       typeof value !== "object" ||
@@ -55,12 +68,100 @@ export function readSavedMapCamera(): LocationCamera | null {
   }
 }
 
-export function saveMapCamera(camera: LocationCamera) {
+export function readSavedMapCamera(): LocationCamera | null {
+  if (typeof window === "undefined") return null;
+
+  const consentAccepted = isAnalyticsConsentAccepted();
+  let localStored: string | null = null;
+  let sessionStored: string | null = null;
   try {
-    sessionStorage.setItem(
-      LOCATION_SESSION_KEYS.camera,
-      JSON.stringify(camera),
-    );
+    localStored = window.localStorage.getItem(LOCATION_SESSION_KEYS.camera);
+  } catch (error) {
+    console.warn("Could not read the persistent map position.", error);
+  }
+  try {
+    sessionStored = window.sessionStorage.getItem(LOCATION_SESSION_KEYS.camera);
+  } catch (error) {
+    console.warn("Could not read the session map position.", error);
+  }
+
+  const localCamera = parseSavedMapCamera(localStored);
+  const sessionCamera = parseSavedMapCamera(sessionStored);
+
+  if (consentAccepted) {
+    if (localCamera) {
+      try {
+        window.sessionStorage.removeItem(LOCATION_SESSION_KEYS.camera);
+      } catch (error) {
+        console.warn("Could not clear the session map position.", error);
+      }
+      return localCamera;
+    }
+
+    if (sessionCamera && sessionStored) {
+      try {
+        window.localStorage.setItem(
+          LOCATION_SESSION_KEYS.camera,
+          sessionStored,
+        );
+        window.sessionStorage.removeItem(LOCATION_SESSION_KEYS.camera);
+      } catch (error) {
+        console.warn("Could not migrate the saved map position.", error);
+      }
+    }
+
+    return sessionCamera;
+  }
+
+  try {
+    window.localStorage.removeItem(LOCATION_SESSION_KEYS.camera);
+  } catch (error) {
+    console.warn("Could not clear the persistent map position.", error);
+  }
+
+  if (!sessionCamera && localCamera && localStored) {
+    try {
+      window.sessionStorage.setItem(LOCATION_SESSION_KEYS.camera, localStored);
+    } catch (error) {
+      console.warn("Could not move the map position to this session.", error);
+    }
+  }
+  return sessionCamera ?? localCamera;
+}
+
+export function saveMapCamera(camera: LocationCamera) {
+  if (typeof window === "undefined") return;
+
+  const consentAccepted = isAnalyticsConsentAccepted();
+  if (!consentAccepted) {
+    try {
+      window.localStorage.removeItem(LOCATION_SESSION_KEYS.camera);
+    } catch (error) {
+      console.warn("Could not clear the persistent map position.", error);
+    }
+  }
+
+  try {
+    const value = JSON.stringify(camera);
+    if (consentAccepted) {
+      try {
+        window.localStorage.setItem(LOCATION_SESSION_KEYS.camera, value);
+        window.sessionStorage.removeItem(LOCATION_SESSION_KEYS.camera);
+        return;
+      } catch (error) {
+        console.warn("Could not save the map position persistently.", error);
+        try {
+          window.localStorage.removeItem(LOCATION_SESSION_KEYS.camera);
+        } catch (removeError) {
+          console.warn(
+            "Could not clear the persistent map position.",
+            removeError,
+          );
+        }
+      }
+    }
+
+    window.sessionStorage.setItem(LOCATION_SESSION_KEYS.camera, value);
   } catch (error) {
     console.warn("Could not save the map position for this session.", error);
   }
