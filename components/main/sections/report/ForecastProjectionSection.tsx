@@ -1,4 +1,6 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Download, Lightbulb, Printer } from "lucide-react";
 import PrimaryButton from "../../shared/button/PrimaryButton";
 
@@ -24,23 +26,12 @@ interface ForecastProjectionSectionProps {
   printLabel?: string;
   onDownload?: () => void;
   onPrint?: () => void;
+  downloadDisabled?: boolean;
+  printDisabled?: boolean;
+  downloading?: boolean;
 }
 
-const sampleRows: ForecastRow[] = [
-  { month: "November 2026", rainfall: "31.2 mm", potential: "19,886 L" },
-  { month: "December 2026", rainfall: "10.3 mm", potential: "6,565 L" },
-  { month: "January 2027", rainfall: "8.3 mm", potential: "5,290 L" },
-  { month: "February 2027", rainfall: "1.4 mm", potential: "892 L" },
-  { month: "March 2027", rainfall: "8.1 mm", potential: "5,163 L" },
-  {
-    month: "Grand Total",
-    rainfall: "59.3 mm",
-    potential: "37,797 Litres",
-    highlight: true,
-  },
-];
-
-export default async function ForecastProjectionSection({
+export default function ForecastProjectionSection({
   title,
   period,
   rows,
@@ -54,10 +45,13 @@ export default async function ForecastProjectionSection({
   printLabel,
   onDownload,
   onPrint,
+  downloadDisabled = false,
+  printDisabled = false,
+  downloading = false,
 }: ForecastProjectionSectionProps) {
-  const t = await getTranslations("Report");
+  const t = useTranslations("Report");
   const resolvedTitle = title ?? t("forecastTitle");
-  const resolvedPeriod = period ?? t("forecastPeriod");
+  const resolvedPeriod = period ?? t("forecastPeriodPending");
   const resolvedTip = tip ?? t("tip");
   const resolvedForecastNote = forecastNote ?? t("forecastNote");
   const resolvedForecastSource = forecastSource ?? t("forecastSource");
@@ -66,13 +60,7 @@ export default async function ForecastProjectionSection({
   const resolvedCtaText = ctaText ?? t("ctaText");
   const resolvedDownloadLabel = downloadLabel ?? t("downloadPdf");
   const resolvedPrintLabel = printLabel ?? t("printPdf");
-  const resolvedRows =
-    rows ??
-    sampleRows.map((row, index) =>
-      index === sampleRows.length - 1
-        ? { ...row, month: t("grandTotal") }
-        : row,
-    );
+  const resolvedRows = rows ?? [];
 
   return (
     <section className="container-y-pad overflow-hidden bg-linear-to-b from-secondary/40 to-background to-30%">
@@ -104,31 +92,42 @@ export default async function ForecastProjectionSection({
               </tr>
             </thead>
             <tbody>
-              {resolvedRows.map(
-                ({ month, rainfall, potential, highlight }, i) => (
-                  <tr
-                    key={`${month}-${i}`}
-                    className={
-                      highlight
-                        ? "bg-secondary font-semibold text-heading"
-                        : i % 2 === 1
-                          ? "bg-foreground/5 text-paragraph"
-                          : "bg-background text-paragraph"
-                    }
-                  >
-                    <td
-                      className={`border-r border-paragraph/60 px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg ${highlight ? "" : "font-medium"}`}
+              {resolvedRows.length > 0 ? (
+                resolvedRows.map(
+                  ({ month, rainfall, potential, highlight }, i) => (
+                    <tr
+                      key={`${month}-${i}`}
+                      className={
+                        highlight
+                          ? "bg-secondary font-semibold text-heading"
+                          : i % 2 === 1
+                            ? "bg-foreground/5 text-paragraph"
+                            : "bg-background text-paragraph"
+                      }
                     >
-                      {month}
-                    </td>
-                    <td className="border-r border-paragraph/60 px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg">
-                      {rainfall}
-                    </td>
-                    <td className="px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg">
-                      {potential}
-                    </td>
-                  </tr>
-                ),
+                      <td
+                        className={`border-r border-paragraph/60 px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg ${highlight ? "" : "font-medium"}`}
+                      >
+                        {month}
+                      </td>
+                      <td className="border-r border-paragraph/60 px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg">
+                        {rainfall}
+                      </td>
+                      <td className="px-3 py-2.5 text-xs sm:px-8 sm:py-4 sm:text-base lg:text-lg">
+                        {potential}
+                      </td>
+                    </tr>
+                  ),
+                )
+              ) : (
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="bg-background px-3 py-5 text-center text-sm text-paragraph sm:px-8 sm:py-7"
+                  >
+                    {t("forecastPending")}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -184,17 +183,19 @@ export default async function ForecastProjectionSection({
         </div>
 
         {/* Actions */}
-        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:mt-10 sm:flex-row sm:gap-6">
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 print:hidden sm:mt-10 sm:flex-row sm:gap-6">
           <PrimaryButton
             btnType="solid-primary"
             onClick={onDownload}
+            disabled={downloadDisabled}
             endIcon={<Download className="size-4.5" strokeWidth={1.5} />}
           >
-            {resolvedDownloadLabel}
+            {downloading ? t("preparingPdf") : resolvedDownloadLabel}
           </PrimaryButton>
           <PrimaryButton
             btnType="outline"
             onClick={onPrint}
+            disabled={printDisabled}
             endIcon={<Printer className="size-4.5" strokeWidth={1.5} />}
           >
             {resolvedPrintLabel}

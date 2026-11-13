@@ -131,23 +131,21 @@ function DataTable({
 export default async function PrivacyPolicyContentSection() {
   const t = await getTranslations("Privacy");
 
-  const inShort = ([0, 1, 2, 3] as const).map((index) =>
-    t(`inShort.${index}`),
-  );
-  const retention = ([0, 1, 2, 3, 4, 5] as const).map((index) =>
+  const inShort = ([0, 1, 2, 3] as const).map((index) => t(`inShort.${index}`));
+  const retention = ([0, 1, 2, 3, 4, 5, 6] as const).map((index) =>
     t(`retention.${index}`),
   );
   const rights = ([0, 1, 2, 3] as const).map((index) => t(`rights.${index}`));
-  const recipients = (
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
-  ).map((index) => ({
-    name: t(`recipients.${index}.name`),
-    cells: [
-      t(`recipients.${index}.for`),
-      t(`recipients.${index}.receives`),
-    ] as [string, string],
-  }));
-  const storage = ([0, 1, 2, 3, 4] as const).map((index) => ({
+  const recipients = ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const).map(
+    (index) => ({
+      name: t(`recipients.${index}.name`),
+      cells: [
+        t(`recipients.${index}.for`),
+        t(`recipients.${index}.receives`),
+      ] as [string, string],
+    }),
+  );
+  const storage = ([0, 1, 2, 3, 4, 5, 6] as const).map((index) => ({
     name: t(`storage.${index}.name`),
     cells: [t(`storage.${index}.kept`), t(`storage.${index}.purpose`)] as [
       string,

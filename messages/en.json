@@ -113,7 +113,7 @@
     "magicSelectionRequiresMap": "Switch to Map view to use Magic Selection, or place points manually.",
     "noBuildingFound": "No building found here. Click to place points instead.",
     "buildingLookupFailed": "Couldn't look up the building. Place points instead.",
-    "privacyNote": "We value your privacy and never store your data.",
+    "privacyNote": "Your rooftop stays in this browser until checkout. Paid report data is saved so you can return to it.",
     "title": "Select Your Location",
     "nameLabel": "To include your name (optional) on the final report, please enter it below.",
     "namePlaceholder": "Name (Optional)",
@@ -141,7 +141,7 @@
     "switchToMap": "Switch to map view",
     "switchToSatellite": "Switch to satellite view",
     "pointsPlaced": "{count} / {min} points placed",
-    "disclaimer": "All measurements are approximate and intended for reference only. We value your privacy and never store your data."
+    "disclaimer": "Measurements are approximate and intended for reference. A paid report and its rooftop outline are stored in a secure report session so you can return to them."
   },
   "About": {
     "bannerHeading": "Every Rooftop",
@@ -354,35 +354,43 @@
   },
   "Report": {
     "greeting": "Hey, <name></name>",
+    "greetingGeneric": "Your rainwater harvesting report",
     "thankYou": "Thank you for taking the first step toward conserving water—for yourself and for future generations.",
     "catchmentLabel": "Selected Catchment Area",
     "rainfallLabel": "Average Annual Rainfall",
+    "notAvailable": "Not available",
+    "mapPending": "Your selected rooftop map will appear here.",
+    "mapFailed": "The selected rooftop map could not be loaded.",
     "potentialTitle": "Rainwater Harvesting Potential",
     "potentialDescription": "Based on the above parameters, your selected location has the potential to harvest approximately",
     "impactTitle": "The Impact Of Saving {litres} Litres Of Rainwater Per Year",
     "impactDescription": "Conserving this much water annually can make a huge difference!",
     "impacts": {
       "0": {
-        "label": "Daily Water Needs",
-        "value": "8 Families",
-        "note": "for a full year*"
+        "label": "Family Water-Security Days",
+        "note": "for one family*"
       },
       "1": {
         "label": "Trees Supported",
-        "value": "1,738 Trees",
-        "note": "for a full year*"
+        "note": "at 365 L per tree / year*"
       },
       "2": {
         "label": "Water Tankers",
-        "value": "126 Trips",
         "note": "of 5,000L each*"
       },
       "3": {
         "label": "Schools & Hygiene",
-        "value": "634 Children",
-        "note": "for a full year*"
+        "note": "children for one school year*"
       }
     },
+    "daysUnit": "days",
+    "treesUnit": "trees",
+    "tripsUnit": "trips",
+    "childrenUnit": "children",
+    "litresUnit": "Litres",
+    "impactPending": "Impact metrics will appear when the rainwater potential is calculated.",
+    "annualRainfallSource": "Source: Open-Meteo historical data; average of the last 10 complete calendar years.",
+    "analysisPending": "Location-specific hydrogeology analysis is being generated.",
     "assumptions": "* Assumptions: Family of 4 using 50L/person/day · Standard tanker = 5,000L · Trees Supported uses an illustrative Water Warriors equivalence of 365L/tree/year, not a universal scientific requirement · Schools & Hygiene uses 5L/child/school day based on WHO/UNICEF day-school guidance (drinking, personal hygiene, food preparation, cleaning and laundry; excluding toilet flushing and showers) x 200 school days, with the 200-day academic year being a Water Warriors assumption.",
     "rechargeTitle": "Why Rainwater Recharge Matters.",
     "rechargeIntro": "Harvesting approximately {litres} litres of rainwater annually at your location in {location}, represents a substantial potential for augmenting your household water supply. This significant volume could be strategically utilized for various non-potable needs, reducing the demand on other sources.",
@@ -393,6 +401,8 @@
     },
     "forecastTitle": "Your Next Five-Month Rainfall Harvesting Projection",
     "forecastPeriod": "(November 2026 - March 2027)",
+    "forecastPeriodPending": "Five-month seasonal forecast",
+    "forecastPending": "Seasonal forecast data will appear when available.",
     "month": "Month",
     "forecastedRainfall": "Forecasted Average Rainfall (mm)",
     "harvestingPotential": "Rainwater Harvesting Potential (Litres)*",
@@ -400,11 +410,20 @@
     "tip": "Don't let the next rain go to waste. Harvest it, divert it, and conserve it with proven rainwater harvesting techniques—turning every drop into a lasting water resource for your home.",
     "forecastNote": "*Forecast rainfall values are based on Open-Meteo seasonal forecast data. Long-range forecasts are indicative and actual rainfall may vary.",
     "forecastSource": "Source: Open-Meteo Seasonal Forecast API (ECMWF seasonal forecast).",
-    "disclaimer": "*Measurements are approximate and provided for reference purposes only. We do not retain or store your data.",
+    "disclaimer": "*Measurements are estimates for reference. To restore a paid report after refresh, its rooftop outline and generated results are stored in a secure report session.",
     "ctaTitle": "Turn Every Drop of Rain into a Sustainable Future!",
     "ctaText": "Discover your rainwater harvesting potential, save water, and make every drop count with Water Warriors AI.",
     "downloadPdf": "Download PDF Report",
     "printPdf": "Download High-Quality PDF",
+    "preparingPdf": "Preparing PDF...",
+    "reportLoading": "Loading your report...",
+    "reportGenerating": "Generating your report...",
+    "reportRetrying": "Retrying a report service...",
+    "reportReady": "Your report is ready.",
+    "reportFailed": "Some report sections could not be generated.",
+    "reportLoadFailed": "Could not load your report.",
+    "reportNotFound": "No paid report session was found for this browser.",
+    "retryReport": "Retry report generation",
     "anotherReport": "Ready For Another Report?",
     "measureAnother": "Measure Another Rooftop"
   },
@@ -474,11 +493,11 @@
     "bannerHeading": "Privacy",
     "bannerHighlight": "Policy",
     "bannerDescription": "This policy explains what information Water Warriors AI LLP (“Water Warriors”, “we”) handles when you use this website, why, who else receives it, and the choices you have.",
-    "lastUpdated": "Last updated: 27 October 2026",
+    "lastUpdated": "Last updated: 13 November 2026",
     "inShortTitle": "In short",
     "inShort": {
       "0": "You don't need an account to use the calculator.",
-      "1": "The area you draw stays in your browser. We send its location to the services that do the calculations, but we don't store it on our servers.",
+      "1": "The area you draw stays in your browser until checkout. A checkout order temporarily stores the outline; after verified payment, the report and outline are kept in a secure report session so you can restore them.",
       "2": "We use Google Analytics cookies only if you accept them. Google may also set cookies for maps and, when ads are shown, for advertising.",
       "3": "We don't sell your information."
     },
@@ -486,11 +505,11 @@
     "handled": {
       "0": {
         "title": "The area you draw",
-        "body": "When you draw a rooftop or open area on the map, its outline, size and location are kept in your browser for the current session. To produce your results, the location and size are sent to the services listed below for rainfall, groundwater and local impact analysis. We don't keep them on our servers, except that groundwater extraction results are cached for 24 hours under a scrambled code of the area's shape, so a repeat request is faster."
+        "body": "When you draw a rooftop or open area, its outline and name stay in your browser until checkout. A pending billing order stores the outline so it can be associated with payment. After payment is verified, the outline is moved to a MongoDB-backed report session so you can restore the report after refresh. The centroid is sent to Google for reverse geocoding and to Open-Meteo for historical rainfall and seasonal forecasts; locality and report figures are sent to Google Gemini for hydrogeology analysis. Those providers handle requests under their own privacy terms."
       },
       "1": {
         "title": "Your name",
-        "body": "If you type your name for the greeting, it stays in your browser for the current session and isn't sent to us."
+        "body": "If you type your name for the greeting, it stays in your browser until checkout. It is included with the billing order and paid report session."
       },
       "2": {
         "title": "Saved rooftops",
@@ -498,11 +517,11 @@
       },
       "3": {
         "title": "Paid reports",
-        "body": "Payments are handled by Razorpay. Your card, UPI or bank details go to Razorpay, not to us. We receive the order and payment IDs to confirm the payment. The infographic is created from your report figures by the image service selected for the site (getimg.ai or Google Gemini)."
+        "body": "Payments are handled by Razorpay. Your card, UPI or bank details go to Razorpay, not to us. We receive order and payment IDs to confirm payment. The verified payment is associated with the saved rooftop and report session."
       },
       "4": {
         "title": "PDF reports",
-        "body": "Download PDF Report is created entirely in your browser. Print to PDF sends a copy of your report page to Browserless or to our own server at Amazon Web Services, which turns it into a PDF using a single-use link that expires shortly afterwards."
+        "body": "Both PDF actions use your browser's print-to-PDF workflow. The report page is not sent to a separate PDF-rendering service."
       },
       "5": {
         "title": "Contact and feedback",
@@ -547,9 +566,9 @@
         "receives": "Your IP address, the area you draw and its location"
       },
       "1": {
-        "name": "Google (Gemini AI and Earth Engine)",
-        "for": "Groundwater and local impact analysis, and the paid infographic if Gemini is selected",
-        "receives": "The location and size of the area, and the report figures"
+        "name": "Google (Gemini AI)",
+        "for": "Hydrogeology analysis for paid reports",
+        "receives": "The locality and calculated report figures"
       },
       "2": {
         "name": "Google (Analytics)",
@@ -567,9 +586,9 @@
         "receives": "Your IP address and the location's coordinates"
       },
       "5": {
-        "name": "Supabase",
-        "for": "Our back end: runs the calculations above and stores site settings",
-        "receives": "Your IP address and the data each calculation needs"
+        "name": "Water Warriors (MongoDB)",
+        "for": "Our application database: stores site settings, billing orders and paid report sessions",
+        "receives": "The checkout order, rooftop outline, optional name and generated report"
       },
       "6": {
         "name": "Razorpay",
@@ -577,38 +596,33 @@
         "receives": "The payment details you enter in Razorpay's checkout"
       },
       "7": {
-        "name": "getimg.ai",
-        "for": "The paid infographic, if this model is selected",
-        "receives": "The report figures (area, location name, rainfall, litres)"
+        "name": "Your browser",
+        "for": "Rendering a vector PDF with the print-to-PDF workflow",
+        "receives": "The report page stays in your browser"
       },
       "8": {
-        "name": "Browserless or Amazon Web Services (AWS)",
-        "for": "Creating the Print to PDF version of your report",
-        "receives": "A copy of your report page"
-      },
-      "9": {
         "name": "Resend",
         "for": "Delivering Contact and Feedback messages to our inbox",
         "receives": "What you enter in the form"
       },
-      "10": {
+      "9": {
         "name": "ipwho.is and ipapi.co",
         "for": "Finding your country for the visitor counter",
         "receives": "Your IP address"
       },
-      "11": {
+      "10": {
         "name": "flagcdn.com",
         "for": "Country flag images in the visitor counter",
         "receives": "Your IP address"
       },
-      "12": {
+      "11": {
         "name": "Lovable and Amazon Web Services",
         "for": "Hosting the website",
         "receives": "Standard server logs (IP address, browser, time)"
       }
     },
     "cookiesTitle": "Cookies and browser storage",
-    "cookiesIntro": "We don't set cookies ourselves. The site uses your browser's storage for the items below. “Session” items are deleted when you close the tab; “Device” items stay until you clear your browser data.",
+    "cookiesIntro": "Our server sets a necessary, HttpOnly report-access cookie after checkout. The site also uses your browser's storage for the items below. “Session” items are deleted when you close the tab; “Device” items stay until you clear your browser data.",
     "storage": {
       "0": {
         "name": "site_authenticated",
@@ -616,9 +630,9 @@
         "purpose": "Remembers that you signed in to the site"
       },
       "1": {
-        "name": "water_warrior_* (polygon points, location, name, map view, report access)",
+        "name": "water-warriors:location-map-points and water-warriors:location-name",
         "kept": "Session",
-        "purpose": "Carries the area you drew, its location, the name you typed and your map view from page to page"
+        "purpose": "Carries your selected rooftop outline and optional name from page to page"
       },
       "2": {
         "name": "rooftop-projects",
@@ -634,17 +648,28 @@
         "name": "water_warrior_country_counted",
         "kept": "Device",
         "purpose": "Makes sure you are counted only once in the visitor counter"
+      },
+      "5": {
+        "name": "ww_report_access",
+        "kept": "HttpOnly cookie, up to 1 year",
+        "purpose": "Restores the paid report associated with the verified checkout"
+      },
+      "6": {
+        "name": "water-warriors:location-map-camera",
+        "kept": "Session, or device storage after analytics consent",
+        "purpose": "Restores the last map center and zoom"
       }
     },
     "cookiesOutro": "If you accept analytics cookies, Google Analytics sets the _ga cookie and one named after our property (_ga_ followed by an ID), which last up to 2 years. Google Maps and, when ads are shown, Google AdSense may set their own cookies, as described in Google's policies.",
     "retentionTitle": "How long we keep information",
     "retention": {
       "0": "Session items in your browser: until you close the tab.",
-      "1": "Groundwater extraction cache: 24 hours.",
-      "2": "Print to PDF links: single use, expiring within minutes.",
+      "1": "Paid report sessions: kept so you can restore the report; contact us to request deletion.",
+      "2": "Unpaid checkout rooftop data: kept with its pending billing order; contact us to request deletion.",
       "3": "Contact and feedback emails: as long as needed to reply and follow up.",
       "4": "Visitor counts: country totals only, kept indefinitely.",
-      "5": "Google Analytics data: 14 months, then deleted by Google."
+      "5": "Google Analytics data: 14 months, then deleted by Google.",
+      "6": "Cached Gemini analysis: up to 24 hours."
     },
     "rightsTitle": "Your choices and rights",
     "rights": {

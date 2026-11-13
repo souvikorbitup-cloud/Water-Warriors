@@ -228,3 +228,19 @@ export function saveLocationName(name: string) {
     console.warn("Could not save the location name for this session.", error);
   }
 }
+
+export function clearLocationSelectionSession() {
+  try {
+    sessionStorage.removeItem(LOCATION_SESSION_KEYS.points);
+    sessionStorage.removeItem(LOCATION_SESSION_KEYS.name);
+    sessionStorage.removeItem(LOCATION_SESSION_KEYS.camera);
+  } catch (error) {
+    console.warn("Could not clear the saved rooftop selection.", error);
+  }
+
+  try {
+    localStorage.removeItem(LOCATION_SESSION_KEYS.camera);
+  } catch (error) {
+    console.warn("Could not clear the saved map position.", error);
+  }
+}

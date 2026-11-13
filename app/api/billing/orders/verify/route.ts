@@ -8,6 +8,15 @@ import {
   RazorpayError,
   verifyOrderPaymentSignature,
 } from "@/lib/razorpay/razorpay.service";
+import { attachReportAccessCookie } from "@/lib/report/access";
+import { ensurePaidReportSession } from "@/lib/report/report-session-service";
+
+function createVerifiedResponse(orderId: string) {
+  return attachReportAccessCookie(
+    NextResponse.json({ success: true, reportSessionId: orderId }),
+    orderId,
+  );
+}
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -61,7 +70,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (order.status === "paid" && order.paymentId === paymentId) {
-      return NextResponse.json({ success: true });
+      await ensurePaidReportSession(orderId, paymentId);
+      return createVerifiedResponse(orderId);
     }
 
     const payment = await fetchPayment(paymentId);
@@ -78,7 +88,8 @@ export async function POST(request: NextRequest) {
     }
 
     await markBillingOrderPaid(orderId, paymentId);
-    return NextResponse.json({ success: true });
+    await ensurePaidReportSession(orderId, paymentId);
+    return createVerifiedResponse(orderId);
   } catch (error) {
     if (error instanceof RazorpayError) {
       console.error("Payment verification request failed:", error.message);

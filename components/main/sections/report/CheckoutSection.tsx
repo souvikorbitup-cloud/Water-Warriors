@@ -20,6 +20,7 @@ import {
   readSavedMapCamera,
   readSavedMapPoints,
 } from "@/lib/data/location-selection-session";
+import { createStaticMapUrl } from "@/lib/maps/static-map-url";
 import type { BillingQuote } from "@/lib/billing/types";
 import {
   createRazorpayCheckout,
@@ -96,54 +97,11 @@ async function getApiMessage(
 
 function createAreaPreviewUrl(points: { lat: number; lng: number }[]): string {
   const savedCamera = readSavedMapCamera();
-  let twiceArea = 0;
-  let latitudeSum = 0;
-  let longitudeSum = 0;
-  points.forEach((point, index) => {
-    const nextPoint = points[(index + 1) % points.length];
-    const cross = point.lng * nextPoint.lat - nextPoint.lng * point.lat;
-    twiceArea += cross;
-    latitudeSum += (point.lat + nextPoint.lat) * cross;
-    longitudeSum += (point.lng + nextPoint.lng) * cross;
+  return createStaticMapUrl({
+    points,
+    zoom: savedCamera?.zoom ?? 19,
+    mapType: "roadmap",
   });
-  const center =
-    Math.abs(twiceArea) < 1e-12
-      ? points.reduce(
-          (sum, point) => ({
-            lat: sum.lat + point.lat / points.length,
-            lng: sum.lng + point.lng / points.length,
-          }),
-          { lat: 0, lng: 0 },
-        )
-      : {
-          lat: latitudeSum / (3 * twiceArea),
-          lng: longitudeSum / (3 * twiceArea),
-        };
-  const zoom = Math.max(15, Math.min(21, savedCamera?.zoom ?? 19));
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    throw new Error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not configured.");
-  }
-
-  const firstPoint = points[0];
-  const pathPoints = points.map((point) => `${point.lat},${point.lng}`);
-  if (firstPoint) pathPoints.push(`${firstPoint.lat},${firstPoint.lng}`);
-
-  const searchParams = new URLSearchParams({
-    maptype: "roadmap",
-    size: "640x251",
-    scale: "2",
-    center: `${center.lat},${center.lng}`,
-    zoom: String(zoom),
-    path: [
-      "fillcolor:0xFFA50040",
-      "color:0xFF8C00",
-      "weight:2",
-      ...pathPoints,
-    ].join("|"),
-    key: apiKey,
-  });
-  return `https://maps.googleapis.com/maps/api/staticmap?${searchParams.toString()}`;
 }
 
 export default function CheckoutSection() {
@@ -317,6 +275,11 @@ export default function CheckoutSection() {
         body: JSON.stringify({
           couponCode: appliedCoupon,
           customerName,
+          selection: {
+            name: customerName,
+            points: readSavedMapPoints(),
+            zoom: readSavedMapCamera()?.zoom ?? 19,
+          },
         }),
       });
       if (!response.ok) {

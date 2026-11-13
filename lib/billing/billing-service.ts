@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db";
 import CouponModel, { type ICoupon } from "@/lib/models/Coupon.model";
 import { getSiteSettingsCollection } from "@/lib/services/site-settings";
 import type { BillingQuote, Coupon } from "@/lib/billing/types";
+import type { RooftopSelection } from "@/lib/report/types";
 
 export const DEFAULT_PLUS_PRICE_PAISE = 9900;
 export const BILLING_CURRENCY = "INR";
@@ -40,6 +41,7 @@ export type BillingOrderDocument = Document & {
   currency: string;
   couponCode: string | null;
   customerName: string;
+  rooftopSelection?: RooftopSelection;
   status: "created" | "paid";
   paymentId?: string;
   createdAt: Date;
@@ -352,6 +354,16 @@ export async function getBillingOrder(
   return collection.findOne<BillingOrderDocument>({
     _id: `${ORDER_ID_PREFIX}${orderId}`,
   });
+}
+
+export async function clearBillingOrderRooftopSelection(
+  orderId: string,
+): Promise<void> {
+  const collection = await getSiteSettingsCollection();
+  await collection.updateOne(
+    { _id: `${ORDER_ID_PREFIX}${orderId}` },
+    { $unset: { rooftopSelection: "" } },
+  );
 }
 
 export async function markBillingOrderPaid(

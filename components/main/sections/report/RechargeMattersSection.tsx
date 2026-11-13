@@ -1,17 +1,19 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 
 interface RechargeMattersSectionProps {
   litres?: string;
   location?: string;
+  analysis?: string[];
 }
 
-const highlightIndices = [0, 1, 2] as const;
-
-export default async function RechargeMattersSection({
-  litres = "634,672",
-  location = "Mega Hills, Hyderabad",
+export default function RechargeMattersSection({
+  litres,
+  location,
+  analysis,
 }: RechargeMattersSectionProps) {
-  const t = await getTranslations("Report");
+  const t = useTranslations("Report");
 
   return (
     <section className="container-y-pad overflow-hidden">
@@ -20,19 +22,27 @@ export default async function RechargeMattersSection({
           {t("rechargeTitle")}
         </h2>
 
-        <p className="mt-4 max-w-285 text-base leading-normal sm:mt-5 lg:text-lg">
-          {t("rechargeIntro", { litres, location })}
-        </p>
+        {litres && location && (
+          <p className="mt-4 max-w-285 text-base leading-normal sm:mt-5 lg:text-lg">
+            {t("rechargeIntro", { litres, location })}
+          </p>
+        )}
 
         <div className="mt-6 max-w-285 space-y-4 sm:mt-8 sm:space-y-6">
-          {highlightIndices.map((index) => (
-            <p
-              key={index}
-              className="border-l-4 border-primary pl-4 text-base leading-normal sm:pl-5 lg:text-lg"
-            >
-              {t(`rechargeHighlights.${index}`)}
+          {analysis?.length ? (
+            analysis.map((paragraph, index) => (
+              <p
+                key={`${index}-${paragraph.slice(0, 24)}`}
+                className="border-l-4 border-primary pl-4 text-base leading-normal sm:pl-5 lg:text-lg"
+              >
+                {paragraph}
+              </p>
+            ))
+          ) : (
+            <p className="rounded-2xl border border-border p-5 text-sm">
+              {t("analysisPending")}
             </p>
-          ))}
+          )}
         </div>
       </div>
     </section>

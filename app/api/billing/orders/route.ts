@@ -10,6 +10,8 @@ import {
   getRazorpayKeyId,
   RazorpayError,
 } from "@/lib/razorpay/razorpay.service";
+import { rooftopSelectionSchema } from "@/lib/report/schemas";
+import { attachReportAccessCookie } from "@/lib/report/access";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -37,6 +39,15 @@ export async function POST(request: NextRequest) {
     "customerName" in body && typeof body.customerName === "string"
       ? body.customerName.trim().slice(0, 100)
       : "";
+  const parsedSelection = rooftopSelectionSchema.safeParse(
+    "selection" in body ? body.selection : undefined,
+  );
+  if (!parsedSelection.success) {
+    return NextResponse.json(
+      { message: "Select a valid rooftop area before checkout." },
+      { status: 400 },
+    );
+  }
 
   try {
     const quote = await getBillingQuote(couponCode);
@@ -58,20 +69,27 @@ export async function POST(request: NextRequest) {
       currency: order.currency,
       couponCode: quote.couponCode,
       customerName,
+      rooftopSelection: {
+        ...parsedSelection.data,
+        name: customerName || parsedSelection.data.name,
+      },
       status: "created",
       createdAt: new Date(),
     });
 
-    return NextResponse.json(
-      {
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        keyId,
-        customerName,
-        description: "Water Warriors Plus report",
-      },
-      { headers: { "Cache-Control": "no-store" } },
+    return attachReportAccessCookie(
+      NextResponse.json(
+        {
+          orderId: order.id,
+          amount: order.amount,
+          currency: order.currency,
+          keyId,
+          customerName,
+          description: "Water Warriors Plus report",
+        },
+        { headers: { "Cache-Control": "no-store" } },
+      ),
+      order.id,
     );
   } catch (error) {
     if (error instanceof InvalidCouponError) {

@@ -52,6 +52,37 @@ server-only; do not use `NEXT_PUBLIC_*` variables. Admins can manage the Plus
 price and coupon codes at `/admin/billing`. Coupon expiry dates are inclusive
 through the end of the selected date in India time.
 
+## Paid reports
+
+Paid reports use the local Next.js API routes and MongoDB; this project does
+not integrate Supabase. In addition to the Plus checkout settings, configure:
+
+- `GOOGLE_GEOCODING_API_KEY` as a separate server-only key with the Google
+  Geocoding API enabled. Do not use an HTTP-referrer-restricted key for this
+  server request; restrict it to the Geocoding API and, where possible, the
+  server's IP address.
+- `GEMINI_API_KEY` as a server-only key for hydrogeology analysis.
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` with Google Maps Static API enabled and
+  restricted to the site's HTTP referrers. Report map images load directly from
+  Google Static Maps.
+- `BETTER_AUTH_SECRET` for signing the HttpOnly report-access cookie.
+- `RAZORPAY_WEBHOOK_SECRET` for signature verification of Razorpay webhooks.
+
+Configure Razorpay to send `payment.captured` and `order.paid` events to
+`/api/billing/webhook`. The webhook and checkout verification both create or
+reuse a report session only after confirming the payment.
+
+Report sessions are stored in the `reportSessions` MongoDB collection and
+analysis results are cached in `reportAnalysisCache` for up to 24 hours. These
+collections and indexes are created by Mongoose when the report workflow first
+runs. Open-Meteo is used for rainfall data and does not require an API key.
+
+The optional report map type is read from the `siteSettings` collection in a
+document with `_id: "report-settings"` and a `map_snapshot_type` value of
+`roadmap`, `satellite`, `terrain`, or `hybrid`. If the document or field is
+missing, reports use `roadmap`. PDF actions use the browser's print-to-PDF
+workflow; no PDF-rendering service is used.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

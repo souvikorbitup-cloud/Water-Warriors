@@ -1,4 +1,6 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
@@ -9,6 +11,10 @@ interface ReportOverviewSectionProps {
   name?: string;
   catchmentArea?: string;
   annualRainfall?: string;
+  mapImageUrl?: string | null;
+  mapImageFailed?: boolean;
+  onMapLoad?: () => void;
+  onMapError?: () => void;
 }
 
 function StatCard({
@@ -39,22 +45,28 @@ function StatCard({
   );
 }
 
-export default async function ReportOverviewSection({
-  name = "Water Warrior",
-  catchmentArea = "760 sq. metres",
-  annualRainfall = "995.74 mm per year",
+export default function ReportOverviewSection({
+  name,
+  catchmentArea,
+  annualRainfall,
+  mapImageUrl,
+  mapImageFailed = false,
+  onMapLoad,
+  onMapError,
 }: ReportOverviewSectionProps) {
-  const t = await getTranslations("Report");
-  const tCommon = await getTranslations("Common");
+  const t = useTranslations("Report");
+  const tCommon = useTranslations("Common");
 
   return (
     <section className="container-y-pad overflow-hidden">
       <div className="my-container-x">
         <div className="mx-auto flex flex-col items-center text-center">
           <h1 className="text-4xl leading-tight font-normal text-heading sm:text-5xl lg:text-6xl xl:text-[64px]">
-            {t.rich("greeting", {
-              name: () => <span className="font-semibold">{name}!</span>,
-            })}
+            {name
+              ? t.rich("greeting", {
+                  name: () => <span className="font-semibold">{name}!</span>,
+                })
+              : t("greetingGeneric")}
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-heading sm:mt-4 sm:text-base">
             {t("thankYou")}
@@ -63,13 +75,22 @@ export default async function ReportOverviewSection({
 
         {/* Selected area map */}
         <div className="relative mt-8 h-52 overflow-hidden rounded-2xl border border-border sm:mt-10 sm:h-72 sm:rounded-4xl lg:mt-12 lg:h-90">
-          <Image
-            src="/map.png"
-            alt={tCommon("mapSelectedAreaAlt")}
-            fill
-            sizes="(min-width: 1200px) 1200px, 100vw"
-            className="object-cover"
-          />
+          {mapImageUrl && !mapImageFailed ? (
+            <Image
+              src={mapImageUrl}
+              alt={tCommon("mapSelectedAreaAlt")}
+              fill
+              unoptimized
+              sizes="(min-width: 1200px) 1200px, 100vw"
+              className="object-cover"
+              onLoad={onMapLoad}
+              onError={onMapError}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-secondary/30 text-sm text-paragraph">
+              {mapImageFailed ? t("mapFailed") : t("mapPending")}
+            </div>
+          )}
         </div>
 
         {/* Key figures */}
@@ -77,12 +98,12 @@ export default async function ReportOverviewSection({
           <StatCard
             icon={<House />}
             label={t("catchmentLabel")}
-            value={catchmentArea}
+            value={catchmentArea ?? t("notAvailable")}
           />
           <StatCard
             icon={<Cloud />}
             label={t("rainfallLabel")}
-            value={annualRainfall}
+            value={annualRainfall ?? t("notAvailable")}
           />
         </div>
       </div>
