@@ -91,6 +91,14 @@ export interface RazorpayOrder {
   notes?: Record<string, string>;
 }
 
+export interface RazorpayPayment {
+  id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  status: string;
+}
+
 export interface CreateRazorpayOrderParams {
   amountPaise: number;
   currency: string;
@@ -214,6 +222,13 @@ export function createRazorpayOrder(p: CreateRazorpayOrderParams) {
     payment_capture: 1,
     notes: p.notes,
   });
+}
+
+export function fetchPayment(paymentId: string) {
+  return request<RazorpayPayment>(
+    "GET",
+    `/payments/${encodeURIComponent(paymentId)}`,
+  );
 }
 
 export function verifyOrderPaymentSignature(params: {

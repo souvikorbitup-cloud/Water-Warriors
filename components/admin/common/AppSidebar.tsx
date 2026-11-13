@@ -18,6 +18,7 @@ import {
   FileVideoCamera,
   UserStar,
   CircleQuestionMark,
+  CreditCard,
 } from "lucide-react";
 import {
   canAccess,
@@ -96,6 +97,12 @@ const menuSections: MenuSection[] = [
         name: "All Testimonials",
         path: "/admin/all-testimonials",
         permission: PERMISSIONS.AllTestimonialsView,
+      },
+      {
+        icon: <CreditCard />,
+        name: "Plans & Coupons",
+        path: "/admin/billing",
+        permission: PERMISSIONS.paymentsView,
       },
     ],
   },

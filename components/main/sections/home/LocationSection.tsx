@@ -28,6 +28,16 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { detectRoofFromPixels } from "@/lib/data/roof-detection";
+import {
+  readSavedLocationName,
+  readSavedMapCamera,
+  readSavedMapPoints,
+  saveLocationName,
+  saveMapCamera,
+  saveMapPoints,
+  type LocationCamera as MapCamera,
+} from "@/lib/data/location-selection-session";
+import { useRouter } from "@/i18n/navigation";
 
 type LatLng = google.maps.LatLngLiteral;
 
@@ -38,8 +48,6 @@ type LocationSectionProps = {
 
 const INITIAL_CENTER: LatLng = { lat: 22.6446, lng: 88.3737 };
 const INITIAL_ZOOM = 17;
-const MAP_CAMERA_SESSION_KEY = "water-warriors:location-map-camera";
-const MAP_POINTS_SESSION_KEY = "water-warriors:location-map-points";
 const MIN_POINTS = 4;
 // Two map clicks closer together than this are treated as one double-click.
 const DOUBLE_CLICK_MS = 350;
@@ -56,102 +64,6 @@ const MAP_OPTIONS: google.maps.MapOptions = {
 const COORDS_REGEX = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/;
 
 type BuildingStatus = "idle" | "loading" | "notFound" | "error" | "mapRequired";
-
-type MapCamera = {
-  center: LatLng;
-  zoom: number;
-};
-
-function readSavedMapCamera(): MapCamera | null {
-  try {
-    const stored = sessionStorage.getItem(MAP_CAMERA_SESSION_KEY);
-    if (!stored) return null;
-
-    const value: unknown = JSON.parse(stored);
-    if (
-      typeof value !== "object" ||
-      value === null ||
-      !("center" in value) ||
-      !("zoom" in value) ||
-      typeof value.center !== "object" ||
-      value.center === null ||
-      !("lat" in value.center) ||
-      !("lng" in value.center) ||
-      typeof value.center.lat !== "number" ||
-      typeof value.center.lng !== "number" ||
-      typeof value.zoom !== "number" ||
-      !Number.isFinite(value.center.lat) ||
-      !Number.isFinite(value.center.lng) ||
-      !Number.isFinite(value.zoom) ||
-      value.center.lat < -85 ||
-      value.center.lat > 85 ||
-      value.center.lng < -180 ||
-      value.center.lng > 180 ||
-      value.zoom < 0 ||
-      value.zoom > 22
-    ) {
-      return null;
-    }
-
-    return {
-      center: { lat: value.center.lat, lng: value.center.lng },
-      zoom: value.zoom,
-    };
-  } catch (error) {
-    console.warn("Could not restore the saved map position.", error);
-    return null;
-  }
-}
-
-function saveMapCamera(camera: MapCamera) {
-  try {
-    sessionStorage.setItem(MAP_CAMERA_SESSION_KEY, JSON.stringify(camera));
-  } catch (error) {
-    console.warn("Could not save the map position for this session.", error);
-  }
-}
-
-function isValidMapPoint(value: unknown): value is LatLng {
-  if (typeof value !== "object" || value === null) return false;
-  if (!("lat" in value) || !("lng" in value)) return false;
-
-  return (
-    typeof value.lat === "number" &&
-    typeof value.lng === "number" &&
-    Number.isFinite(value.lat) &&
-    Number.isFinite(value.lng) &&
-    value.lat >= -90 &&
-    value.lat <= 90 &&
-    value.lng >= -180 &&
-    value.lng <= 180
-  );
-}
-
-function readSavedMapPoints(): LatLng[] {
-  try {
-    const stored = sessionStorage.getItem(MAP_POINTS_SESSION_KEY);
-    if (!stored) return [];
-
-    const value: unknown = JSON.parse(stored);
-    if (!Array.isArray(value) || !value.every(isValidMapPoint)) {
-      console.warn("Ignoring invalid saved map points.");
-      return [];
-    }
-
-    return value;
-  } catch (error) {
-    console.warn("Could not restore the saved map points.", error);
-    return [];
-  }
-}
-
-function saveMapPoints(points: LatLng[]) {
-  try {
-    sessionStorage.setItem(MAP_POINTS_SESSION_KEY, JSON.stringify(points));
-  } catch (error) {
-    console.warn("Could not save the map points for this session.", error);
-  }
-}
 
 // Ray-casting point-in-polygon test (lng = x, lat = y).
 function pointInPolygon(point: LatLng, ring: LatLng[]): boolean {
@@ -285,6 +197,43 @@ async function fetchBuildingFootprint(point: LatLng): Promise<LatLng[] | null> {
   return rings.find((ring) => pointInPolygon(point, ring)) ?? rings[0];
 }
 
+type StaticMapImageResponse = {
+  image: string;
+  center: LatLng;
+  zoom: number;
+  size: number;
+  scale: number;
+};
+
+function isStaticMapImageResponse(
+  value: unknown,
+): value is StaticMapImageResponse {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("image" in value) ||
+    !("center" in value) ||
+    !("zoom" in value) ||
+    !("size" in value) ||
+    !("scale" in value) ||
+    typeof value.image !== "string" ||
+    !value.image.startsWith("data:image/png;base64,") ||
+    typeof value.center !== "object" ||
+    value.center === null ||
+    !("lat" in value.center) ||
+    !("lng" in value.center) ||
+    typeof value.center.lat !== "number" ||
+    typeof value.center.lng !== "number" ||
+    typeof value.zoom !== "number" ||
+    typeof value.size !== "number" ||
+    typeof value.scale !== "number"
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 async function detectBuildingFromMap(
   point: LatLng,
   zoom: number,
@@ -301,33 +250,36 @@ async function detectBuildingFromMap(
     );
   }
 
-  const bitmap = await createImageBitmap(await response.blob());
-
-  try {
-    const canvas = document.createElement("canvas");
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
-
-    const context = canvas.getContext("2d");
-    if (!context)
-      throw new Error("Could not create the roof detection canvas.");
-
-    context.drawImage(bitmap, 0, 0);
-    const image = context.getImageData(0, 0, canvas.width, canvas.height);
-
-    return detectRoofFromPixels(image.data, {
-      width: canvas.width,
-      height: canvas.height,
-      center: point,
-      zoom,
-      scale: 2,
-    });
-  } finally {
-    bitmap.close();
+  const result: unknown = await response.json();
+  if (!isStaticMapImageResponse(result)) {
+    throw new Error("Magic Selection returned an invalid image response.");
   }
+
+  const image = new Image();
+  image.src = result.image;
+  await image.decode();
+
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Could not create the roof detection canvas.");
+
+  context.drawImage(image, 0, 0);
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+
+  return detectRoofFromPixels(pixels.data, {
+    width: canvas.width,
+    height: canvas.height,
+    center: result.center,
+    zoom: result.zoom,
+    scale: result.scale,
+  });
 }
 
 export default function LocationSection({ onNext }: LocationSectionProps) {
+  const router = useRouter();
   const t = useTranslations("Location");
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-maps-script",
@@ -349,7 +301,9 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
     null,
   );
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState(() =>
+    typeof window === "undefined" ? "" : readSavedLocationName(),
+  );
   const [query, setQuery] = useState("");
   const [isPlacesLoaded, setIsPlacesLoaded] = useState(false);
   const [placesLoadError, setPlacesLoadError] = useState<string | null>(null);
@@ -765,7 +719,12 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
   };
 
   const handleNext = () => {
-    onNext?.({ name, points });
+    if (onNext) {
+      onNext({ name, points });
+      return;
+    }
+
+    router.push("/checkout");
   };
 
   return (
@@ -795,7 +754,10 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
             <Input
               id="report-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                saveLocationName(e.target.value);
+              }}
               placeholder={t("namePlaceholder")}
               className="mt-2 h-10.5 rounded-md border-border bg-background! px-3 text-sm"
             />

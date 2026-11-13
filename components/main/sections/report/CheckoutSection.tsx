@@ -1,48 +1,489 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { BadgePercent, FileText, MapPin, Star } from "lucide-react";
+import {
+  BadgePercent,
+  FileText,
+  LoaderCircle,
+  MapPin,
+  Star,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 import SampleReportModal from "@/components/main/shared/modal/SampleReportModal";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import {
+  readSavedLocationName,
+  readSavedMapCamera,
+  readSavedMapPoints,
+} from "@/lib/data/location-selection-session";
+import type { BillingQuote } from "@/lib/billing/types";
+import {
+  createRazorpayCheckout,
+  loadRazorpayScript,
+  type RazorpayCheckoutResponse,
+} from "@/lib/razorpay/razorpay-client";
 
-interface CheckoutSectionProps {
-  planName?: string;
-  planDescription?: string;
-  subtotal?: number;
-  discount?: number;
-  onApplyCoupon?: (code: string) => void;
-  onProceed?: () => void;
+type PaymentStage = "idle" | "starting" | "verifying";
+type MapPreviewError = "missing-area" | "failed";
+
+type StaticMapImageResponse = {
+  image: string;
+  center: { lat: number; lng: number };
+  zoom: number;
+  size: number;
+  scale: number;
+};
+
+type CreateOrderResponse = {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  customerName: string;
+  description: string;
+};
+
+function isBillingQuote(value: unknown): value is BillingQuote {
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    "planPricePaise" in value &&
+    typeof value.planPricePaise === "number" &&
+    "discountPaise" in value &&
+    typeof value.discountPaise === "number" &&
+    "totalPaise" in value &&
+    typeof value.totalPaise === "number" &&
+    "currency" in value &&
+    value.currency === "INR" &&
+    "couponCode" in value &&
+    (typeof value.couponCode === "string" || value.couponCode === null)
+  );
 }
 
-const formatPrice = (value: number) => `₹ ${value.toFixed(2)}`;
+function isStaticMapImageResponse(
+  value: unknown,
+): value is StaticMapImageResponse {
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    "image" in value &&
+    typeof value.image === "string" &&
+    value.image.startsWith("data:image/png;base64,") &&
+    "center" in value &&
+    typeof value.center === "object" &&
+    value.center !== null &&
+    "lat" in value.center &&
+    typeof value.center.lat === "number" &&
+    "lng" in value.center &&
+    typeof value.center.lng === "number" &&
+    "zoom" in value &&
+    typeof value.zoom === "number" &&
+    "size" in value &&
+    typeof value.size === "number" &&
+    "scale" in value &&
+    typeof value.scale === "number"
+  );
+}
 
-export default function CheckoutSection({
-  planName,
-  planDescription,
-  subtotal = 99,
-  discount = 0,
-  onApplyCoupon,
-  onProceed,
-}: CheckoutSectionProps) {
+function isCreateOrderResponse(value: unknown): value is CreateOrderResponse {
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    "orderId" in value &&
+    typeof value.orderId === "string" &&
+    "amount" in value &&
+    typeof value.amount === "number" &&
+    "currency" in value &&
+    typeof value.currency === "string" &&
+    "keyId" in value &&
+    typeof value.keyId === "string" &&
+    "customerName" in value &&
+    typeof value.customerName === "string" &&
+    "description" in value &&
+    typeof value.description === "string"
+  );
+}
+
+async function getApiMessage(
+  response: Response,
+  fallback: string,
+): Promise<string> {
+  try {
+    const body: unknown = await response.json();
+    if (
+      typeof body === "object" &&
+      body !== null &&
+      "message" in body &&
+      typeof body.message === "string"
+    ) {
+      return body.message;
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
+}
+
+function projectPoint(
+  point: { lat: number; lng: number },
+  image: StaticMapImageResponse,
+): { x: number; y: number } {
+  const worldSize = 256 * 2 ** image.zoom;
+  const centerX = ((image.center.lng + 180) / 360) * worldSize;
+  const centerSinLatitude = Math.sin((image.center.lat * Math.PI) / 180);
+  const centerY =
+    (0.5 -
+      Math.log((1 + centerSinLatitude) / (1 - centerSinLatitude)) /
+        (4 * Math.PI)) *
+    worldSize;
+  const pointSinLatitude = Math.sin((point.lat * Math.PI) / 180);
+  const pointX = ((point.lng + 180) / 360) * worldSize;
+  const pointY =
+    (0.5 -
+      Math.log((1 + pointSinLatitude) / (1 - pointSinLatitude)) /
+        (4 * Math.PI)) *
+    worldSize;
+
+  return {
+    x: (image.size * image.scale) / 2 + (pointX - centerX) * image.scale,
+    y: (image.size * image.scale) / 2 + (pointY - centerY) * image.scale,
+  };
+}
+
+async function createAreaPreview(
+  points: { lat: number; lng: number }[],
+): Promise<string> {
+  const savedCamera = readSavedMapCamera();
+  const center =
+    savedCamera?.center ??
+    points.reduce(
+      (sum, point) => ({
+        lat: sum.lat + point.lat / points.length,
+        lng: sum.lng + point.lng / points.length,
+      }),
+      { lat: 0, lng: 0 },
+    );
+  const zoom = Math.max(15, Math.min(21, savedCamera?.zoom ?? 19));
+  const response = await fetch("/api/detect-building-footprint", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...center, zoom }),
+  });
+  if (!response.ok) {
+    throw new Error(await getApiMessage(response, "Could not load the map."));
+  }
+
+  const payload: unknown = await response.json();
+  if (!isStaticMapImageResponse(payload)) {
+    throw new Error("The server returned an invalid map image.");
+  }
+
+  const image = new window.Image();
+  image.src = payload.image;
+  await image.decode();
+
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Could not create the map preview.");
+
+  context.drawImage(image, 0, 0);
+  const projectedPoints = points.map((point) => projectPoint(point, payload));
+
+  context.beginPath();
+  context.moveTo(projectedPoints[0].x, projectedPoints[0].y);
+  for (const point of projectedPoints.slice(1)) {
+    context.lineTo(point.x, point.y);
+  }
+  context.closePath();
+  context.fillStyle = "rgba(241, 187, 27, 0.35)";
+  context.strokeStyle = "#F1BB1B";
+  context.lineWidth = Math.max(3, canvas.width / 400);
+  context.fill();
+  context.stroke();
+
+  for (const point of projectedPoints) {
+    context.beginPath();
+    context.arc(
+      point.x,
+      point.y,
+      Math.max(5, canvas.width / 240),
+      0,
+      2 * Math.PI,
+    );
+    context.fillStyle = "#F1BB1B";
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = "#ffffff";
+    context.stroke();
+  }
+
+  return canvas.toDataURL("image/png");
+}
+
+export default function CheckoutSection() {
   const t = useTranslations("Checkout");
   const tCommon = useTranslations("Common");
+  const router = useRouter();
   const [coupon, setCoupon] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [quote, setQuote] = useState<BillingQuote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(true);
+  const [mapPreview, setMapPreview] = useState<string | null>(null);
+  const [mapPreviewLoading, setMapPreviewLoading] = useState(true);
+  const [mapPreviewError, setMapPreviewError] =
+    useState<MapPreviewError | null>(null);
+  const [selectedAreaAvailable, setSelectedAreaAvailable] = useState(false);
+  const [customerName] = useState(() =>
+    typeof window === "undefined" ? "" : readSavedLocationName(),
+  );
   const [reportOpen, setReportOpen] = useState(false);
-  const total = Math.max(subtotal - discount, 0);
+  const [paymentStage, setPaymentStage] = useState<PaymentStage>("idle");
+  const [paymentResponse, setPaymentResponse] =
+    useState<RazorpayCheckoutResponse | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  );
 
-  function handleCoupon(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    let active = true;
+    fetch("/api/billing/quote", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(
+            await getApiMessage(response, "Could not load the plan price."),
+          );
+        }
+        const result: unknown = await response.json();
+        if (!isBillingQuote(result)) {
+          throw new Error("The server returned an invalid plan price.");
+        }
+        if (active) setQuote(result);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Could not load the plan price.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setQuoteLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    Promise.resolve()
+      .then(() => {
+        const points = readSavedMapPoints();
+        if (points.length < 4) {
+          if (active) setMapPreviewError("missing-area");
+          return null;
+        }
+
+        if (active) setSelectedAreaAvailable(true);
+        return createAreaPreview(points);
+      })
+      .then((preview) => {
+        if (active && preview) setMapPreview(preview);
+      })
+      .catch((error: unknown) => {
+        console.error(
+          "Could not prepare the selected-area map preview.",
+          error,
+        );
+        if (active) setMapPreviewError("failed");
+      })
+      .finally(() => {
+        if (active) setMapPreviewLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleCoupon(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const code = coupon.trim();
-    if (code) onApplyCoupon?.(code);
+    setQuoteLoading(true);
+    try {
+      const submittedCode = coupon.trim().toUpperCase();
+      const code =
+        submittedCode && submittedCode !== appliedCoupon ? submittedCode : "";
+      const url = code
+        ? `/api/billing/quote?code=${encodeURIComponent(code)}`
+        : "/api/billing/quote";
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(
+          await getApiMessage(response, "Could not apply coupon."),
+        );
+      }
+
+      const result: unknown = await response.json();
+      if (!isBillingQuote(result)) {
+        throw new Error("The server returned an invalid order total.");
+      }
+
+      setQuote(result);
+      setAppliedCoupon(result.couponCode);
+      setCoupon(result.couponCode ?? "");
+      toast.success(
+        result.couponCode ? t("couponApplied") : t("couponRemoved"),
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not apply coupon.",
+      );
+    } finally {
+      setQuoteLoading(false);
+    }
   }
+
+  async function submitPaymentVerification(payment: RazorpayCheckoutResponse) {
+    setPaymentStage("verifying");
+    setVerificationError(null);
+    try {
+      const response = await fetch("/api/billing/orders/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payment),
+      });
+      if (!response.ok) {
+        throw new Error(
+          await getApiMessage(response, "Could not verify payment."),
+        );
+      }
+
+      router.replace("/report");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not verify payment. Please contact support.";
+      setVerificationError(message);
+      toast.error(message);
+    }
+  }
+
+  async function verifyPayment(payment: RazorpayCheckoutResponse) {
+    setPaymentResponse(payment);
+    await submitPaymentVerification(payment);
+  }
+
+  async function handleProceed() {
+    if (!quote || quoteLoading || paymentStage !== "idle") return;
+    setPaymentStage("starting");
+
+    try {
+      const response = await fetch("/api/billing/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          couponCode: appliedCoupon,
+          customerName,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(
+          await getApiMessage(response, "Could not start payment."),
+        );
+      }
+
+      const orderResult: unknown = await response.json();
+      if (!isCreateOrderResponse(orderResult)) {
+        throw new Error("The server returned an invalid payment order.");
+      }
+
+      if (!(await loadRazorpayScript())) {
+        throw new Error("Could not load the Razorpay payment window.");
+      }
+
+      const checkout = createRazorpayCheckout({
+        key: orderResult.keyId,
+        amount: orderResult.amount,
+        currency: orderResult.currency,
+        name: "Water Warriors",
+        description: orderResult.description,
+        order_id: orderResult.orderId,
+        prefill: {
+          name: orderResult.customerName,
+          email: "",
+          contact: "",
+        },
+        handler: verifyPayment,
+        modal: {
+          ondismiss: () => setPaymentStage("idle"),
+        },
+      });
+
+      if (!checkout) {
+        throw new Error("Could not open the Razorpay payment window.");
+      }
+
+      setPaymentStage("idle");
+      checkout.open();
+    } catch (error) {
+      setPaymentStage("idle");
+      toast.error(
+        error instanceof Error ? error.message : "Could not start payment.",
+      );
+    }
+  }
+
+  if (paymentStage !== "idle") {
+    return (
+      <section
+        className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center"
+        role="status"
+        aria-live="polite"
+      >
+        <LoaderCircle className="size-12 animate-spin text-primary" />
+        <h1 className="mt-5 text-2xl font-semibold text-heading sm:text-3xl">
+          {paymentStage === "starting"
+            ? t("startingPayment")
+            : t("verifyingPayment")}
+        </h1>
+        <p className="mt-2 max-w-md text-sm text-paragraph sm:text-base">
+          {t("paymentProcessingNote")}
+        </p>
+        {verificationError && paymentResponse && (
+          <div className="mt-5">
+            <p className="text-sm text-destructive">{verificationError}</p>
+            <button
+              type="button"
+              onClick={() => void submitPaymentVerification(paymentResponse)}
+              className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
+            >
+              {t("retryVerification")}
+            </button>
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  const subtotal = quote?.planPricePaise ?? 0;
+  const discount = quote?.discountPaise ?? 0;
+  const total = quote?.totalPaise ?? 0;
+  const formatPrice = (paise: number) =>
+    `₹ ${new Intl.NumberFormat("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(paise / 100)}`;
 
   return (
     <section className="container-y-pad relative isolate overflow-hidden">
-      {/* Decorative W-shaped overlay (bottom left) */}
       <Image
         src="/section-images/w-logo-light.svg"
         alt="w-logo"
@@ -55,18 +496,30 @@ export default function CheckoutSection({
       />
 
       <div className="my-container-x">
-        {/* Map preview */}
         <div className="relative h-60 overflow-hidden rounded-2xl border border-border sm:h-80 sm:rounded-4xl lg:h-110">
-          <Image
-            src="/map.png"
-            alt={tCommon("mapSelectedAreaAlt")}
-            fill
-            sizes="(min-width: 1200px) 1800px, 100vw"
-            className="object-cover"
-          />
+          {mapPreview ? (
+            <Image
+              src={mapPreview}
+              alt={tCommon("mapSelectedAreaAlt")}
+              fill
+              unoptimized
+              sizes="(min-width: 1200px) 1800px, 100vw"
+              className="object-cover"
+            />
+          ) : (
+            <p
+              role={mapPreviewLoading ? "status" : "alert"}
+              className="absolute inset-0 flex items-center justify-center bg-secondary/30 px-6 text-center text-sm text-heading"
+            >
+              {mapPreviewLoading
+                ? t("loadingAreaPreview")
+                : mapPreviewError === "missing-area"
+                  ? t("missingAreaPreview")
+                  : t("areaPreviewFailed")}
+            </p>
+          )}
         </div>
 
-        {/* Info cards */}
         <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-2 lg:mt-14 lg:gap-8">
           <div className="rounded-2xl border border-border bg-background p-5 sm:rounded-3xl sm:p-6">
             <span className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground sm:size-12">
@@ -104,7 +557,6 @@ export default function CheckoutSection({
           </div>
         </div>
 
-        {/* Order summary */}
         <div className="mt-8 grid items-start gap-6 sm:mt-10 lg:mt-14 lg:grid-cols-2 lg:gap-8">
           <div className="rounded-2xl bg-secondary/35 p-6 sm:rounded-3xl sm:p-9">
             <h2 className="text-3xl leading-[1.15] font-semibold sm:text-4xl lg:text-5xl xl:text-[52px]">
@@ -115,15 +567,14 @@ export default function CheckoutSection({
             </p>
           </div>
 
-          {/* Plan card with soft gradient border */}
           <div className="rounded-3xl bg-linear-to-b from-primary/35 to-border p-2.5 shadow-xl shadow-foreground/5 sm:rounded-4xl sm:p-3">
             <div className="overflow-hidden rounded-2xl bg-background sm:rounded-3xl">
               <div className="bg-foreground/3 px-5 pt-6 pb-9 sm:px-6.5 sm:pt-7 sm:pb-10">
                 <h3 className="text-2xl font-semibold text-heading sm:text-3xl">
-                  {planName ?? t("planName")}
+                  {t("planName")}
                 </h3>
                 <p className="mt-1 text-sm text-paragraph sm:text-base">
-                  {planDescription ?? t("planDescription")}
+                  {t("planDescription")}
                 </p>
               </div>
 
@@ -131,7 +582,9 @@ export default function CheckoutSection({
                 <dl className="space-y-3 text-sm sm:space-y-4 sm:text-base">
                   <div className="flex items-center justify-between">
                     <dt className="text-heading">{t("subtotal")}</dt>
-                    <dd className="text-paragraph">{formatPrice(subtotal)}</dd>
+                    <dd className="text-paragraph">
+                      {quoteLoading ? t("loadingPrice") : formatPrice(subtotal)}
+                    </dd>
                   </div>
                   <div className="flex items-center justify-between">
                     <dt className="text-heading">{t("discount")}</dt>
@@ -146,11 +599,10 @@ export default function CheckoutSection({
                     {t("total")}
                   </p>
                   <p className="font-heading text-xl font-semibold text-heading sm:text-2xl">
-                    {formatPrice(total)}
+                    {quoteLoading ? t("loadingPrice") : formatPrice(total)}
                   </p>
                 </div>
 
-                {/* Coupon */}
                 <form
                   onSubmit={handleCoupon}
                   className="mt-5 flex items-center gap-2 rounded-2xl border border-border py-2 pr-2 pl-3 sm:mt-6 sm:gap-3 sm:pl-4"
@@ -163,23 +615,34 @@ export default function CheckoutSection({
                   <input
                     type="text"
                     value={coupon}
-                    onChange={(e) => setCoupon(e.target.value)}
+                    onChange={(event) => setCoupon(event.target.value)}
                     placeholder={t("couponPlaceholder")}
                     aria-label={t("couponLabel")}
                     className="min-w-0 flex-1 bg-transparent text-sm text-heading outline-none placeholder:text-muted-foreground sm:text-base"
                   />
                   <button
                     type="submit"
-                    className="h-10 shrink-0 rounded-lg border border-border bg-foreground/3 px-4 text-sm text-heading transition-colors hover:bg-muted sm:h-11 sm:px-5 sm:text-base cursor-pointer"
+                    disabled={quoteLoading}
+                    className="h-10 shrink-0 rounded-lg border border-border bg-foreground/3 px-4 text-sm text-heading transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:px-5 sm:text-base"
                   >
-                    {t("applyCode")}
+                    {appliedCoupon &&
+                    coupon.trim().toUpperCase() === appliedCoupon
+                      ? t("removeCode")
+                      : t("applyCode")}
                   </button>
                 </form>
+
+                {appliedCoupon && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {t("appliedCoupon", { code: appliedCoupon })}
+                  </p>
+                )}
 
                 <PrimaryButton
                   btnType="solid-primary"
                   full
-                  onClick={onProceed}
+                  disabled={!quote || quoteLoading || !selectedAreaAvailable}
+                  onClick={() => void handleProceed()}
                   className="mt-5 w-full sm:mt-6"
                 >
                   {t("proceed")}
@@ -189,7 +652,6 @@ export default function CheckoutSection({
           </div>
         </div>
 
-        {/* Disclaimer */}
         <div className="mt-8 flex items-start gap-3 rounded-2xl bg-secondary/35 px-4 py-4 text-sm text-heading sm:mt-10 sm:items-center sm:px-6 sm:text-base">
           <Star
             className="mt-0.5 size-4 shrink-0 fill-current sm:mt-0"
