@@ -125,6 +125,10 @@ function createAreaPreviewUrl(points: { lat: number; lng: number }[]): string {
     throw new Error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not configured.");
   }
 
+  const firstPoint = points[0];
+  const pathPoints = points.map((point) => `${point.lat},${point.lng}`);
+  if (firstPoint) pathPoints.push(`${firstPoint.lat},${firstPoint.lng}`);
+
   const searchParams = new URLSearchParams({
     maptype: "roadmap",
     size: "640x251",
@@ -135,7 +139,7 @@ function createAreaPreviewUrl(points: { lat: number; lng: number }[]): string {
       "fillcolor:0xFFA50040",
       "color:0xFF8C00",
       "weight:2",
-      ...points.map((point) => `${point.lat},${point.lng}`),
+      ...pathPoints,
     ].join("|"),
     key: apiKey,
   });
