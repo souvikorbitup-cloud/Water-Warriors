@@ -366,6 +366,20 @@ export async function clearBillingOrderRooftopSelection(
   );
 }
 
+export async function saveBillingOrderRooftopSelection(
+  orderId: string,
+  rooftopSelection: RooftopSelection,
+): Promise<void> {
+  const collection = await getSiteSettingsCollection();
+  await collection.updateOne(
+    {
+      _id: `${ORDER_ID_PREFIX}${orderId}`,
+      rooftopSelection: { $exists: false },
+    },
+    { $set: { rooftopSelection } },
+  );
+}
+
 export async function markBillingOrderPaid(
   orderId: string,
   paymentId: string,

@@ -22,6 +22,12 @@ import { numberToIndianWords } from "@/lib/report/format";
 import { REPORT_IMPACT_ASSUMPTIONS } from "@/lib/report/constants";
 import { reportSessionResponseSchema } from "@/lib/report/schemas";
 import type { ReportSessionData } from "@/lib/report/types";
+import {
+  ANALYTICS_CONSENT_CHANGE_EVENT,
+  ANALYTICS_CONSENT_KEY,
+} from "@/lib/data/analytics-consent";
+
+const REPORT_SESSION_STORAGE_PREFIX = "ww-report-session:";
 
 const mapSnapshotTypes = new Set<MapSnapshotType>([
   "roadmap",
@@ -63,6 +69,49 @@ function getApiMessage(value: unknown): string | null {
   return null;
 }
 
+function hasAnalyticsConsent(): boolean {
+  try {
+    return window.localStorage.getItem(ANALYTICS_CONSENT_KEY) === "accepted";
+  } catch (error) {
+    console.warn("Could not read analytics consent for report storage.", error);
+    return false;
+  }
+}
+
+function readSessionReport(orderId: string): ReportSessionData | null {
+  const key = `${REPORT_SESSION_STORAGE_PREFIX}${orderId}`;
+  try {
+    const stored = window.sessionStorage.getItem(key);
+    if (!stored) return null;
+
+    const parsed: unknown = JSON.parse(stored);
+    const result = reportSessionResponseSchema.safeParse(parsed);
+    if (!result.success || result.data.orderId !== orderId) {
+      window.sessionStorage.removeItem(key);
+      console.warn(
+        "Ignoring invalid report data saved for this browser session.",
+      );
+      return null;
+    }
+
+    return result.data;
+  } catch (error) {
+    console.warn("Could not restore this browser session's report.", error);
+    return null;
+  }
+}
+
+function saveSessionReport(report: ReportSessionData): void {
+  try {
+    window.sessionStorage.setItem(
+      `${REPORT_SESSION_STORAGE_PREFIX}${report.orderId}`,
+      JSON.stringify(report),
+    );
+  } catch (error) {
+    console.warn("Could not save the report for this browser session.", error);
+  }
+}
+
 export default function ReportClient() {
   const t = useTranslations("Report");
   const locale = useLocale();
@@ -71,6 +120,7 @@ export default function ReportClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
   const [generationAttempt, setGenerationAttempt] = useState(0);
+  const [consentRevision, setConsentRevision] = useState(0);
   const [isPreparingPdf, setIsPreparingPdf] = useState(false);
   const [loadedMapImageUrl, setLoadedMapImageUrl] = useState<string | null>(
     null,
@@ -79,22 +129,46 @@ export default function ReportClient() {
     null,
   );
 
-  const loadReport = useCallback(async () => {
-    const response = await fetch("/api/report-session", {
-      cache: "no-store",
-    });
-    const body: unknown = await response.json().catch(() => null);
-    if (!response.ok) {
-      throw new Error(getApiMessage(body) ?? t("reportNotFound"));
-    }
-    const parsed = reportSessionResponseSchema.safeParse(body);
-    if (!parsed.success) {
-      throw new Error(t("reportLoadFailed"));
-    }
-    setReport(parsed.data);
-    setLoadError(null);
-    return parsed.data;
-  }, [t]);
+  const loadReport = useCallback(
+    async (consentAccepted: boolean) => {
+      const response = await fetch("/api/report-session", {
+        cache: "no-store",
+        headers: {
+          "x-ww-analytics-consent": consentAccepted ? "accepted" : "declined",
+        },
+      });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(getApiMessage(body) ?? t("reportNotFound"));
+      }
+      const parsed = reportSessionResponseSchema.safeParse(body);
+      if (!parsed.success) {
+        throw new Error(t("reportLoadFailed"));
+      }
+      setReport(parsed.data);
+      setLoadError(null);
+      return parsed.data;
+    },
+    [t],
+  );
+
+  const syncReportConsent = useCallback(
+    async (accepted: boolean) => {
+      const response = await fetch("/api/report-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accepted }),
+      });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(getApiMessage(body) ?? t("reportLoadFailed"));
+      }
+      const parsed = reportSessionResponseSchema.safeParse(body);
+      if (!parsed.success) throw new Error(t("reportLoadFailed"));
+      return parsed.data;
+    },
+    [t],
+  );
 
   const startGeneration = useCallback(async () => {
     const response = await fetch("/api/report-session/generate", {
@@ -119,17 +193,45 @@ export default function ReportClient() {
     const poll = async (isInitialRequest: boolean) => {
       if (!active) return;
       try {
-        let nextReport = await loadReport();
+        const consentAccepted = hasAnalyticsConsent();
+        let nextReport = await syncReportConsent(consentAccepted);
         if (!active) return;
+
+        if (!consentAccepted) {
+          const cachedReport =
+            generationAttempt === 0
+              ? readSessionReport(nextReport.orderId)
+              : null;
+          if (cachedReport) {
+            setReport(cachedReport);
+            setLoadError(null);
+            setIsRetrying(false);
+            return;
+          }
+          nextReport = await startGeneration();
+          if (!active) return;
+          if (
+            nextReport.status !== "generating" &&
+            nextReport.status !== "retrying"
+          ) {
+            saveSessionReport(nextReport);
+          }
+        } else {
+          nextReport = await loadReport(true);
+          if (!active) return;
+        }
+
         if (
+          consentAccepted &&
           isInitialRequest &&
           (nextReport.status === "pending" ||
-            (generationAttempt > 0 && nextReport.status === "failed"))
+            (generationAttempt > 0 && nextReport.status === "failed") ||
+            nextReport.forecast === undefined)
         ) {
           setIsRetrying(true);
           nextReport = await startGeneration();
+          if (!active) return;
         }
-        if (!active) return;
         if (
           nextReport.status === "generating" ||
           nextReport.status === "retrying"
@@ -152,13 +254,35 @@ export default function ReportClient() {
       }
     };
 
+    const handleConsentChange = () => {
+      setReport(null);
+      setIsLoading(true);
+      setConsentRevision((revision) => revision + 1);
+    };
+    window.addEventListener(
+      ANALYTICS_CONSENT_CHANGE_EVENT,
+      handleConsentChange,
+    );
+    window.addEventListener("storage", handleConsentChange);
     void poll(true);
 
     return () => {
       active = false;
+      window.removeEventListener(
+        ANALYTICS_CONSENT_CHANGE_EVENT,
+        handleConsentChange,
+      );
+      window.removeEventListener("storage", handleConsentChange);
       if (pollTimer !== undefined) window.clearTimeout(pollTimer);
     };
-  }, [generationAttempt, loadReport, startGeneration, t]);
+  }, [
+    consentRevision,
+    generationAttempt,
+    loadReport,
+    startGeneration,
+    syncReportConsent,
+    t,
+  ]);
 
   const retryGeneration = () => {
     setIsRetrying(true);

@@ -63,6 +63,24 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
       window.dispatchEvent(new Event(ANALYTICS_CONSENT_CHANGE_EVENT));
       setConsentSaveError(null);
       setCookieSettingsOpen(false);
+
+      if (pathname !== "/report") {
+        void fetch("/api/report-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accepted: consent === "accepted" }),
+        })
+          .then((response) => {
+            if (response.status !== 404 && !response.ok) {
+              throw new Error(
+                `Report consent update failed (${response.status}).`,
+              );
+            }
+          })
+          .catch((error: unknown) => {
+            console.error("Could not update report-session consent.", error);
+          });
+      }
     } catch (error) {
       console.error("Unable to save analytics cookie preference", error);
       setConsentSaveError(t("cookieSaveError"));

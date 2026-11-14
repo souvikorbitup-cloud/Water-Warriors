@@ -1,19 +1,35 @@
 import "server-only";
 
 import { connectDB } from "@/lib/db";
-import ReportSession from "@/lib/models/ReportSession.model";
+import {
+  getBillingOrder,
+  type BillingOrderDocument,
+} from "@/lib/billing/billing-service";
+import ReportSession, {
+  type IReportSession,
+} from "@/lib/models/ReportSession.model";
 import { RUNOFF_COEFFICIENT } from "@/lib/report/constants";
 import {
+  getPolygonAreaSquareMeters,
+  getPolygonCentroid,
+} from "@/lib/report/geometry";
+import {
   getAverageAnnualRainfall,
+  deleteHydrogeologyAnalysisCache,
   getFiveMonthForecast,
   getHydrogeologyAnalysis,
   getMapSnapshotType,
   GeminiGenerationError,
   reverseGeocode,
 } from "@/lib/report/providers";
-import type { ReportLocation } from "@/lib/report/types";
+import type {
+  ReportForecastMonth,
+  ReportLocation,
+  ReportSessionData,
+} from "@/lib/report/types";
 
 const RETRY_DELAYS_MS = [10_000, 30_000];
+type ReportStep = keyof IReportSession["steps"];
 
 const wait = (milliseconds: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
@@ -32,12 +48,26 @@ function getErrorMessage(error: unknown): string {
 
 async function updateStep(
   orderId: string,
-  step: "location" | "rainfall" | "analysis" | "forecast",
+  step: ReportStep,
   value: unknown,
+  persistDetails: boolean,
 ): Promise<void> {
   await ReportSession.updateOne(
     { orderId },
-    { $set: { [`steps.${step}`]: "complete", [step]: value } },
+    { $set: { [`steps.${step}`]: "complete" } },
+  );
+  if (persistDetails) {
+    await ReportSession.updateOne(
+      { orderId, analyticsConsent: true },
+      { $set: { [step]: value } },
+    );
+  }
+}
+
+async function setStepFailed(orderId: string, step: ReportStep): Promise<void> {
+  await ReportSession.updateOne(
+    { orderId },
+    { $set: { [`steps.${step}`]: "failed" } },
   );
 }
 
@@ -47,6 +77,7 @@ async function generateAnalysisWithRetries(
   areaSqm: number,
   rainfallMm: number,
   potentialLitres: number,
+  persistDetails: boolean,
 ): Promise<string[]> {
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
     try {
@@ -55,6 +86,7 @@ async function generateAnalysisWithRetries(
         areaSqm,
         rainfallMm,
         potentialLitres,
+        persistDetails,
       );
     } catch (error) {
       const delay = RETRY_DELAYS_MS[attempt];
@@ -76,88 +108,161 @@ async function generateAnalysisWithRetries(
   throw new Error("Hydrogeology analysis retries were exhausted.");
 }
 
-export async function generateReport(orderId: string): Promise<void> {
-  await connectDB();
-  const report = await ReportSession.findOne({ orderId });
-  if (!report) throw new Error("Report session was not found.");
+function buildReportData(
+  orderId: string,
+  status: ReportSessionData["status"],
+  order: BillingOrderDocument,
+  selection: NonNullable<BillingOrderDocument["rooftopSelection"]>,
+  areaSqm: number,
+  centroid: { lat: number; lng: number },
+  steps: ReportSessionData["steps"],
+  values: {
+    annualRainfallMm?: number;
+    potentialLitres?: number;
+    location?: ReportLocation;
+    analysis?: string[];
+    forecast?: ReportForecastMonth[];
+    mapSnapshotType?: string;
+  },
+  lastError?: string,
+): ReportSessionData {
+  return {
+    orderId,
+    status,
+    customerName: order.customerName,
+    selection,
+    areaSqm,
+    centroid,
+    runoffCoefficient: RUNOFF_COEFFICIENT,
+    ...values,
+    steps,
+    ...(lastError ? { lastError } : {}),
+  };
+}
 
+export async function generateReport(
+  orderId: string,
+): Promise<ReportSessionData> {
+  await connectDB();
+  const [report, order] = await Promise.all([
+    ReportSession.findOne({ orderId }),
+    getBillingOrder(orderId),
+  ]);
+  if (!report) throw new Error("Report session was not found.");
+  if (
+    !order ||
+    order.status !== "paid" ||
+    order.paymentId !== report.paymentId
+  ) {
+    throw new Error("A verified, paid order is required for this report.");
+  }
+
+  const selection = order.rooftopSelection ?? report.selection;
+  if (!selection || selection.points.length < 4) {
+    throw new Error("The paid order has no valid rooftop selection.");
+  }
+  const areaSqm =
+    report.areaSqm ?? getPolygonAreaSquareMeters(selection.points);
+  const centroid = report.centroid ?? getPolygonCentroid(selection.points);
+  const persistDetails = report.analyticsConsent === true;
+  const steps: ReportSessionData["steps"] = persistDetails
+    ? { ...report.steps }
+    : {
+        location: "pending",
+        rainfall: "pending",
+        analysis: "pending",
+        forecast: "pending",
+      };
   const failures: string[] = [];
 
+  let mapSnapshotType = persistDetails ? report.mapSnapshotType : undefined;
   try {
-    const mapSnapshotType = await getMapSnapshotType();
-    await ReportSession.updateOne({ orderId }, { $set: { mapSnapshotType } });
+    mapSnapshotType = await getMapSnapshotType();
+    if (persistDetails) {
+      await ReportSession.updateOne(
+        { orderId, analyticsConsent: true },
+        { $set: { mapSnapshotType } },
+      );
+    }
   } catch (error) {
     failures.push(`Map settings: ${getErrorMessage(error)}`);
   }
 
-  let location = report.location;
-  if (report.steps.location !== "complete") {
+  let location = persistDetails ? report.location : undefined;
+  if (!persistDetails || steps.location !== "complete") {
     try {
-      location = await reverseGeocode(report.centroid);
-      await updateStep(orderId, "location", location);
+      location = await reverseGeocode(centroid);
+      steps.location = "complete";
+      await updateStep(orderId, "location", location, persistDetails);
     } catch (error) {
       const message = getErrorMessage(error);
       failures.push(`Location: ${message}`);
       console.error(`Report location lookup failed for ${orderId}:`, error);
-      await ReportSession.updateOne(
-        { orderId },
-        { $set: { "steps.location": "failed" } },
-      );
+      steps.location = "failed";
+      await setStepFailed(orderId, "location");
     }
   }
 
-  let rainfallMm = report.annualRainfallMm;
-  let potentialLitres = report.potentialLitres;
-  if (report.steps.rainfall !== "complete") {
+  let annualRainfallMm = persistDetails ? report.annualRainfallMm : undefined;
+  let potentialLitres = persistDetails ? report.potentialLitres : undefined;
+  if (!persistDetails || steps.rainfall !== "complete") {
     try {
-      rainfallMm = await getAverageAnnualRainfall(report.centroid);
-      potentialLitres = report.areaSqm * rainfallMm * RUNOFF_COEFFICIENT;
+      annualRainfallMm = await getAverageAnnualRainfall(centroid);
+      potentialLitres = areaSqm * annualRainfallMm * RUNOFF_COEFFICIENT;
+      steps.rainfall = "complete";
       await ReportSession.updateOne(
         { orderId },
-        {
-          $set: {
-            annualRainfallMm: rainfallMm,
-            potentialLitres,
-            runoffCoefficient: RUNOFF_COEFFICIENT,
-            "steps.rainfall": "complete",
-          },
-        },
+        { $set: { "steps.rainfall": "complete" } },
       );
+      if (persistDetails) {
+        await ReportSession.updateOne(
+          { orderId, analyticsConsent: true },
+          {
+            $set: {
+              annualRainfallMm,
+              potentialLitres,
+              runoffCoefficient: RUNOFF_COEFFICIENT,
+            },
+          },
+        );
+      }
     } catch (error) {
       const message = getErrorMessage(error);
       failures.push(`Rainfall: ${message}`);
       console.error(`Report rainfall lookup failed for ${orderId}:`, error);
-      await ReportSession.updateOne(
-        { orderId },
-        { $set: { "steps.rainfall": "failed" } },
-      );
+      steps.rainfall = "failed";
+      await setStepFailed(orderId, "rainfall");
     }
   }
 
+  let analysis = persistDetails ? report.analysis : undefined;
   const prerequisitesAvailable =
     location !== undefined &&
-    rainfallMm !== undefined &&
+    annualRainfallMm !== undefined &&
     potentialLitres !== undefined;
-  if (report.steps.analysis !== "complete") {
+  if (!persistDetails || steps.analysis !== "complete") {
     if (
       prerequisitesAvailable &&
       location &&
-      rainfallMm !== undefined &&
+      annualRainfallMm !== undefined &&
       potentialLitres !== undefined
     ) {
       try {
-        const analysis = await generateAnalysisWithRetries(
+        analysis = await generateAnalysisWithRetries(
           orderId,
           location,
-          report.areaSqm,
-          rainfallMm,
+          areaSqm,
+          annualRainfallMm,
           potentialLitres,
+          persistDetails,
         );
-        await updateStep(orderId, "analysis", analysis);
+        steps.analysis = "complete";
+        await updateStep(orderId, "analysis", analysis, persistDetails);
       } catch (error) {
         const message = getErrorMessage(error);
         failures.push(`Hydrogeology analysis: ${message}`);
         console.error(`Report analysis failed for ${orderId}:`, error);
+        steps.analysis = "failed";
         await ReportSession.updateOne(
           { orderId },
           {
@@ -172,41 +277,36 @@ export async function generateReport(orderId: string): Promise<void> {
       failures.push(
         "Hydrogeology analysis requires a resolved location and annual rainfall.",
       );
-      await ReportSession.updateOne(
-        { orderId },
-        { $set: { "steps.analysis": "failed" } },
-      );
+      steps.analysis = "failed";
+      await setStepFailed(orderId, "analysis");
     }
   }
 
-  if (report.steps.forecast !== "complete") {
+  let forecast = persistDetails ? report.forecast : undefined;
+  if (!persistDetails || steps.forecast !== "complete") {
     try {
-      const forecast = await getFiveMonthForecast(
-        report.centroid,
-        report.areaSqm,
+      forecast = await getFiveMonthForecast(
+        centroid,
+        areaSqm,
         RUNOFF_COEFFICIENT,
       );
-      await updateStep(orderId, "forecast", forecast);
+      steps.forecast = "complete";
+      await updateStep(orderId, "forecast", forecast, persistDetails);
     } catch (error) {
       const message = getErrorMessage(error);
       failures.push(`Seasonal forecast: ${message}`);
       console.error(`Report forecast failed for ${orderId}:`, error);
-      await ReportSession.updateOne(
-        { orderId },
-        { $set: { "steps.forecast": "failed" } },
-      );
+      steps.forecast = "failed";
+      await setStepFailed(orderId, "forecast");
     }
   }
 
-  const finalReport = await ReportSession.findOne({ orderId });
-  if (!finalReport) throw new Error("Report session was not found.");
-
   const ready =
-    finalReport.steps.location === "complete" &&
-    finalReport.steps.rainfall === "complete" &&
-    finalReport.steps.analysis === "complete" &&
-    finalReport.steps.forecast === "complete" &&
-    Boolean(finalReport.mapSnapshotType);
+    steps.location === "complete" &&
+    steps.rainfall === "complete" &&
+    steps.analysis === "complete" &&
+    steps.forecast === "complete" &&
+    Boolean(mapSnapshotType);
   const lastError = ready
     ? ""
     : failures.length > 0
@@ -221,5 +321,41 @@ export async function generateReport(orderId: string): Promise<void> {
         lastError,
       },
     },
+  );
+
+  const finalSession = await ReportSession.findOne({ orderId });
+  if (!finalSession) throw new Error("Report session was not found.");
+  if (
+    persistDetails &&
+    !finalSession.analyticsConsent &&
+    location &&
+    annualRainfallMm !== undefined &&
+    potentialLitres !== undefined
+  ) {
+    await deleteHydrogeologyAnalysisCache(
+      location,
+      areaSqm,
+      annualRainfallMm,
+      potentialLitres,
+    );
+  }
+
+  return buildReportData(
+    orderId,
+    ready ? "ready" : "failed",
+    order,
+    selection,
+    areaSqm,
+    centroid,
+    steps,
+    {
+      ...(annualRainfallMm === undefined ? {} : { annualRainfallMm }),
+      ...(potentialLitres === undefined ? {} : { potentialLitres }),
+      ...(location ? { location } : {}),
+      ...(analysis ? { analysis } : {}),
+      ...(forecast ? { forecast } : {}),
+      ...(mapSnapshotType ? { mapSnapshotType } : {}),
+    },
+    lastError,
   );
 }

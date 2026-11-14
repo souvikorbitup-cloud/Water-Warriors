@@ -1,6 +1,6 @@
 import { after, NextResponse } from "next/server";
 import ReportSession from "@/lib/models/ReportSession.model";
-import { getCurrentAuthorizedReport } from "@/lib/report/current-session";
+import { getCurrentAuthorizedReportContext } from "@/lib/report/current-session";
 import {
   claimReportGeneration,
   getReportSession,
@@ -9,26 +9,54 @@ import {
 import { generateReport } from "@/lib/report/generation-service";
 
 export async function POST() {
-  const report = await getCurrentAuthorizedReport();
-  if (!report) {
+  const context = await getCurrentAuthorizedReportContext();
+  if (!context) {
     return NextResponse.json(
       { message: "No paid report session was found." },
       { status: 404 },
     );
   }
 
-  const claimed = await claimReportGeneration(report.orderId);
+  const { orderId, order, session } = context;
+  const claimed = await claimReportGeneration(orderId);
+  if (claimed && !session.analyticsConsent) {
+    try {
+      const report = await generateReport(orderId);
+      return NextResponse.json(report, {
+        headers: { "Cache-Control": "no-store" },
+      });
+    } catch (error) {
+      console.error(`Could not generate report for ${orderId}:`, error);
+      await ReportSession.updateOne(
+        { orderId },
+        {
+          $set: {
+            status: "failed",
+            lastError:
+              error instanceof Error
+                ? error.message
+                : "Report generation failed.",
+          },
+        },
+      );
+      return NextResponse.json(
+        { message: "Could not generate the report." },
+        { status: 500, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+  }
+
   if (claimed) {
     after(async () => {
       try {
-        await generateReport(report.orderId);
+        await generateReport(orderId);
       } catch (error) {
         console.error(
-          `Could not finish report generation for ${report.orderId}:`,
+          `Could not finish report generation for ${orderId}:`,
           error,
         );
         await ReportSession.updateOne(
-          { orderId: report.orderId },
+          { orderId },
           {
             $set: {
               status: "failed",
@@ -43,7 +71,7 @@ export async function POST() {
     });
   }
 
-  const current = await getReportSession(report.orderId);
+  const current = await getReportSession(orderId);
   if (!current) {
     return NextResponse.json(
       { message: "Report session was not found." },
@@ -51,8 +79,15 @@ export async function POST() {
     );
   }
 
-  return NextResponse.json(toReportSessionData(current), {
-    status: claimed ? 202 : 200,
-    headers: { "Cache-Control": "no-store" },
-  });
+  return NextResponse.json(
+    toReportSessionData(
+      current,
+      order,
+      current.analyticsConsent && session.analyticsConsent,
+    ),
+    {
+      status: claimed ? 202 : 200,
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }

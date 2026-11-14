@@ -11,10 +11,22 @@ import type {
 
 export interface IReportSession extends Omit<
   ReportSessionData,
-  "steps" | "selection" | "location" | "forecast"
+  | "steps"
+  | "customerName"
+  | "selection"
+  | "areaSqm"
+  | "centroid"
+  | "runoffCoefficient"
+  | "location"
+  | "forecast"
 > {
   paymentId: string;
-  selection: RooftopSelection;
+  analyticsConsent: boolean;
+  customerName?: string;
+  selection?: RooftopSelection;
+  areaSqm?: number;
+  centroid?: ReportPoint;
+  runoffCoefficient?: number;
   location?: ReportLocation;
   forecast?: ReportForecastMonth[];
   steps: ReportSessionData["steps"];
@@ -66,17 +78,18 @@ const reportSessionSchema = new Schema<IReportSession>(
   {
     orderId: { type: String, required: true },
     paymentId: { type: String, required: true },
+    analyticsConsent: { type: Boolean, default: false, required: true },
     status: {
       type: String,
       enum: ["pending", "generating", "retrying", "ready", "failed"],
       default: "pending",
       required: true,
     },
-    customerName: { type: String, default: "", maxlength: 100 },
-    selection: { type: selectionSchema, required: true },
-    areaSqm: { type: Number, required: true, min: 0 },
-    centroid: { type: pointSchema, required: true },
-    runoffCoefficient: { type: Number, required: true, default: 0.9 },
+    customerName: { type: String, maxlength: 100 },
+    selection: { type: selectionSchema },
+    areaSqm: { type: Number, min: 0 },
+    centroid: { type: pointSchema },
+    runoffCoefficient: { type: Number },
     annualRainfallMm: { type: Number, min: 0 },
     potentialLitres: { type: Number, min: 0 },
     location: { type: locationSchema },

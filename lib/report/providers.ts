@@ -448,7 +448,17 @@ export async function getHydrogeologyAnalysis(
   areaSqm: number,
   annualRainfallMm: number,
   potentialLitres: number,
+  cacheResult = true,
 ): Promise<string[]> {
+  if (!cacheResult) {
+    return requestHydrogeologyAnalysis(
+      location,
+      areaSqm,
+      annualRainfallMm,
+      potentialLitres,
+    );
+  }
+
   await ReportAnalysisCache.init();
   const cacheKey = getAnalysisCacheKey(
     location,
@@ -483,6 +493,22 @@ export async function getHydrogeologyAnalysis(
     if (!isDuplicateKeyError(error)) throw error;
   }
   return analysis;
+}
+
+export async function deleteHydrogeologyAnalysisCache(
+  location: ReportLocation,
+  areaSqm: number,
+  annualRainfallMm: number,
+  potentialLitres: number,
+): Promise<void> {
+  await ReportAnalysisCache.deleteOne({
+    cacheKey: getAnalysisCacheKey(
+      location,
+      areaSqm,
+      annualRainfallMm,
+      potentialLitres,
+    ),
+  });
 }
 
 export async function getMapSnapshotType(): Promise<string> {
