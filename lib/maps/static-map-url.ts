@@ -5,6 +5,8 @@ export type MapSnapshotType = "roadmap" | "satellite" | "terrain" | "hybrid";
 
 const STATIC_MAP_WIDTH = 640;
 const STATIC_MAP_HEIGHT = 251;
+const STANDARD_PDF_MAP_WIDTH = 426;
+const STANDARD_PDF_MAP_HEIGHT = 167;
 const STATIC_MAP_PADDING = 32;
 const MAX_MAP_ZOOM = 21;
 
@@ -57,10 +59,13 @@ export function createStaticMapUrl({
   points,
   zoom,
   mapType,
+  scale = 2,
 }: {
   points: ReportPoint[];
   zoom: number;
   mapType: MapSnapshotType;
+  /** Scale 1 uses 426x167; scale 2 uses 640x251, yielding about 3x more pixels per side. */
+  scale?: 1 | 2;
 }): string {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
@@ -72,14 +77,16 @@ export function createStaticMapUrl({
 
   const center = getPolygonCentroid(points);
   const previewZoom = getPreviewZoom(points, center, zoom);
+  const mapWidth = scale === 1 ? STANDARD_PDF_MAP_WIDTH : STATIC_MAP_WIDTH;
+  const mapHeight = scale === 1 ? STANDARD_PDF_MAP_HEIGHT : STATIC_MAP_HEIGHT;
   const pathPoints = points.map((point) => `${point.lat},${point.lng}`);
   const firstPoint = points[0];
   if (firstPoint) pathPoints.push(`${firstPoint.lat},${firstPoint.lng}`);
 
   const searchParams = new URLSearchParams({
     maptype: mapType,
-    size: `${STATIC_MAP_WIDTH}x${STATIC_MAP_HEIGHT}`,
-    scale: "2",
+    size: `${mapWidth}x${mapHeight}`,
+    scale: String(scale),
     center: `${center.lat},${center.lng}`,
     zoom: String(previewZoom),
     path: [
@@ -90,5 +97,6 @@ export function createStaticMapUrl({
     ].join("|"),
     key: apiKey,
   });
+
   return `https://maps.googleapis.com/maps/api/staticmap?${searchParams.toString()}`;
 }

@@ -30,6 +30,15 @@ import { numberToIndianWords } from "@/lib/report/format";
 import { REPORT_IMPACT_ASSUMPTIONS } from "@/lib/report/constants";
 import { reportSessionResponseSchema } from "@/lib/report/schemas";
 import type { ReportSessionData } from "@/lib/report/types";
+import type {
+  PdfQuality,
+  WaterWarriorsPdfData,
+} from "@/components/pdf/report/pdf.types";
+import {
+  createReportPdfBlob,
+  createSafePdfFileName,
+  downloadPdfBlob,
+} from "@/lib/report/generate-report-pdf";
 import {
   ANALYTICS_CONSENT_CHANGE_EVENT,
   ANALYTICS_CONSENT_KEY,
@@ -72,6 +81,25 @@ function isMapSnapshotType(
   value: string | undefined,
 ): value is MapSnapshotType {
   return value !== undefined && mapSnapshotTypes.has(value as MapSnapshotType);
+}
+
+function createPdfMapImageUrl(
+  report: ReportSessionData | null,
+  quality: PdfQuality,
+): string | null {
+  if (!report || !isMapSnapshotType(report.mapSnapshotType)) return null;
+
+  try {
+    return createStaticMapUrl({
+      points: report.selection.points,
+      zoom: report.selection.zoom,
+      mapType: report.mapSnapshotType,
+      scale: quality === "high" ? 2 : 1,
+    });
+  } catch (error) {
+    console.error("Could not create the PDF map snapshot URL.", error);
+    return null;
+  }
 }
 
 function numberFormat(locale: string, value: number, decimals = 0): string {
@@ -175,7 +203,9 @@ export default function ReportClient() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [generationAttempt, setGenerationAttempt] = useState(0);
   const [consentRevision, setConsentRevision] = useState(0);
-  const [isPreparingPdf, setIsPreparingPdf] = useState(false);
+  const [preparingPdfQuality, setPreparingPdfQuality] =
+    useState<PdfQuality | null>(null);
+  const isPreparingPdf = preparingPdfQuality !== null;
   const [loadedMapImageUrl, setLoadedMapImageUrl] = useState<string | null>(
     null,
   );
@@ -397,6 +427,7 @@ export default function ReportClient() {
         points: report.selection.points,
         zoom: report.selection.zoom,
         mapType: report.mapSnapshotType,
+        scale: 2,
       });
     } catch (error) {
       console.error("Could not create the report map snapshot URL.", error);
@@ -426,89 +457,92 @@ export default function ReportClient() {
       ? `(${numberFormat(locale, report.areaSqm, 2)} sq.m x ${numberFormat(locale, report.annualRainfallMm, 1)} mm x ${numberFormat(locale, report.runoffCoefficient)} = ${formattedPotential} ${t("litresUnit")})`
       : undefined;
 
-  const impacts: ImpactStat[] | undefined =
-    report?.potentialLitres === undefined
-      ? undefined
-      : [
-          {
-            label: t("impacts.0.label"),
-            value: `${numberFormat(
-              locale,
-              Math.floor(
-                report.potentialLitres /
-                  (REPORT_IMPACT_ASSUMPTIONS.familySize *
-                    REPORT_IMPACT_ASSUMPTIONS.litresPerPersonPerDay),
-              ),
-            )} ${t("daysUnit")}`,
-            note: t("impacts.0.note"),
-            Icon: Family,
-          },
-          {
-            label: t("impacts.1.label"),
-            value: `${numberFormat(
-              locale,
-              Math.floor(
-                report.potentialLitres /
-                  REPORT_IMPACT_ASSUMPTIONS.litresPerTreePerYear,
-              ),
-            )} ${t("treesUnit")}`,
-            note: t("impacts.1.note"),
-            Icon: Tree,
-          },
-          {
-            label: t("impacts.2.label"),
-            value: `${numberFormat(
-              locale,
-              Math.floor(
-                report.potentialLitres /
-                  REPORT_IMPACT_ASSUMPTIONS.tankerCapacityLitres,
-              ),
-            )} ${t("tripsUnit")}`,
-            note: t("impacts.2.note"),
-            Icon: Tanker,
-          },
-          {
-            label: t("impacts.3.label"),
-            value: `${numberFormat(
-              locale,
-              Math.floor(
-                report.potentialLitres /
-                  (REPORT_IMPACT_ASSUMPTIONS.litresPerChildPerSchoolDay *
-                    REPORT_IMPACT_ASSUMPTIONS.schoolDaysPerYear),
-              ),
-            )} ${t("childrenUnit")}`,
-            note: t("impacts.3.note"),
-            Icon: Children,
-          },
-        ];
+  const impacts = useMemo<ImpactStat[] | undefined>(() => {
+    if (report?.potentialLitres === undefined) return undefined;
 
-  const forecastRows: ForecastRow[] | undefined = report?.forecast
-    ? [
-        ...report.forecast.map((month) => ({
-          month: monthName(locale, month.monthStart),
-          rainfall: `${numberFormat(locale, month.rainfallMm, 1)} mm`,
-          potential: `${numberFormat(locale, Math.round(month.harvestableLitres))} ${t("litresUnit")}`,
-        })),
-        {
-          month: t("grandTotal"),
-          rainfall: `${numberFormat(
-            locale,
-            report.forecast.reduce((sum, month) => sum + month.rainfallMm, 0),
-            1,
-          )} mm`,
-          potential: `${numberFormat(
-            locale,
-            Math.round(
-              report.forecast.reduce(
-                (sum, month) => sum + month.harvestableLitres,
-                0,
-              ),
+    return [
+      {
+        label: t("impacts.0.label"),
+        value: `${numberFormat(
+          locale,
+          Math.floor(
+            report.potentialLitres /
+              (REPORT_IMPACT_ASSUMPTIONS.familySize *
+                REPORT_IMPACT_ASSUMPTIONS.litresPerPersonPerDay),
+          ),
+        )} ${t("daysUnit")}`,
+        note: t("impacts.0.note"),
+        Icon: Family,
+      },
+      {
+        label: t("impacts.1.label"),
+        value: `${numberFormat(
+          locale,
+          Math.floor(
+            report.potentialLitres /
+              REPORT_IMPACT_ASSUMPTIONS.litresPerTreePerYear,
+          ),
+        )} ${t("treesUnit")}`,
+        note: t("impacts.1.note"),
+        Icon: Tree,
+      },
+      {
+        label: t("impacts.2.label"),
+        value: `${numberFormat(
+          locale,
+          Math.floor(
+            report.potentialLitres /
+              REPORT_IMPACT_ASSUMPTIONS.tankerCapacityLitres,
+          ),
+        )} ${t("tripsUnit")}`,
+        note: t("impacts.2.note"),
+        Icon: Tanker,
+      },
+      {
+        label: t("impacts.3.label"),
+        value: `${numberFormat(
+          locale,
+          Math.floor(
+            report.potentialLitres /
+              (REPORT_IMPACT_ASSUMPTIONS.litresPerChildPerSchoolDay *
+                REPORT_IMPACT_ASSUMPTIONS.schoolDaysPerYear),
+          ),
+        )} ${t("childrenUnit")}`,
+        note: t("impacts.3.note"),
+        Icon: Children,
+      },
+    ];
+  }, [locale, report, t]);
+
+  const forecastRows = useMemo<ForecastRow[] | undefined>(() => {
+    if (!report?.forecast) return undefined;
+
+    return [
+      ...report.forecast.map((month) => ({
+        month: monthName(locale, month.monthStart),
+        rainfall: `${numberFormat(locale, month.rainfallMm, 1)} mm`,
+        potential: `${numberFormat(locale, Math.round(month.harvestableLitres))} ${t("litresUnit")}`,
+      })),
+      {
+        month: t("grandTotal"),
+        rainfall: `${numberFormat(
+          locale,
+          report.forecast.reduce((sum, month) => sum + month.rainfallMm, 0),
+          1,
+        )} mm`,
+        potential: `${numberFormat(
+          locale,
+          Math.round(
+            report.forecast.reduce(
+              (sum, month) => sum + month.harvestableLitres,
+              0,
             ),
-          )} ${t("litresUnit")}`,
-          highlight: true,
-        },
-      ]
-    : undefined;
+          ),
+        )} ${t("litresUnit")}`,
+        highlight: true,
+      },
+    ];
+  }, [locale, report, t]);
 
   const forecastPeriod =
     report?.forecast && report.forecast.length > 0
@@ -529,6 +563,101 @@ export default function ReportClient() {
         )
         .join(", ")
     : undefined;
+
+  const pdfMapImageUrl = useMemo(
+    () => createPdfMapImageUrl(report, "standard"),
+    [report],
+  );
+
+  const pdfData: WaterWarriorsPdfData | null = useMemo(() => {
+    if (!report) return null;
+
+    const potentialValue = formattedPotential
+      ? `${formattedPotential} ${t("litresUnit")}`
+      : t("notAvailable");
+
+    const rechargeIntroduction =
+      formattedPotential && locationName
+        ? t("rechargeIntro", {
+            litres: formattedPotential,
+            location: locationName,
+          })
+        : "";
+
+    return {
+      locale,
+      greeting: report.customerName
+        ? t("pdfGreeting", { customerName: report.customerName })
+        : t("pdfGreetingDefault"),
+      thankYou: t("thankYou"),
+      customerName: report.customerName || "",
+      location: locationName || "",
+      mapImageUrl: pdfMapImageUrl,
+      rechargeBannerUrl: "/section-images/report-divider-img.png",
+      overview: {
+        catchmentLabel: t("catchmentLabel"),
+        catchmentArea: formattedArea || t("notAvailable"),
+        rainfallLabel: t("rainfallLabel"),
+        annualRainfall: formattedRainfall || t("notAvailable"),
+        potentialTitle: t("potentialTitle"),
+        potentialDescription: t("potentialDescription"),
+        potentialValue,
+        potentialInWords: harvestableInWords
+          ? `(${harvestableInWords} ${t("litresUnit")})`
+          : undefined,
+        calculation,
+        source:
+          report.annualRainfallMm !== undefined
+            ? t("annualRainfallSource")
+            : undefined,
+      },
+      impact: {
+        title: t("impactTitle", {
+          litres: formattedPotential || t("notAvailable"),
+        }),
+        description: t("impactDescription"),
+        items: (impacts || []).map(({ label, value, note }) => ({
+          label,
+          value,
+          note,
+        })),
+        assumptions: t("assumptions"),
+      },
+      recharge: {
+        title: t("rechargeTitle"),
+        introduction: rechargeIntroduction,
+        paragraphs: report.analysis || [],
+      },
+      forecast: {
+        title: t("forecastTitle"),
+        period: forecastPeriod || "",
+        monthLabel: t("month"),
+        rainfallLabel: t("forecastedRainfall"),
+        potentialLabel: t("harvestingPotential"),
+        pendingLabel: t("forecastPending"),
+        rows: forecastRows || [],
+        tip: t("tip"),
+        note: t("forecastNote"),
+        source: t("forecastSource"),
+        disclaimer: t("disclaimer"),
+      },
+    };
+  }, [
+    report,
+    locale,
+    t,
+    formattedPotential,
+    formattedArea,
+    formattedRainfall,
+    harvestableInWords,
+    calculation,
+    impacts,
+    locationName,
+    pdfMapImageUrl,
+    forecastPeriod,
+    forecastRows,
+  ]);
+
   const mapImageReady =
     mapImageUrl !== null && loadedMapImageUrl === mapImageUrl;
   const mapImageFailed =
@@ -550,10 +679,37 @@ export default function ReportClient() {
       ? t("reportLoading")
       : t("reportNotFound");
 
-  const printReport = () => {
-    setIsPreparingPdf(true);
-    window.print();
-    window.setTimeout(() => setIsPreparingPdf(false), 1000);
+  const buildPdfBlob = async (data: WaterWarriorsPdfData) => {
+    const [{ default: WaterWarriorsReportPdf }] = await Promise.all([
+      import("@/components/pdf/report/WaterWarriorsReportPdf"),
+    ]);
+
+    return createReportPdfBlob(<WaterWarriorsReportPdf data={data} />);
+  };
+
+  const downloadReport = async (quality: PdfQuality) => {
+    if (!isReady || !pdfData || isPreparingPdf) return;
+
+    setPreparingPdfQuality(quality);
+    try {
+      const data =
+        quality === "standard"
+          ? pdfData
+          : {
+              ...pdfData,
+              mapImageUrl: createPdfMapImageUrl(report, quality),
+            };
+      const blob = await buildPdfBlob(data);
+      const fileName = createSafePdfFileName(
+        `WaterWarriors-${report?.location?.city || "Rainwater-Report"}-${locale}-${quality === "high" ? "high-quality" : "standard"}`,
+      );
+      downloadPdfBlob(blob, fileName);
+    } catch (error) {
+      console.error("Could not generate the Water Warriors PDF.", error);
+      window.alert(t("pdfGenerationFailed"));
+    } finally {
+      setPreparingPdfQuality(null);
+    }
   };
 
   if (
@@ -654,11 +810,11 @@ export default function ReportClient() {
       <ForecastProjectionSection
         period={forecastPeriod}
         rows={forecastRows}
-        onDownload={printReport}
-        onPrint={printReport}
+        onDownload={() => downloadReport("standard")}
+        onHighQualityDownload={() => downloadReport("high")}
         downloadDisabled={!isReady || isPreparingPdf}
-        printDisabled={!isReady || isPreparingPdf}
-        downloading={isPreparingPdf}
+        highQualityDisabled={!isReady || isPreparingPdf}
+        downloadingQuality={preparingPdfQuality}
       />
       <ReportCTASection />
     </>

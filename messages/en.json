@@ -355,6 +355,8 @@
   "Report": {
     "greeting": "Hey, <name></name>",
     "greetingDefault": "Hey, <name>Water Warrior!</name>",
+    "pdfGreeting": "Hey, {customerName}!",
+    "pdfGreetingDefault": "Hey, Water Warrior!",
     "greetingGeneric": "Your rainwater harvesting report",
     "thankYou": "Thank you for taking the first step toward conserving water—for yourself and for future generations.",
     "catchmentLabel": "Selected Catchment Area",
@@ -415,8 +417,9 @@
     "ctaTitle": "Turn Every Drop of Rain into a Sustainable Future!",
     "ctaText": "Discover your rainwater harvesting potential, save water, and make every drop count with Water Warriors AI.",
     "downloadPdf": "Download PDF Report",
-    "printPdf": "Download High-Quality PDF",
+    "downloadHighQualityPdf": "Download High-Quality PDF",
     "preparingPdf": "Preparing PDF...",
+    "pdfGenerationFailed": "Could not generate the PDF. Please try again.",
     "reportLoading": "Loading your report...",
     "reportGenerating": "Generating your report...",
     "reportRetrying": "Retrying a report service...",
@@ -598,7 +601,7 @@
       },
       "7": {
         "name": "Your browser",
-        "for": "Rendering a vector PDF with the print-to-PDF workflow",
+        "for": "Generating and downloading your report PDF",
         "receives": "The report page stays in your browser"
       },
       "8": {

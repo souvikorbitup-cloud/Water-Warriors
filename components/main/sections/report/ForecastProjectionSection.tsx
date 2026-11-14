@@ -1,8 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Download, Lightbulb, Printer } from "lucide-react";
+import { Download, Lightbulb } from "lucide-react";
 import PrimaryButton from "../../shared/button/PrimaryButton";
+import type { PdfQuality } from "@/components/pdf/report/pdf.types";
 
 export interface ForecastRow {
   month: string;
@@ -23,12 +24,12 @@ interface ForecastProjectionSectionProps {
   ctaTitle?: string;
   ctaText?: string;
   downloadLabel?: string;
-  printLabel?: string;
+  highQualityLabel?: string;
   onDownload?: () => void;
-  onPrint?: () => void;
+  onHighQualityDownload?: () => void;
   downloadDisabled?: boolean;
-  printDisabled?: boolean;
-  downloading?: boolean;
+  highQualityDisabled?: boolean;
+  downloadingQuality?: PdfQuality | null;
 }
 
 export default function ForecastProjectionSection({
@@ -42,12 +43,12 @@ export default function ForecastProjectionSection({
   ctaTitle,
   ctaText,
   downloadLabel,
-  printLabel,
+  highQualityLabel,
   onDownload,
-  onPrint,
+  onHighQualityDownload,
   downloadDisabled = false,
-  printDisabled = false,
-  downloading = false,
+  highQualityDisabled = false,
+  downloadingQuality = null,
 }: ForecastProjectionSectionProps) {
   const t = useTranslations("Report");
   const resolvedTitle = title ?? t("forecastTitle");
@@ -59,7 +60,8 @@ export default function ForecastProjectionSection({
   const resolvedCtaTitle = ctaTitle ?? t("ctaTitle");
   const resolvedCtaText = ctaText ?? t("ctaText");
   const resolvedDownloadLabel = downloadLabel ?? t("downloadPdf");
-  const resolvedPrintLabel = printLabel ?? t("printPdf");
+  const resolvedHighQualityLabel =
+    highQualityLabel ?? t("downloadHighQualityPdf");
   const resolvedRows = rows ?? [];
 
   return (
@@ -182,24 +184,29 @@ export default function ForecastProjectionSection({
           </p>
         </div>
 
-        {/* Actions */}
-        <div className="mt-8 flex flex-col items-center justify-center gap-4 print:hidden sm:mt-10 sm:flex-row sm:gap-6">
-          <PrimaryButton
-            btnType="solid-primary"
-            onClick={onDownload}
-            disabled={downloadDisabled}
-            endIcon={<Download className="size-4.5" strokeWidth={1.5} />}
-          >
-            {downloading ? t("preparingPdf") : resolvedDownloadLabel}
-          </PrimaryButton>
-          <PrimaryButton
-            btnType="outline"
-            onClick={onPrint}
-            disabled={printDisabled}
-            endIcon={<Printer className="size-4.5" strokeWidth={1.5} />}
-          >
-            {resolvedPrintLabel}
-          </PrimaryButton>
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 print:hidden sm:mt-10">
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
+            <PrimaryButton
+              btnType="solid-primary"
+              onClick={onDownload}
+              disabled={downloadDisabled}
+              endIcon={<Download className="size-4.5" strokeWidth={1.5} />}
+            >
+              {downloadingQuality === "standard"
+                ? t("preparingPdf")
+                : resolvedDownloadLabel}
+            </PrimaryButton>
+            <PrimaryButton
+              btnType="outline"
+              onClick={onHighQualityDownload}
+              disabled={highQualityDisabled}
+              endIcon={<Download className="size-4.5" strokeWidth={1.5} />}
+            >
+              {downloadingQuality === "high"
+                ? t("preparingPdf")
+                : resolvedHighQualityLabel}
+            </PrimaryButton>
+          </div>
         </div>
       </div>
     </section>
