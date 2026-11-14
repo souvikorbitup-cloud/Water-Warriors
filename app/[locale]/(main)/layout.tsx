@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import HeaderBar from "@/components/main/common/HeaderBar";
 import MainFooter from "@/components/main/common/MainFooter";
 import MainNavbar from "@/components/main/common/MainNavbar";
+import DownloadReportButton from "@/components/main/shared/DownloadReportButton";
 
 export default async function MainLayout({
   children,
@@ -18,7 +19,7 @@ export default async function MainLayout({
       <MainNavbar />
 
       {children}
-
+      <DownloadReportButton />
       <MainFooter />
     </>
   );
