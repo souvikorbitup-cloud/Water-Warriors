@@ -143,6 +143,17 @@ function saveSessionReport(report: ReportSessionData): void {
   }
 }
 
+function hasCompleteReportDetails(report: ReportSessionData): boolean {
+  return Boolean(
+    report.annualRainfallMm !== undefined &&
+      report.potentialLitres !== undefined &&
+      report.location &&
+      (report.analysis?.length ?? 0) >= 3 &&
+      report.forecast?.length === 5 &&
+      report.mapSnapshotType,
+  );
+}
+
 export default function ReportClient() {
   const t = useTranslations("Report");
   const locale = useLocale();
@@ -295,10 +306,13 @@ export default function ReportClient() {
 
         if (
           consentAccepted &&
-          isInitialRequest &&
-          (nextReport.status === "pending" ||
-            (generationAttempt > 0 && nextReport.status === "failed") ||
-            nextReport.forecast === undefined)
+          ((isInitialRequest &&
+            (nextReport.status === "pending" ||
+              (nextReport.status === "failed" &&
+                (generationAttempt > 0 ||
+                  !hasCompleteReportDetails(nextReport))))) ||
+            (nextReport.status === "ready" &&
+              !hasCompleteReportDetails(nextReport)))
         ) {
           setIsRetrying(true);
           nextReport = await startGeneration(reportSessionId);

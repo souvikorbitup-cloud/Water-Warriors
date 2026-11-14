@@ -66,8 +66,8 @@ export function toReportSessionData(
       ? { potentialLitres }
       : {}),
     ...(shouldIncludeDetails && location ? { location } : {}),
-    ...(shouldIncludeDetails && analysis ? { analysis } : {}),
-    ...(shouldIncludeDetails && forecast ? { forecast } : {}),
+    ...(shouldIncludeDetails && analysis?.length ? { analysis } : {}),
+    ...(shouldIncludeDetails && forecast?.length ? { forecast } : {}),
     ...(shouldIncludeDetails && mapSnapshotType ? { mapSnapshotType } : {}),
     steps,
     ...(lastError ? { lastError } : {}),
@@ -155,14 +155,31 @@ export async function setReportSessionConsent(
     existing.centroid !== undefined ||
     existing.runoffCoefficient !== undefined ||
     existing.location ||
-    existing.analysis ||
-    existing.forecast ||
+    existing.analysis?.length ||
+    existing.forecast?.length ||
+    existing.mapSnapshotType,
+  );
+  const reportHasCompleteDetails = Boolean(
+    existing.annualRainfallMm !== undefined &&
+    existing.potentialLitres !== undefined &&
+    existing.location &&
+    (existing.analysis?.length ?? 0) >= 3 &&
+    existing.forecast?.length === 5 &&
     existing.mapSnapshotType,
   );
   const generationInProgress =
     existing.status === "generating" || existing.status === "retrying";
   const consentChanged = existing.analyticsConsent !== accepted;
-  if (!consentChanged && (accepted || !reportHasDetails)) return existing;
+  if (
+    !consentChanged &&
+    ((accepted &&
+    (reportHasCompleteDetails || existing.status !== "ready")) ||
+    (!accepted && !reportHasDetails))
+  ) {
+    return existing;
+  }
+  const shouldResetGeneration =
+    accepted && !reportHasCompleteDetails && !generationInProgress;
 
   const report = accepted
     ? await ReportSession.findOneAndUpdate(
@@ -175,7 +192,7 @@ export async function setReportSessionConsent(
             areaSqm: getPolygonAreaSquareMeters(selection.points),
             centroid: getPolygonCentroid(selection.points),
             runoffCoefficient: RUNOFF_COEFFICIENT,
-            ...(!existing.forecast
+            ...(shouldResetGeneration
               ? {
                   status: "pending",
                   steps: {
@@ -187,7 +204,7 @@ export async function setReportSessionConsent(
                 }
               : {}),
           },
-          ...(!existing.forecast
+          ...(shouldResetGeneration
             ? {
                 $unset: {
                   annualRainfallMm: "",
@@ -287,7 +304,16 @@ export async function claimReportGeneration(orderId: string): Promise<boolean> {
         {
           status: "ready",
           analyticsConsent: true,
-          forecast: { $exists: false },
+          $or: [
+            { forecast: { $exists: false } },
+            { forecast: { $size: 0 } },
+            { analysis: { $exists: false } },
+            { analysis: { $size: 0 } },
+            { location: { $exists: false } },
+            { annualRainfallMm: { $exists: false } },
+            { potentialLitres: { $exists: false } },
+            { mapSnapshotType: { $exists: false } },
+          ],
         },
         {
           status: { $in: ["generating", "retrying"] },

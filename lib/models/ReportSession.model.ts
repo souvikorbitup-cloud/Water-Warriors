@@ -93,8 +93,8 @@ const reportSessionSchema = new Schema<IReportSession>(
     annualRainfallMm: { type: Number, min: 0 },
     potentialLitres: { type: Number, min: 0 },
     location: { type: locationSchema },
-    analysis: { type: [String] },
-    forecast: { type: [forecastMonthSchema] },
+    analysis: { type: [String], default: undefined },
+    forecast: { type: [forecastMonthSchema], default: undefined },
     mapSnapshotType: { type: String },
     steps: {
       location: {
