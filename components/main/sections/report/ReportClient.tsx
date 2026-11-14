@@ -1,7 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { LoaderCircle } from "lucide-react";
 import Image from "next/image";
 import { Children, Family, Tanker, Tree } from "@/components/icons";
@@ -26,8 +33,32 @@ import {
   ANALYTICS_CONSENT_CHANGE_EVENT,
   ANALYTICS_CONSENT_KEY,
 } from "@/lib/data/analytics-consent";
+import {
+  REPORT_SESSION_REFERENCE_CHANGE_EVENT,
+  REPORT_SESSION_REFERENCE_HEADER,
+  REPORT_SESSION_REFERENCE_KEY,
+} from "@/lib/data/report-session";
 
 const REPORT_SESSION_STORAGE_PREFIX = "ww-report-session:";
+
+function subscribeToReportSession(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(REPORT_SESSION_REFERENCE_CHANGE_EVENT, onChange);
+
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(REPORT_SESSION_REFERENCE_CHANGE_EVENT, onChange);
+  };
+}
+
+function getReportSessionReference(): string | null {
+  try {
+    return window.sessionStorage.getItem(REPORT_SESSION_REFERENCE_KEY) || null;
+  } catch (error) {
+    console.error("Could not read the active report session.", error);
+    return null;
+  }
+}
 
 const mapSnapshotTypes = new Set<MapSnapshotType>([
   "roadmap",
@@ -115,7 +146,14 @@ function saveSessionReport(report: ReportSessionData): void {
 export default function ReportClient() {
   const t = useTranslations("Report");
   const locale = useLocale();
+  const router = useRouter();
+  const reportSessionId = useSyncExternalStore(
+    subscribeToReportSession,
+    getReportSessionReference,
+    () => undefined,
+  );
   const [report, setReport] = useState<ReportSessionData | null>(null);
+  const [sessionAuthorized, setSessionAuthorized] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -130,71 +168,105 @@ export default function ReportClient() {
   );
 
   const loadReport = useCallback(
-    async (consentAccepted: boolean) => {
+    async (consentAccepted: boolean, sessionReference: string) => {
       const response = await fetch("/api/report-session", {
         cache: "no-store",
         headers: {
           "x-ww-analytics-consent": consentAccepted ? "accepted" : "declined",
+          [REPORT_SESSION_REFERENCE_HEADER]: sessionReference,
         },
       });
       const body: unknown = await response.json().catch(() => null);
       if (!response.ok) {
+        if (response.status === 404) router.replace("/");
         throw new Error(getApiMessage(body) ?? t("reportNotFound"));
       }
       const parsed = reportSessionResponseSchema.safeParse(body);
       if (!parsed.success) {
         throw new Error(t("reportLoadFailed"));
       }
+      if (parsed.data.orderId !== sessionReference) {
+        router.replace("/");
+        throw new Error(t("reportNotFound"));
+      }
+      setSessionAuthorized(true);
       setReport(parsed.data);
       setLoadError(null);
       return parsed.data;
     },
-    [t],
+    [router, t],
   );
 
   const syncReportConsent = useCallback(
-    async (accepted: boolean) => {
+    async (accepted: boolean, sessionReference: string) => {
       const response = await fetch("/api/report-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          [REPORT_SESSION_REFERENCE_HEADER]: sessionReference,
+        },
         body: JSON.stringify({ accepted }),
       });
       const body: unknown = await response.json().catch(() => null);
       if (!response.ok) {
+        if (response.status === 404) router.replace("/");
         throw new Error(getApiMessage(body) ?? t("reportLoadFailed"));
       }
       const parsed = reportSessionResponseSchema.safeParse(body);
       if (!parsed.success) throw new Error(t("reportLoadFailed"));
+      if (parsed.data.orderId !== sessionReference) {
+        router.replace("/");
+        throw new Error(t("reportNotFound"));
+      }
+      setSessionAuthorized(true);
       return parsed.data;
     },
-    [t],
+    [router, t],
   );
 
-  const startGeneration = useCallback(async () => {
+  const startGeneration = useCallback(async (sessionReference: string) => {
     const response = await fetch("/api/report-session/generate", {
       method: "POST",
+      headers: {
+        [REPORT_SESSION_REFERENCE_HEADER]: sessionReference,
+      },
     });
     const body: unknown = await response.json().catch(() => null);
     if (!response.ok) {
+      if (response.status === 404) router.replace("/");
       throw new Error(getApiMessage(body) ?? t("reportFailed"));
     }
     const parsed = reportSessionResponseSchema.safeParse(body);
     if (!parsed.success) {
       throw new Error(t("reportLoadFailed"));
     }
+    if (parsed.data.orderId !== sessionReference) {
+      router.replace("/");
+      throw new Error(t("reportNotFound"));
+    }
+    setSessionAuthorized(true);
     setReport(parsed.data);
     setLoadError(null);
     return parsed.data;
-  }, [t]);
+  }, [router, t]);
 
   useEffect(() => {
+    if (reportSessionId === null) router.replace("/");
+  }, [reportSessionId, router]);
+
+  useEffect(() => {
+    if (reportSessionId === undefined || reportSessionId === null) return;
+
     let active = true;
     let pollTimer: number | undefined;
     const poll = async (isInitialRequest: boolean) => {
       if (!active) return;
       try {
         const consentAccepted = hasAnalyticsConsent();
-        let nextReport = await syncReportConsent(consentAccepted);
+        let nextReport = await syncReportConsent(
+          consentAccepted,
+          reportSessionId,
+        );
         if (!active) return;
 
         if (!consentAccepted) {
@@ -208,7 +280,7 @@ export default function ReportClient() {
             setIsRetrying(false);
             return;
           }
-          nextReport = await startGeneration();
+          nextReport = await startGeneration(reportSessionId);
           if (!active) return;
           if (
             nextReport.status !== "generating" &&
@@ -217,7 +289,7 @@ export default function ReportClient() {
             saveSessionReport(nextReport);
           }
         } else {
-          nextReport = await loadReport(true);
+          nextReport = await loadReport(true, reportSessionId);
           if (!active) return;
         }
 
@@ -229,7 +301,7 @@ export default function ReportClient() {
             nextReport.forecast === undefined)
         ) {
           setIsRetrying(true);
-          nextReport = await startGeneration();
+          nextReport = await startGeneration(reportSessionId);
           if (!active) return;
         }
         if (
@@ -256,6 +328,7 @@ export default function ReportClient() {
 
     const handleConsentChange = () => {
       setReport(null);
+      setSessionAuthorized(false);
       setIsLoading(true);
       setConsentRevision((revision) => revision + 1);
     };
@@ -279,6 +352,7 @@ export default function ReportClient() {
     consentRevision,
     generationAttempt,
     loadReport,
+    reportSessionId,
     startGeneration,
     syncReportConsent,
     t,
@@ -455,6 +529,14 @@ export default function ReportClient() {
     window.print();
     window.setTimeout(() => setIsPreparingPdf(false), 1000);
   };
+
+  if (
+    reportSessionId === undefined ||
+    reportSessionId === null ||
+    !sessionAuthorized
+  ) {
+    return null;
+  }
 
   return (
     <>

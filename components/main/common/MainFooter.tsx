@@ -12,6 +12,10 @@ import {
   ANALYTICS_CONSENT_CHANGE_EVENT,
   ANALYTICS_CONSENT_KEY,
 } from "@/lib/data/analytics-consent";
+import {
+  REPORT_SESSION_REFERENCE_HEADER,
+  REPORT_SESSION_REFERENCE_KEY,
+} from "@/lib/data/report-session";
 
 type MainFooterProps = {
   visitorCount?: number;
@@ -65,21 +69,35 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
       setCookieSettingsOpen(false);
 
       if (pathname !== "/report") {
-        void fetch("/api/report-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accepted: consent === "accepted" }),
-        })
-          .then((response) => {
-            if (response.status !== 404 && !response.ok) {
-              throw new Error(
-                `Report consent update failed (${response.status}).`,
-              );
-            }
+        let reportSessionReference: string | null = null;
+        try {
+          reportSessionReference = window.sessionStorage.getItem(
+            REPORT_SESSION_REFERENCE_KEY,
+          );
+        } catch (error) {
+          console.warn("Could not read the active report session.", error);
+        }
+
+        if (reportSessionReference) {
+          void fetch("/api/report-session", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              [REPORT_SESSION_REFERENCE_HEADER]: reportSessionReference,
+            },
+            body: JSON.stringify({ accepted: consent === "accepted" }),
           })
-          .catch((error: unknown) => {
-            console.error("Could not update report-session consent.", error);
-          });
+            .then((response) => {
+              if (response.status !== 404 && !response.ok) {
+                throw new Error(
+                  `Report consent update failed (${response.status}).`,
+                );
+              }
+            })
+            .catch((error: unknown) => {
+              console.error("Could not update report-session consent.", error);
+            });
+        }
       }
     } catch (error) {
       console.error("Unable to save analytics cookie preference", error);

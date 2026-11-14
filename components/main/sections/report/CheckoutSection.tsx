@@ -20,6 +20,10 @@ import {
   readSavedMapCamera,
   readSavedMapPoints,
 } from "@/lib/data/location-selection-session";
+import {
+  REPORT_SESSION_REFERENCE_CHANGE_EVENT,
+  REPORT_SESSION_REFERENCE_KEY,
+} from "@/lib/data/report-session";
 import { createStaticMapUrl } from "@/lib/maps/static-map-url";
 import type { BillingQuote } from "@/lib/billing/types";
 import {
@@ -245,6 +249,34 @@ export default function CheckoutSection() {
       if (!response.ok) {
         throw new Error(
           await getApiMessage(response, "Could not verify payment."),
+        );
+      }
+
+      const body: unknown = await response.json().catch(() => null);
+      if (
+        typeof body !== "object" ||
+        body === null ||
+        !("success" in body) ||
+        body.success !== true ||
+        !("reportSessionId" in body) ||
+        typeof body.reportSessionId !== "string" ||
+        body.reportSessionId !== payment.razorpay_order_id
+      ) {
+        throw new Error("Payment verification returned an invalid report session.");
+      }
+
+      try {
+        window.sessionStorage.setItem(
+          REPORT_SESSION_REFERENCE_KEY,
+          body.reportSessionId,
+        );
+        window.dispatchEvent(
+          new Event(REPORT_SESSION_REFERENCE_CHANGE_EVENT),
+        );
+      } catch (error) {
+        console.error("Could not save the report session for this tab.", error);
+        throw new Error(
+          "Could not save your report session in this browser tab.",
         );
       }
 

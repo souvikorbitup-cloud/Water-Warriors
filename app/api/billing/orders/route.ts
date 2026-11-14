@@ -11,7 +11,6 @@ import {
   RazorpayError,
 } from "@/lib/razorpay/razorpay.service";
 import { rooftopSelectionSchema } from "@/lib/report/schemas";
-import { attachReportAccessCookie } from "@/lib/report/access";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -77,19 +76,16 @@ export async function POST(request: NextRequest) {
       createdAt: new Date(),
     });
 
-    return attachReportAccessCookie(
-      NextResponse.json(
-        {
-          orderId: order.id,
-          amount: order.amount,
-          currency: order.currency,
-          keyId,
-          customerName,
-          description: "Water Warriors Plus report",
-        },
-        { headers: { "Cache-Control": "no-store" } },
-      ),
-      order.id,
+    return NextResponse.json(
+      {
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        keyId,
+        customerName,
+        description: "Water Warriors Plus report",
+      },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
     if (error instanceof InvalidCouponError) {

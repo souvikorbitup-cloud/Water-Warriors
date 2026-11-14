@@ -7,9 +7,12 @@ import {
   toReportSessionData,
 } from "@/lib/report/report-session-service";
 import { generateReport } from "@/lib/report/generation-service";
+import { REPORT_SESSION_REFERENCE_HEADER } from "@/lib/data/report-session";
 
-export async function POST() {
-  const context = await getCurrentAuthorizedReportContext();
+export async function POST(request: Request) {
+  const context = await getCurrentAuthorizedReportContext(
+    request.headers.get(REPORT_SESSION_REFERENCE_HEADER) ?? "",
+  );
   if (!context) {
     return NextResponse.json(
       { message: "No paid report session was found." },

@@ -3,11 +3,15 @@ import {
   getCurrentAuthorizedReport,
   updateCurrentAuthorizedReportConsent,
 } from "@/lib/report/current-session";
+import { REPORT_SESSION_REFERENCE_HEADER } from "@/lib/data/report-session";
 
 export async function GET(request: Request) {
   const consentAccepted =
     request.headers.get("x-ww-analytics-consent") === "accepted";
-  const report = await getCurrentAuthorizedReport(consentAccepted);
+  const report = await getCurrentAuthorizedReport(
+    consentAccepted,
+    request.headers.get(REPORT_SESSION_REFERENCE_HEADER) ?? "",
+  );
   if (!report) {
     return NextResponse.json(
       { message: "No paid report session was found." },
@@ -46,7 +50,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await updateCurrentAuthorizedReportConsent(body.accepted);
+  const result = await updateCurrentAuthorizedReportConsent(
+    body.accepted,
+    request.headers.get(REPORT_SESSION_REFERENCE_HEADER) ?? "",
+  );
   if (!result) {
     return NextResponse.json(
       { message: "No paid report session was found." },

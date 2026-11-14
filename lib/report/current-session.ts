@@ -26,9 +26,16 @@ async function getAuthorizedReportOrderId(): Promise<string | null> {
   return getOrderIdFromReportCookie(token);
 }
 
-export async function getCurrentAuthorizedReportContext(): Promise<AuthorizedReportContext | null> {
+export async function getCurrentAuthorizedReportContext(
+  sessionReference?: string,
+): Promise<AuthorizedReportContext | null> {
   const orderId = await getAuthorizedReportOrderId();
-  if (!orderId) return null;
+  if (
+    !orderId ||
+    (sessionReference !== undefined && orderId !== sessionReference)
+  ) {
+    return null;
+  }
 
   const [session, order] = await Promise.all([
     getReportSession(orderId),
@@ -39,8 +46,11 @@ export async function getCurrentAuthorizedReportContext(): Promise<AuthorizedRep
   return { orderId, session, order };
 }
 
-export async function updateCurrentAuthorizedReportConsent(accepted: boolean) {
-  const context = await getCurrentAuthorizedReportContext();
+export async function updateCurrentAuthorizedReportConsent(
+  accepted: boolean,
+  sessionReference?: string,
+) {
+  const context = await getCurrentAuthorizedReportContext(sessionReference);
   if (!context) return null;
 
   const session = await setReportSessionConsent(context.orderId, accepted);
@@ -53,8 +63,11 @@ export async function updateCurrentAuthorizedReportConsent(accepted: boolean) {
   };
 }
 
-export async function getCurrentAuthorizedReport(includeDetails = true) {
-  const context = await getCurrentAuthorizedReportContext();
+export async function getCurrentAuthorizedReport(
+  includeDetails = true,
+  sessionReference?: string,
+) {
+  const context = await getCurrentAuthorizedReportContext(sessionReference);
   if (!context) return null;
 
   return toReportSessionData(
