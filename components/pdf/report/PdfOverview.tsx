@@ -1,5 +1,6 @@
 import { Image as PdfImage, Text, View } from "@react-pdf/renderer";
 import type { WaterWarriorsPdfData } from "./pdf.types";
+import { resolveAsset } from "./pdf.assets";
 import { pdfStyles } from "./pdf.styles";
 
 export default function PdfOverview({ data }: { data: WaterWarriorsPdfData }) {
@@ -15,33 +16,28 @@ export default function PdfOverview({ data }: { data: WaterWarriorsPdfData }) {
         </View>
       )}
 
-      <View style={pdfStyles.statCard}>
-        <View>
-          <Text style={pdfStyles.statLabel}>{overview.catchmentLabel}</Text>
-          <Text style={pdfStyles.statValue}>{overview.catchmentArea}</Text>
+      <View style={pdfStyles.statRow} wrap={false}>
+        <View style={pdfStyles.statCard}>
+          <PdfImage
+            src={resolveAsset(data.assets, "house")}
+            style={pdfStyles.statIcon}
+          />
+          <View>
+            <Text style={pdfStyles.statLabel}>{overview.catchmentLabel}</Text>
+            <Text style={pdfStyles.statValue}>{overview.catchmentArea}</Text>
+          </View>
         </View>
-      </View>
 
-      <View style={pdfStyles.statCard}>
-        <View>
-          <Text style={pdfStyles.statLabel}>{overview.rainfallLabel}</Text>
-          <Text style={pdfStyles.statValue}>{overview.annualRainfall}</Text>
+        <View style={pdfStyles.statCard}>
+          <PdfImage
+            src={resolveAsset(data.assets, "rain")}
+            style={pdfStyles.statIcon}
+          />
+          <View>
+            <Text style={pdfStyles.statLabel}>{overview.rainfallLabel}</Text>
+            <Text style={pdfStyles.statValue}>{overview.annualRainfall}</Text>
+          </View>
         </View>
-      </View>
-
-      <View style={pdfStyles.potentialCard}>
-        <Text style={pdfStyles.sectionTitle}>{overview.potentialTitle}</Text>
-        <Text style={pdfStyles.muted}>{overview.potentialDescription}</Text>
-        <Text style={pdfStyles.potentialValue}>{overview.potentialValue}</Text>
-        {overview.potentialInWords ? (
-          <Text style={pdfStyles.smallText}>{overview.potentialInWords}</Text>
-        ) : null}
-        {overview.calculation ? (
-          <Text style={pdfStyles.smallText}>{overview.calculation}</Text>
-        ) : null}
-        {overview.source ? (
-          <Text style={pdfStyles.smallText}>{overview.source}</Text>
-        ) : null}
       </View>
     </View>
   );

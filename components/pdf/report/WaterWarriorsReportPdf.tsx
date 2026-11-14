@@ -3,6 +3,7 @@ import { Document, Font, Page, Text, View } from "@react-pdf/renderer";
 import type { WaterWarriorsPdfData } from "./pdf.types";
 import PdfHeader from "./PdfHeader";
 import PdfOverview from "./PdfOverview";
+import PdfPotential from "./PdfPotential";
 import PdfImpact from "./PdfImpact";
 import PdfRechargeAnalysis from "./PdfRechargeAnalysis";
 import PdfForecast from "./PdfForecast";
@@ -86,24 +87,31 @@ export default function WaterWarriorsReportPdf({
       subject="Rainwater harvesting potential and forecast report"
       language={data.locale}
     >
+      {/* Page 1: header, greeting, map, stats, potential */}
       <Page size="A4" style={pageStyle} wrap>
-        <PdfHeader />
+        <PdfHeader data={data} />
         <Text style={pdfStyles.greeting}>{data.greeting}</Text>
-        <Text style={pdfStyles.muted}>{data.thankYou}</Text>
+        <Text style={pdfStyles.thankYou}>{data.thankYou}</Text>
         <PdfOverview data={data} />
+        <PdfPotential data={data} />
         <PageFooter />
       </Page>
 
+      {/* Page 2: impact */}
       <Page size="A4" style={pageStyle} wrap>
-        <PdfImpact data={data} />
+        <View style={pdfStyles.contentTop}>
+          <PdfImpact data={data} />
+        </View>
         <PageFooter />
       </Page>
 
+      {/* Page 3: recharge analysis */}
       <Page size="A4" style={pageStyle} wrap>
         <PdfRechargeAnalysis data={data} />
         <PageFooter />
       </Page>
 
+      {/* Page 4: forecast */}
       <Page size="A4" style={pageStyle} wrap>
         <PdfForecast data={data} />
         <PageFooter />

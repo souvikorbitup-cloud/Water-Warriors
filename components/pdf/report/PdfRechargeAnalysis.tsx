@@ -1,5 +1,6 @@
 import { Image as PdfImage, Text, View } from "@react-pdf/renderer";
 import type { WaterWarriorsPdfData } from "./pdf.types";
+import { resolveAsset } from "./pdf.assets";
 import { pdfStyles } from "./pdf.styles";
 
 export default function PdfRechargeAnalysis({
@@ -9,31 +10,25 @@ export default function PdfRechargeAnalysis({
 }) {
   return (
     <View>
-      <View>
-        {data.rechargeBannerUrl ? (
-          <PdfImage
-            src={data.rechargeBannerUrl}
-            style={pdfStyles.rechargeBanner}
-          />
-        ) : null}
-        <Text style={pdfStyles.rechargeTitleOverlay}>
-          {data.recharge.title}
-        </Text>
-      </View>
+      <PdfImage
+        src={data.rechargeBannerUrl || resolveAsset(data.assets, "divider")}
+        style={pdfStyles.rechargeBanner}
+      />
+
+      <Text style={pdfStyles.rechargeTitle}>{data.recharge.title}</Text>
 
       {data.recharge.introduction ? (
-        <Text style={pdfStyles.paragraph}>{data.recharge.introduction}</Text>
+        <Text style={pdfStyles.rechargeIntro}>
+          {data.recharge.introduction}
+        </Text>
       ) : null}
 
       {data.recharge.paragraphs.map((paragraph, index) => (
-        <Text
-          key={`analysis-${index}`}
-          style={pdfStyles.paragraph}
-          orphans={2}
-          widows={2}
-        >
-          {paragraph}
-        </Text>
+        <View key={`analysis-${index}`} style={pdfStyles.quote} wrap={false}>
+          <Text style={pdfStyles.quoteText} orphans={2} widows={2}>
+            {paragraph}
+          </Text>
+        </View>
       ))}
     </View>
   );

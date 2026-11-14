@@ -1,3 +1,5 @@
+import type { PdfAssets } from "./pdf.assets";
+
 export type PdfQuality = "standard" | "high";
 
 export interface PdfImpactItem {
@@ -20,8 +22,14 @@ export interface WaterWarriorsPdfData {
   customerName: string;
   location: string;
 
+  /** Optional top strip text (defaults to the patent notice). */
+  notice?: string;
+
   mapImageUrl: string | null;
   rechargeBannerUrl: string;
+
+  /** Output of loadPdfAssets(); omit to use the raw public paths. */
+  assets?: PdfAssets;
 
   overview: {
     catchmentLabel: string;
@@ -30,10 +38,13 @@ export interface WaterWarriorsPdfData {
     annualRainfall: string;
     potentialTitle: string;
     potentialDescription: string;
+    /** Small label above the yellow value pill (falls back to catchmentLabel). */
+    potentialLabel?: string;
     potentialValue: string;
     potentialInWords?: string;
     calculation?: string;
     source?: string;
+    imageCaption?: string;
   };
 
   impact: {
