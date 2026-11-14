@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { footerNavLinks, socialLinks } from "@/lib/data/all_data";
 import Image from "next/image";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import PrimaryButton from "../shared/button/PrimaryButton";
 import {
   ANALYTICS_CONSENT_CHANGE_EVENT,
@@ -17,12 +17,40 @@ import {
   REPORT_SESSION_REFERENCE_KEY,
 } from "@/lib/data/report-session";
 
+const VISITOR_COUNT_SESSION_KEY = "ww_visitor_count";
+const VISITOR_COUNT_CHANGE_EVENT = "ww:visitor-count-change";
+let inMemoryVisitorCount: number | null = null;
+
 type MainFooterProps = {
   visitorCount?: number;
 };
 
 type AnalyticsConsent = "accepted" | "declined";
 const COPYRIGHT_YEAR = new Date().getFullYear();
+
+function subscribeToVisitorCount(onChange: () => void) {
+  window.addEventListener(VISITOR_COUNT_CHANGE_EVENT, onChange);
+
+  return () => {
+    window.removeEventListener(VISITOR_COUNT_CHANGE_EVENT, onChange);
+  };
+}
+
+function getVisitorCountSnapshot(fallback: number) {
+  try {
+    const storedCount = window.sessionStorage.getItem(
+      VISITOR_COUNT_SESSION_KEY,
+    );
+    const parsedCount = storedCount ? Number(storedCount) : NaN;
+    if (Number.isSafeInteger(parsedCount) && parsedCount >= 216) {
+      return parsedCount;
+    }
+  } catch {
+    return inMemoryVisitorCount ?? fallback;
+  }
+
+  return inMemoryVisitorCount ?? fallback;
+}
 
 function subscribeToAnalyticsConsent(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -50,11 +78,86 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
   const pathname = usePathname();
   const [cookieSettingsOpen, setCookieSettingsOpen] = useState(false);
   const [consentSaveError, setConsentSaveError] = useState<string | null>(null);
+  const visitorCountRequestStarted = useRef(false);
+  const currentVisitorCount = useSyncExternalStore(
+    subscribeToVisitorCount,
+    () => getVisitorCountSnapshot(visitorCount),
+    () => visitorCount,
+  );
   const shouldShowConsent = useSyncExternalStore(
     subscribeToAnalyticsConsent,
     needsAnalyticsConsent,
     () => false,
   );
+
+  useEffect(() => {
+    if (visitorCountRequestStarted.current) return;
+    visitorCountRequestStarted.current = true;
+
+    let storedCount: string | null;
+    try {
+      storedCount = window.sessionStorage.getItem(VISITOR_COUNT_SESSION_KEY);
+      if (storedCount && storedCount !== "pending") {
+        const parsedCount = Number(storedCount);
+        if (Number.isSafeInteger(parsedCount) && parsedCount >= 216) {
+          return;
+        }
+
+        console.warn(
+          "Ignoring an invalid visitor count saved for this session.",
+        );
+        window.sessionStorage.removeItem(VISITOR_COUNT_SESSION_KEY);
+      }
+
+      if (!storedCount || storedCount !== "pending") {
+        window.sessionStorage.setItem(VISITOR_COUNT_SESSION_KEY, "pending");
+      }
+    } catch (error) {
+      console.error(
+        "Could not access session storage for the visitor count.",
+        error,
+      );
+      return;
+    }
+
+    const method = storedCount === "pending" ? "GET" : "POST";
+    void fetch("/api/visitor-count", { method, cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Visitor count request failed (${response.status}).`);
+        }
+        const body: unknown = await response.json();
+        if (
+          typeof body !== "object" ||
+          body === null ||
+          !("count" in body) ||
+          typeof body.count !== "number" ||
+          !Number.isSafeInteger(body.count) ||
+          body.count < 216
+        ) {
+          throw new Error("The server returned an invalid visitor count.");
+        }
+        return body.count;
+      })
+      .then((count) => {
+        inMemoryVisitorCount = count;
+        try {
+          window.sessionStorage.setItem(
+            VISITOR_COUNT_SESSION_KEY,
+            String(count),
+          );
+        } catch (error) {
+          console.error(
+            "Could not save the visitor count for this session.",
+            error,
+          );
+        }
+        window.dispatchEvent(new Event(VISITOR_COUNT_CHANGE_EVENT));
+      })
+      .catch((error: unknown) => {
+        console.error("Could not update the visitor count.", error);
+      });
+  }, [visitorCount]);
 
   const openCookieSettings = () => {
     setConsentSaveError(null);
@@ -210,7 +313,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
 
             {/* Visitor counter */}
             <div className="mt-8 rounded-md border border-secondary px-2.5 py-1.5 text-sm font-medium text-secondary animate-color-transition sm:mt-10 sm:text-base">
-              {t("visitorsSoFar", { count: visitorCount })}
+              {t("visitorsSoFar", { count: currentVisitorCount })}
             </div>
           </div>
 
