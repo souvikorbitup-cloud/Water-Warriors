@@ -36,12 +36,16 @@ export type FeedbackListItem = {
   updatedAt: string;
 };
 
-export type SubmissionsListResponse<T> = {
+export type AdminListResponse<T> = {
   items: T[];
   page: number;
   limit: number;
   total: number;
   totalPages: number;
+  unread?: number;
+};
+
+export type SubmissionsListResponse<T> = AdminListResponse<T> & {
   unread: number;
 };
 

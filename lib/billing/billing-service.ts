@@ -1,14 +1,22 @@
 import "server-only";
 
 import type { Document } from "mongodb";
+import type { SortOrder } from "mongoose";
 import { connectDB } from "@/lib/db";
 import CouponModel, { type ICoupon } from "@/lib/models/Coupon.model";
 import BillingOrderModel, {
   type IBillingOrder,
 } from "@/lib/models/BillingOrder.model";
 import { getSiteSettingsCollection } from "@/lib/services/site-settings";
-import type { BillingQuote, Coupon } from "@/lib/billing/types";
+import type {
+  BillingQuote,
+  Coupon,
+  BillingOrderListItem,
+  BillingOrderListQuery,
+  BillingOrderListResponse,
+} from "@/lib/billing/types";
 import type { RooftopSelection } from "@/lib/report/types";
+import { escapeRegex } from "@/lib/submissions/sanitize";
 
 export const DEFAULT_PLUS_PRICE_PAISE = 9900;
 export const BILLING_CURRENCY = "INR";
@@ -419,4 +427,66 @@ export async function markBillingOrderPaid(
       throw new Error("Payment order could not be marked as paid.");
     }
   }
+}
+
+export async function listBillingOrders(
+  query: BillingOrderListQuery,
+): Promise<BillingOrderListResponse> {
+  await connectDB();
+
+  const filter: Record<string, unknown> = {};
+  if (query.status) filter.status = query.status;
+  if (query.search) {
+    const pattern = escapeRegex(query.search.trim());
+    filter.$or = [
+      { orderId: { $regex: pattern, $options: "i" } },
+      { customerName: { $regex: pattern, $options: "i" } },
+      { paymentId: { $regex: pattern, $options: "i" } },
+      { couponCode: { $regex: pattern, $options: "i" } },
+    ];
+  }
+
+  const sortOptions: Record<
+    BillingOrderListQuery["sort"],
+    Record<string, SortOrder>
+  > = {
+    "createdAt:desc": { createdAt: -1 },
+    "createdAt:asc": { createdAt: 1 },
+    "amountPaise:desc": { amountPaise: -1 },
+    "amountPaise:asc": { amountPaise: 1 },
+    "status:asc": { status: 1 },
+    "status:desc": { status: -1 },
+  };
+  const skip = (query.page - 1) * query.limit;
+
+  const [documents, total] = await Promise.all([
+    BillingOrderModel.find(filter)
+      .sort(sortOptions[query.sort])
+      .skip(skip)
+      .limit(query.limit)
+      .lean<Array<IBillingOrder & { _id: unknown }>>(),
+    BillingOrderModel.countDocuments(filter),
+  ]);
+
+  const items: BillingOrderListItem[] = documents.map((document) => ({
+    id: String(document._id),
+    orderId: document.orderId,
+    amountPaise: document.amountPaise,
+    currency: document.currency,
+    couponCode: document.couponCode ?? null,
+    customerName: document.customerName ?? "",
+    rooftopSelection: document.rooftopSelection,
+    status: document.status,
+    paymentId: document.paymentId ?? null,
+    createdAt: document.createdAt.toISOString(),
+    paidAt: document.paidAt?.toISOString() ?? null,
+  }));
+
+  return {
+    items,
+    page: query.page,
+    limit: query.limit,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / query.limit)),
+  };
 }

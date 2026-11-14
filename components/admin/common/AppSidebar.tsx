@@ -19,6 +19,7 @@ import {
   UserStar,
   CircleQuestionMark,
   CreditCard,
+  ReceiptText,
 } from "lucide-react";
 import {
   canAccess,
@@ -102,6 +103,12 @@ const menuSections: MenuSection[] = [
         icon: <CreditCard />,
         name: "Plans & Coupons",
         path: "/admin/billing",
+        permission: PERMISSIONS.paymentsView,
+      },
+      {
+        icon: <ReceiptText />,
+        name: "Orders Billings",
+        path: "/admin/billing/orders",
         permission: PERMISSIONS.paymentsView,
       },
     ],

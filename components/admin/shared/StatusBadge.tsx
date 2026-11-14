@@ -10,6 +10,10 @@ const STATUS_STYLES: Record<string, string> = {
   archived: "bg-gray-100 text-gray-600 ring-gray-200",
   published: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   draft: "bg-amber-50 text-amber-700 ring-amber-200",
+
+  // Billing statuses
+  paid: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  created: "bg-amber-50 text-amber-700 ring-amber-200",
 };
 
 export default function StatusBadge({ status }: { status: string }) {
@@ -17,7 +21,8 @@ export default function StatusBadge({ status }: { status: string }) {
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset",
-        STATUS_STYLES[status] ?? "bg-gray-100 text-gray-600 ring-gray-200",
+        STATUS_STYLES[status.toLowerCase()] ??
+          "bg-gray-100 text-gray-600 ring-gray-200",
       )}
     >
       {status}

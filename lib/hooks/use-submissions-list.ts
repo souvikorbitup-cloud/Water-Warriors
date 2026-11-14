@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { readApiError } from "@/lib/submissions/api-error";
-import type { SubmissionsListResponse } from "@/types/submissions";
+import type { AdminListResponse } from "@/types/submissions";
 
 export type SubmissionsListParams = {
   page: number;
@@ -26,12 +26,10 @@ const DEFAULT_PARAMS: SubmissionsListParams = {
 
 export function useSubmissionsList<T>(
   endpoint: string,
-  initialData: SubmissionsListResponse<T> | null = null,
+  initialData: AdminListResponse<T> | null = null,
 ) {
   const [params, setParams] = useState<SubmissionsListParams>(DEFAULT_PARAMS);
-  const [data, setData] = useState<SubmissionsListResponse<T> | null>(
-    initialData,
-  );
+  const [data, setData] = useState<AdminListResponse<T> | null>(initialData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,7 +58,7 @@ export function useSubmissionsList<T>(
           );
           throw new Error(message);
         }
-        const result = (await response.json()) as SubmissionsListResponse<T>;
+        const result = (await response.json()) as AdminListResponse<T>;
         setData(result);
       } catch (err) {
         setError(
