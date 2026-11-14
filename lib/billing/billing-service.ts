@@ -3,6 +3,9 @@ import "server-only";
 import type { Document } from "mongodb";
 import { connectDB } from "@/lib/db";
 import CouponModel, { type ICoupon } from "@/lib/models/Coupon.model";
+import BillingOrderModel, {
+  type IBillingOrder,
+} from "@/lib/models/BillingOrder.model";
 import { getSiteSettingsCollection } from "@/lib/services/site-settings";
 import type { BillingQuote, Coupon } from "@/lib/billing/types";
 import type { RooftopSelection } from "@/lib/report/types";
@@ -17,7 +20,6 @@ export type {
 
 const PLAN_SETTINGS_ID = "plus-plan-billing";
 const COUPON_ID_PREFIX = "coupon:";
-const ORDER_ID_PREFIX = "billing-order:";
 
 type PlanSettingsDocument = Document & {
   _id: string;
@@ -34,19 +36,12 @@ type LegacyCouponDocument = Document &
     _id: string;
   };
 
-export type BillingOrderDocument = Document & {
-  _id: string;
-  orderId: string;
-  amountPaise: number;
-  currency: string;
-  couponCode: string | null;
-  customerName: string;
-  rooftopSelection?: RooftopSelection;
-  status: "created" | "paid";
-  paymentId?: string;
-  createdAt: Date;
-  paidAt?: Date;
-};
+export type BillingOrderDocument = IBillingOrder;
+
+type LegacyBillingOrderDocument = Document &
+  BillingOrderDocument & {
+    _id: string;
+  };
 
 export class InvalidCouponError extends Error {
   constructor(message: string) {
@@ -338,30 +333,61 @@ export async function deleteCoupon(code: string): Promise<boolean> {
 }
 
 export async function saveBillingOrder(
-  order: Omit<BillingOrderDocument, "_id">,
+  order: BillingOrderDocument,
 ): Promise<void> {
+  await connectDB();
+  await BillingOrderModel.create(order);
+}
+
+async function migrateLegacyBillingOrder(
+  orderId: string,
+): Promise<BillingOrderDocument | null> {
   const collection = await getSiteSettingsCollection();
-  await collection.insertOne({
-    ...order,
-    _id: `${ORDER_ID_PREFIX}${order.orderId}`,
+  const legacyOrder = await collection.findOne<LegacyBillingOrderDocument>({
+    _id: `billing-order:${orderId}`,
   });
+  if (!legacyOrder) return null;
+
+  const { _id, ...order } = legacyOrder;
+  if (order.orderId !== orderId) {
+    throw new Error("Stored billing order ID does not match its document ID.");
+  }
+
+  await connectDB();
+  try {
+    await BillingOrderModel.updateOne(
+      { orderId },
+      { $setOnInsert: order },
+      { upsert: true },
+    );
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) throw error;
+  }
+
+  const migratedOrder = await BillingOrderModel.findOne({ orderId }).lean();
+  if (!migratedOrder) {
+    throw new Error("Legacy billing order could not be migrated.");
+  }
+  await collection.deleteOne({ _id });
+  return migratedOrder;
 }
 
 export async function getBillingOrder(
   orderId: string,
 ): Promise<BillingOrderDocument | null> {
-  const collection = await getSiteSettingsCollection();
-  return collection.findOne<BillingOrderDocument>({
-    _id: `${ORDER_ID_PREFIX}${orderId}`,
-  });
+  await connectDB();
+  const order = await BillingOrderModel.findOne({ orderId }).lean();
+  if (order) return order;
+  return migrateLegacyBillingOrder(orderId);
 }
 
 export async function clearBillingOrderRooftopSelection(
   orderId: string,
 ): Promise<void> {
-  const collection = await getSiteSettingsCollection();
-  await collection.updateOne(
-    { _id: `${ORDER_ID_PREFIX}${orderId}` },
+  const order = await getBillingOrder(orderId);
+  if (!order) return;
+  await BillingOrderModel.updateOne(
+    { orderId },
     { $unset: { rooftopSelection: "" } },
   );
 }
@@ -370,12 +396,10 @@ export async function saveBillingOrderRooftopSelection(
   orderId: string,
   rooftopSelection: RooftopSelection,
 ): Promise<void> {
-  const collection = await getSiteSettingsCollection();
-  await collection.updateOne(
-    {
-      _id: `${ORDER_ID_PREFIX}${orderId}`,
-      rooftopSelection: { $exists: false },
-    },
+  const order = await getBillingOrder(orderId);
+  if (!order) return;
+  await BillingOrderModel.updateOne(
+    { orderId, rooftopSelection: { $exists: false } },
     { $set: { rooftopSelection } },
   );
 }
@@ -384,9 +408,9 @@ export async function markBillingOrderPaid(
   orderId: string,
   paymentId: string,
 ): Promise<void> {
-  const collection = await getSiteSettingsCollection();
-  const result = await collection.updateOne(
-    { _id: `${ORDER_ID_PREFIX}${orderId}`, status: "created" },
+  await getBillingOrder(orderId);
+  const result = await BillingOrderModel.updateOne(
+    { orderId, status: "created" },
     { $set: { status: "paid", paymentId, paidAt: new Date() } },
   );
   if (result.matchedCount === 0) {
