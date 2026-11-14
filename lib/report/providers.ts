@@ -5,6 +5,7 @@ import { getSiteSettingsCollection } from "@/lib/services/site-settings";
 import ReportAnalysisCache from "@/lib/models/ReportAnalysisCache.model";
 import type {
   ReportForecastMonth,
+  ReportLocale,
   ReportLocation,
   ReportPoint,
 } from "@/lib/report/types";
@@ -282,6 +283,7 @@ function getAnalysisCacheKey(
   areaSqm: number,
   annualRainfallMm: number,
   litres: number,
+  locale: ReportLocale = "en",
 ): string {
   const normalizedLocation = [
     location.locality,
@@ -295,7 +297,7 @@ function getAnalysisCacheKey(
     .trim();
   return createHash("sha256")
     .update(
-      `${normalizedLocation}|${areaSqm.toFixed(2)}|${annualRainfallMm.toFixed(1)}|${Math.round(litres)}`,
+      `${normalizedLocation}|${areaSqm.toFixed(2)}|${annualRainfallMm.toFixed(1)}|${Math.round(litres)}${locale === "hi" ? "|hi" : ""}`,
     )
     .digest("hex");
 }
@@ -324,6 +326,7 @@ async function requestHydrogeologyAnalysis(
   areaSqm: number,
   annualRainfallMm: number,
   potentialLitres: number,
+  locale: ReportLocale,
 ): Promise<string[]> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
@@ -342,6 +345,9 @@ async function requestHydrogeologyAnalysis(
               {
                 text: [
                   "Provide a cautious, location-specific hydrogeology report for rainwater recharge.",
+                  locale === "hi"
+                    ? "Write every analysis paragraph in Hindi using Devanagari script. Keep technical terms understandable for Hindi readers."
+                    : "Write every analysis paragraph in English.",
                   'Return only JSON matching {"analysis":["paragraph 1","paragraph 2","paragraph 3","paragraph 4"]}.',
                   "Cover soil composition, groundwater basin and aquifer behavior, suitable recharge structures, expected recharge benefits, and neighborhood benefits.",
                   "Use only defensible regional context. Clearly qualify uncertainty and do not claim site-specific soil tests, aquifer measurements, or guaranteed recharge.",
@@ -449,6 +455,7 @@ export async function getHydrogeologyAnalysis(
   annualRainfallMm: number,
   potentialLitres: number,
   cacheResult = true,
+  locale: ReportLocale = "en",
 ): Promise<string[]> {
   if (!cacheResult) {
     return requestHydrogeologyAnalysis(
@@ -456,6 +463,7 @@ export async function getHydrogeologyAnalysis(
       areaSqm,
       annualRainfallMm,
       potentialLitres,
+      locale,
     );
   }
 
@@ -465,6 +473,7 @@ export async function getHydrogeologyAnalysis(
     areaSqm,
     annualRainfallMm,
     potentialLitres,
+    locale,
   );
   const cached = await ReportAnalysisCache.findOne({
     cacheKey,
@@ -477,6 +486,7 @@ export async function getHydrogeologyAnalysis(
     areaSqm,
     annualRainfallMm,
     potentialLitres,
+    locale,
   );
   try {
     await ReportAnalysisCache.updateOne(
@@ -501,13 +511,18 @@ export async function deleteHydrogeologyAnalysisCache(
   annualRainfallMm: number,
   potentialLitres: number,
 ): Promise<void> {
-  await ReportAnalysisCache.deleteOne({
-    cacheKey: getAnalysisCacheKey(
-      location,
-      areaSqm,
-      annualRainfallMm,
-      potentialLitres,
-    ),
+  await ReportAnalysisCache.deleteMany({
+    cacheKey: {
+      $in: (["en", "hi"] as const).map((locale) =>
+        getAnalysisCacheKey(
+          location,
+          areaSqm,
+          annualRainfallMm,
+          potentialLitres,
+          locale,
+        ),
+      ),
+    },
   });
 }
 

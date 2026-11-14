@@ -17,6 +17,7 @@ export type ReportStatus =
   | "failed";
 
 export type ReportStepStatus = "pending" | "complete" | "failed";
+export type ReportLocale = "en" | "hi";
 
 export type ReportLocation = {
   locality: string;
@@ -45,6 +46,7 @@ export type ReportSessionData = {
   potentialLitres?: number;
   location?: ReportLocation;
   analysis?: string[];
+  analysisLocale?: ReportLocale;
   forecast?: ReportForecastMonth[];
   mapSnapshotType?: string;
   steps: {

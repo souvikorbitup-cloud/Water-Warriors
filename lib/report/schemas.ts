@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const reportLocaleSchema = z.enum(["en", "hi"]);
+
 export const reportPointSchema = z.object({
   lat: z.number().finite().min(-90).max(90),
   lng: z.number().finite().min(-180).max(180),
@@ -33,6 +35,7 @@ export const reportSessionResponseSchema = z.object({
   potentialLitres: z.number().finite().nonnegative().optional(),
   location: reportLocationSchema.optional(),
   analysis: z.array(z.string()).optional(),
+  analysisLocale: z.enum(["en", "hi"]).optional(),
   forecast: z
     .array(
       z.object({

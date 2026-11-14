@@ -4,6 +4,7 @@ import { Model, Schema, model, models } from "mongoose";
 import type {
   ReportForecastMonth,
   ReportLocation,
+  ReportLocale,
   ReportPoint,
   ReportSessionData,
   RooftopSelection,
@@ -28,6 +29,7 @@ export interface IReportSession extends Omit<
   centroid?: ReportPoint;
   runoffCoefficient?: number;
   location?: ReportLocation;
+  analysisLocale?: ReportLocale;
   forecast?: ReportForecastMonth[];
   steps: ReportSessionData["steps"];
   generationStartedAt?: Date;
@@ -94,6 +96,7 @@ const reportSessionSchema = new Schema<IReportSession>(
     potentialLitres: { type: Number, min: 0 },
     location: { type: locationSchema },
     analysis: { type: [String], default: undefined },
+    analysisLocale: { type: String, enum: ["en", "hi"] },
     forecast: { type: [forecastMonthSchema], default: undefined },
     mapSnapshotType: { type: String },
     steps: {

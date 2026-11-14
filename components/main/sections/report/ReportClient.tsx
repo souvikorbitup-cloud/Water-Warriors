@@ -144,12 +144,16 @@ function saveSessionReport(report: ReportSessionData): void {
   }
 }
 
-function hasCompleteReportDetails(report: ReportSessionData): boolean {
+function hasCompleteReportDetails(
+  report: ReportSessionData,
+  locale: string,
+): boolean {
   return Boolean(
     report.annualRainfallMm !== undefined &&
     report.potentialLitres !== undefined &&
     report.location &&
     (report.analysis?.length ?? 0) >= 3 &&
+    (report.analysisLocale ?? "en") === locale &&
     report.forecast?.length === 5 &&
     report.mapSnapshotType,
   );
@@ -241,8 +245,11 @@ export default function ReportClient() {
       const response = await fetch("/api/report-session/generate", {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           [REPORT_SESSION_REFERENCE_HEADER]: sessionReference,
         },
+        body: JSON.stringify({ locale }),
+        cache: "no-store",
       });
       const body: unknown = await response.json().catch(() => null);
       if (!response.ok) {
@@ -262,7 +269,7 @@ export default function ReportClient() {
       setLoadError(null);
       return parsed.data;
     },
-    [router, t],
+    [locale, router, t],
   );
 
   useEffect(() => {
@@ -289,7 +296,7 @@ export default function ReportClient() {
             generationAttempt === 0
               ? readSessionReport(nextReport.orderId)
               : null;
-          if (cachedReport) {
+          if (cachedReport && hasCompleteReportDetails(cachedReport, locale)) {
             setReport(cachedReport);
             setLoadError(null);
             setIsRetrying(false);
@@ -314,9 +321,9 @@ export default function ReportClient() {
             (nextReport.status === "pending" ||
               (nextReport.status === "failed" &&
                 (generationAttempt > 0 ||
-                  !hasCompleteReportDetails(nextReport))))) ||
+                  !hasCompleteReportDetails(nextReport, locale))))) ||
             (nextReport.status === "ready" &&
-              !hasCompleteReportDetails(nextReport)))
+              !hasCompleteReportDetails(nextReport, locale)))
         ) {
           setIsRetrying(true);
           nextReport = await startGeneration(reportSessionId);
@@ -370,6 +377,7 @@ export default function ReportClient() {
     consentRevision,
     generationAttempt,
     loadReport,
+    locale,
     reportSessionId,
     startGeneration,
     syncReportConsent,

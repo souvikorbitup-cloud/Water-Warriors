@@ -24,6 +24,7 @@ import {
 } from "@/lib/report/providers";
 import type {
   ReportForecastMonth,
+  ReportLocale,
   ReportLocation,
   ReportSessionData,
 } from "@/lib/report/types";
@@ -51,15 +52,20 @@ async function updateStep(
   step: ReportStep,
   value: unknown,
   persistDetails: boolean,
+  analysisLocale?: ReportLocale,
 ): Promise<void> {
   await ReportSession.updateOne(
     { orderId },
     { $set: { [`steps.${step}`]: "complete" } },
   );
   if (persistDetails) {
+    const detailFields: Record<string, unknown> = { [step]: value };
+    if (step === "analysis" && analysisLocale) {
+      detailFields.analysisLocale = analysisLocale;
+    }
     await ReportSession.updateOne(
       { orderId, analyticsConsent: true },
-      { $set: { [step]: value } },
+      { $set: detailFields },
     );
   }
 }
@@ -78,6 +84,7 @@ async function generateAnalysisWithRetries(
   rainfallMm: number,
   potentialLitres: number,
   persistDetails: boolean,
+  locale: ReportLocale,
 ): Promise<string[]> {
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
     try {
@@ -87,6 +94,7 @@ async function generateAnalysisWithRetries(
         rainfallMm,
         potentialLitres,
         persistDetails,
+        locale,
       );
     } catch (error) {
       const delay = RETRY_DELAYS_MS[attempt];
@@ -121,6 +129,7 @@ function buildReportData(
     potentialLitres?: number;
     location?: ReportLocation;
     analysis?: string[];
+    analysisLocale?: ReportLocale;
     forecast?: ReportForecastMonth[];
     mapSnapshotType?: string;
   },
@@ -142,6 +151,7 @@ function buildReportData(
 
 export async function generateReport(
   orderId: string,
+  locale: ReportLocale = "en",
 ): Promise<ReportSessionData> {
   await connectDB();
   const [report, order] = await Promise.all([
@@ -235,12 +245,20 @@ export async function generateReport(
     }
   }
 
-  let analysis = persistDetails ? report.analysis : undefined;
+  const savedAnalysisLocale = report.analysisLocale ?? "en";
+  let analysis =
+    persistDetails && savedAnalysisLocale === locale
+      ? report.analysis
+      : undefined;
   const prerequisitesAvailable =
     location !== undefined &&
     annualRainfallMm !== undefined &&
     potentialLitres !== undefined;
-  if (!persistDetails || steps.analysis !== "complete") {
+  if (
+    !persistDetails ||
+    steps.analysis !== "complete" ||
+    savedAnalysisLocale !== locale
+  ) {
     if (
       prerequisitesAvailable &&
       location &&
@@ -255,9 +273,10 @@ export async function generateReport(
           annualRainfallMm,
           potentialLitres,
           persistDetails,
+          locale,
         );
         steps.analysis = "complete";
-        await updateStep(orderId, "analysis", analysis, persistDetails);
+        await updateStep(orderId, "analysis", analysis, persistDetails, locale);
       } catch (error) {
         const message = getErrorMessage(error);
         failures.push(`Hydrogeology analysis: ${message}`);
@@ -353,6 +372,7 @@ export async function generateReport(
       ...(potentialLitres === undefined ? {} : { potentialLitres }),
       ...(location ? { location } : {}),
       ...(analysis ? { analysis } : {}),
+      ...(analysis ? { analysisLocale: locale } : {}),
       ...(forecast ? { forecast } : {}),
       ...(mapSnapshotType ? { mapSnapshotType } : {}),
     },

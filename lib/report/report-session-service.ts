@@ -16,7 +16,7 @@ import {
 } from "@/lib/report/geometry";
 import { RUNOFF_COEFFICIENT } from "@/lib/report/constants";
 import { deleteHydrogeologyAnalysisCache } from "@/lib/report/providers";
-import type { ReportSessionData } from "@/lib/report/types";
+import type { ReportLocale, ReportSessionData } from "@/lib/report/types";
 
 function isDuplicateKeyError(error: unknown): error is MongoServerError {
   return (
@@ -45,6 +45,7 @@ export function toReportSessionData(
     potentialLitres,
     location,
     analysis,
+    analysisLocale,
     forecast,
     mapSnapshotType,
     steps,
@@ -67,6 +68,9 @@ export function toReportSessionData(
       : {}),
     ...(shouldIncludeDetails && location ? { location } : {}),
     ...(shouldIncludeDetails && analysis?.length ? { analysis } : {}),
+    ...(shouldIncludeDetails && analysis?.length
+      ? { analysisLocale: analysisLocale ?? "en" }
+      : {}),
     ...(shouldIncludeDetails && forecast?.length ? { forecast } : {}),
     ...(shouldIncludeDetails && mapSnapshotType ? { mapSnapshotType } : {}),
     steps,
@@ -172,9 +176,8 @@ export async function setReportSessionConsent(
   const consentChanged = existing.analyticsConsent !== accepted;
   if (
     !consentChanged &&
-    ((accepted &&
-    (reportHasCompleteDetails || existing.status !== "ready")) ||
-    (!accepted && !reportHasDetails))
+    ((accepted && (reportHasCompleteDetails || existing.status !== "ready")) ||
+      (!accepted && !reportHasDetails))
   ) {
     return existing;
   }
@@ -211,6 +214,7 @@ export async function setReportSessionConsent(
                   potentialLitres: "",
                   location: "",
                   analysis: "",
+                  analysisLocale: "",
                   forecast: "",
                   mapSnapshotType: "",
                 },
@@ -246,6 +250,7 @@ export async function setReportSessionConsent(
             potentialLitres: "",
             location: "",
             analysis: "",
+            analysisLocale: "",
             forecast: "",
             mapSnapshotType: "",
             ...(!generationInProgress ? { generationStartedAt: "" } : {}),
@@ -291,7 +296,10 @@ export async function getReportSession(
   return ReportSession.findOne({ orderId });
 }
 
-export async function claimReportGeneration(orderId: string): Promise<boolean> {
+export async function claimReportGeneration(
+  orderId: string,
+  locale: ReportLocale = "en",
+): Promise<boolean> {
   await connectDB();
   const staleBefore = new Date(Date.now() - 3 * 60 * 1000);
   const claimed = await ReportSession.findOneAndUpdate(
@@ -309,6 +317,7 @@ export async function claimReportGeneration(orderId: string): Promise<boolean> {
             { forecast: { $size: 0 } },
             { analysis: { $exists: false } },
             { analysis: { $size: 0 } },
+            { analysisLocale: { $ne: locale } },
             { location: { $exists: false } },
             { annualRainfallMm: { $exists: false } },
             { potentialLitres: { $exists: false } },

@@ -1,4 +1,5 @@
 import { after, NextResponse } from "next/server";
+import { z } from "zod";
 import ReportSession from "@/lib/models/ReportSession.model";
 import { getCurrentAuthorizedReportContext } from "@/lib/report/current-session";
 import {
@@ -8,8 +9,35 @@ import {
 } from "@/lib/report/report-session-service";
 import { generateReport } from "@/lib/report/generation-service";
 import { REPORT_SESSION_REFERENCE_HEADER } from "@/lib/data/report-session";
+import { reportLocaleSchema } from "@/lib/report/schemas";
+import type { ReportLocale } from "@/lib/report/types";
+
+const requestBodySchema = z.object({
+  locale: reportLocaleSchema.default("en"),
+});
 
 export async function POST(request: Request) {
+  let requestBody: unknown = {};
+  const requestText = await request.text();
+  if (requestText.trim()) {
+    try {
+      requestBody = JSON.parse(requestText);
+    } catch {
+      return NextResponse.json(
+        { message: "Invalid report generation request." },
+        { status: 400 },
+      );
+    }
+  }
+  const parsedBody = requestBodySchema.safeParse(requestBody);
+  if (!parsedBody.success) {
+    return NextResponse.json(
+      { message: "Invalid report generation request." },
+      { status: 400 },
+    );
+  }
+  const locale: ReportLocale = parsedBody.data.locale;
+
   const context = await getCurrentAuthorizedReportContext(
     request.headers.get(REPORT_SESSION_REFERENCE_HEADER) ?? "",
   );
@@ -21,10 +49,10 @@ export async function POST(request: Request) {
   }
 
   const { orderId, order, session } = context;
-  const claimed = await claimReportGeneration(orderId);
+  const claimed = await claimReportGeneration(orderId, locale);
   if (claimed && !session.analyticsConsent) {
     try {
-      const report = await generateReport(orderId);
+      const report = await generateReport(orderId, locale);
       return NextResponse.json(report, {
         headers: { "Cache-Control": "no-store" },
       });
@@ -52,7 +80,7 @@ export async function POST(request: Request) {
   if (claimed) {
     after(async () => {
       try {
-        await generateReport(orderId);
+        await generateReport(orderId, locale);
       } catch (error) {
         console.error(
           `Could not finish report generation for ${orderId}:`,
