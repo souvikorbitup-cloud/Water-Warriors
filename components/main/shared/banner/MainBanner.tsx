@@ -25,7 +25,7 @@ export default function MainBanner({
 }: MainBannerProps) {
   return (
     <section className="relative -mt-30">
-      <div className="isolate flex min-h-120 items-center justify-center overflow-hidden sm:min-h-[65vh]">
+      <div className="isolate flex min-h-140 items-center justify-center overflow-hidden sm:min-h-[65vh]">
         {/* Background Image */}
         <Image
           src={fallbackImageUrl}

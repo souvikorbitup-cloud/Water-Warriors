@@ -35,6 +35,7 @@ export default async function ContactUs({ params }: PageProps) {
   return (
     <>
       <MainbannerSection
+        page="contact-us"
         heading={
           <>
             {t("bannerHeading")} <br />

@@ -32,6 +32,7 @@ export default async function Leadership({ params }: PageProps) {
   return (
     <>
       <MainbannerSection
+        page="leadership"
         heading={
           <>
             {t("bannerHeading")}
@@ -40,7 +41,7 @@ export default async function Leadership({ params }: PageProps) {
           </>
         }
         description={t("bannerDescription")}
-        classes="max-w-80 sm:max-w-140"
+        classes="max-w-120 sm:max-w-180"
         breadcrumbs={[
           {
             label: tCommon("home"),

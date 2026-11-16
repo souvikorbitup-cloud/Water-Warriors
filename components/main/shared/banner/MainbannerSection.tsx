@@ -1,9 +1,15 @@
 import { Suspense, ReactNode } from "react";
 import { connection } from "next/server";
+import { getLocale } from "next-intl/server";
 
 import MainBanner from "./MainBanner";
 import { DEFAULT_HERO_FALLBACK_IMAGE_URL } from "@/lib/appearance/hero-banner";
-import { getHeroBannerSettings } from "@/lib/services/hero-banner-settings";
+import {
+  BANNER_LOCALES,
+  type BannerLocale,
+  type BannerPage,
+} from "@/lib/appearance/page-banners";
+import { getPageBanner } from "@/lib/services/page-banner-settings";
 
 interface BreadcrumbItem {
   label: string;
@@ -11,40 +17,33 @@ interface BreadcrumbItem {
 }
 
 interface MainbannerSectionProps {
-  heading: ReactNode;
-  description: string;
+  page: BannerPage;
+  heading: ReactNode; // default heading (from translations)
+  description: string; // default description
   breadcrumbs: BreadcrumbItem[];
   classes?: string;
 }
 
 export default function MainbannerSection({
-  heading,
-  description,
-  breadcrumbs,
-  classes,
+  page,
+  ...props
 }: MainbannerSectionProps) {
-  const bannerProps = {
-    heading,
-    description,
-    breadcrumbs,
-    classes,
-  };
-
   return (
     <Suspense
       fallback={
         <MainBanner
-          {...bannerProps}
+          {...props}
           fallbackImageUrl={DEFAULT_HERO_FALLBACK_IMAGE_URL}
         />
       }
     >
-      <DynamicMainBanner {...bannerProps} />
+      <DynamicMainBanner page={page} {...props} />
     </Suspense>
   );
 }
 
 async function DynamicMainBanner({
+  page,
   heading,
   description,
   breadcrumbs,
@@ -52,14 +51,31 @@ async function DynamicMainBanner({
 }: MainbannerSectionProps) {
   await connection();
 
-  const { fallbackImageUrl } = await getHeroBannerSettings();
+  const locale = (await getLocale()) as BannerLocale;
+  const banner = await getPageBanner(page);
+  const custom = BANNER_LOCALES.includes(locale)
+    ? banner.translations[locale]
+    : undefined;
+
+  const resolvedHeading =
+    custom?.heading || custom?.highlight ? (
+      <>
+        {custom.heading}
+        {custom.heading && custom.highlight && <br />}
+        {custom.highlight && (
+          <span className="text-primary">{custom.highlight}</span>
+        )}
+      </>
+    ) : (
+      heading
+    );
 
   return (
     <MainBanner
-      heading={heading}
-      description={description}
+      heading={resolvedHeading}
+      description={custom?.description || description}
       breadcrumbs={breadcrumbs}
-      fallbackImageUrl={fallbackImageUrl}
+      fallbackImageUrl={banner.imageUrl ?? DEFAULT_HERO_FALLBACK_IMAGE_URL}
       classes={classes}
     />
   );

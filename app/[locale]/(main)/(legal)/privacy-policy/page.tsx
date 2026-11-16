@@ -28,6 +28,7 @@ export default async function PrivacyPolicy({ params }: PageProps) {
   return (
     <>
       <MainbannerSection
+        page="privacy-policy"
         heading={
           <>
             {t("bannerHeading")}{" "}

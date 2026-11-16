@@ -38,6 +38,7 @@ export default async function Education({ params }: PageProps) {
   return (
     <>
       <MainbannerSection
+        page="education"
         heading={
           <>
             {t("bannerHeading")}
@@ -46,7 +47,7 @@ export default async function Education({ params }: PageProps) {
           </>
         }
         description={t("bannerDescription")}
-        classes="max-w-80 sm:max-w-140"
+        classes="max-w-120 sm:max-w-180"
         breadcrumbs={[
           {
             label: tCommon("home"),

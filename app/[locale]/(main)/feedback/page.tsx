@@ -27,6 +27,7 @@ export default async function Feedback({ params }: PageProps) {
   return (
     <>
       <MainbannerSection
+        page="feedback"
         heading={
           <>
             {t("bannerHeading")}
@@ -35,7 +36,7 @@ export default async function Feedback({ params }: PageProps) {
           </>
         }
         description={t("bannerDescription")}
-        classes="max-w-120 sm:max-w-180"
+        classes="max-w-160 sm:max-w-220"
         breadcrumbs={[
           {
             label: tCommon("home"),

@@ -124,6 +124,12 @@ const menuSections: MenuSection[] = [
         permission: PERMISSIONS.appearanceManage,
       },
       {
+        icon: <Film />,
+        name: "Page Banners",
+        path: "/admin/manage-banners",
+        permission: PERMISSIONS.appearanceManage,
+      },
+      {
         icon: <Video />,
         name: "Demo Video",
         path: "/admin/demo-video",
