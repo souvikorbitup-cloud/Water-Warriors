@@ -20,6 +20,7 @@ import TestimonialSectionSkeleton from "@/components/main/sections/home/Testimon
 import DIYSectionSkeleton from "@/components/main/sections/home/DIYSectionSkeleton";
 import { localePageMetadata } from "@/i18n/seo";
 import { getAppLocale } from "@/i18n/get-app-locale";
+import { getPublicHeroSlides } from "@/lib/services/hero-slides";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
@@ -67,10 +68,14 @@ export default async function Home({ params }: PageProps) {
 
 async function HeroBanner() {
   await connection();
-  const heroBannerSettings = await getHeroBannerSettings();
+  const [slides, heroBannerSettings] = await Promise.all([
+    getPublicHeroSlides(),
+    getHeroBannerSettings(),
+  ]);
 
   return (
     <HeroSection
+      slides={slides}
       videoUrl={heroBannerSettings.videoUrl}
       fallbackImageUrl={heroBannerSettings.fallbackImageUrl}
     />

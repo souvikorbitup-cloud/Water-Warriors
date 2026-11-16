@@ -1,65 +1,117 @@
-import { getTranslations } from "next-intl/server";
-import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
+import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
+import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
+import { Fragment } from "react";
+import {
+  isExternalUrl,
+  resolveHeroSlideText,
+  splitHeroTitle,
+  type HeroSlideView,
+} from "@/lib/appearance/hero-slides";
+import HeroSlider, { type HeroSliderItem } from "./HeroSlider";
+
+const headingClass =
+  "text-4xl leading-tight font-semibold text-background sm:text-5xl lg:text-6xl xl:text-[64px]";
+const descriptionClass =
+  "mt-4 max-w-175 text-sm leading-6 text-background sm:mt-6 sm:text-base";
+const buttonClass =
+  "mt-8 min-h-11 max-w-full items-stretch text-left whitespace-normal sm:mt-12 sm:items-center sm:text-center sm:whitespace-nowrap";
 
 export default async function HeroSection({
+  slides = [],
   videoUrl,
   fallbackImageUrl,
 }: {
+  slides?: HeroSlideView[];
+  /** Used for the default slide when no active slides exist. */
   videoUrl: string;
   fallbackImageUrl: string;
 }) {
   const t = await getTranslations("Home");
   const tCommon = await getTranslations("Common");
+  const locale = await getLocale();
 
-  return (
-    <section className="relative -mt-30">
-      <div className="isolate flex min-h-150 sm:min-h-[80vh] items-center justify-center overflow-hidden">
-        {/* Background video (poster doubles as the fallback image) */}
-        <video
-          aria-hidden
-          className="absolute inset-0 -z-20 size-full object-cover object-top"
-          src={videoUrl}
-          poster={fallbackImageUrl}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-        />
+  let items: HeroSliderItem[];
 
-        {/* Overlay */}
-        <div aria-hidden className="absolute inset-0 -z-10 bg-black/48" />
+  if (slides.length > 0) {
+    items = slides.map((slide, index) => {
+      const text = resolveHeroSlideText(slide, locale);
+      const Heading = index === 0 ? "h1" : "h2";
+      const showButton = Boolean(text.buttonLabel && slide.buttonUrl);
 
-        {/* Content */}
-        <div className="my-container-x w-full pt-24 pb-12.5 sm:pt-28 sm:pb-20">
-          <div className="mx-auto flex flex-col items-center text-center">
-            <h1 className="text-4xl leading-tight font-semibold text-background sm:text-5xl lg:text-6xl xl:text-[64px]">
+      return {
+        id: slide.id,
+        mediaType: slide.mediaType,
+        mediaUrl: slide.mediaUrl,
+        posterUrl: slide.posterUrl,
+        content: (
+          <>
+            <Heading className={headingClass}>
+              {splitHeroTitle(text.title).map((part, i) =>
+                part.highlight ? (
+                  <span key={i} className="text-primary">
+                    {part.text}
+                  </span>
+                ) : (
+                  <Fragment key={i}>{part.text}</Fragment>
+                ),
+              )}
+            </Heading>
+            {text.description && (
+              <p className={descriptionClass}>{text.description}</p>
+            )}
+            {showButton && (
+              <PrimaryButton
+                btnType="solid-primary"
+                className={buttonClass}
+                href={slide.buttonUrl}
+                localized={!isExternalUrl(slide.buttonUrl)}
+              >
+                {text.buttonLabel}
+              </PrimaryButton>
+            )}
+          </>
+        ),
+      };
+    });
+  } else {
+    // Default hero: identical to the previous single-video hero.
+    items = [
+      {
+        id: "default",
+        mediaType: "video",
+        mediaUrl: videoUrl,
+        posterUrl: fallbackImageUrl,
+        content: (
+          <>
+            <h1 className={headingClass}>
               {t.rich("heroTitle", {
                 highlight: (chunks) => (
                   <span className="text-primary">{chunks}</span>
                 ),
               })}
             </h1>
-
-            <p className="mt-4 max-w-175 text-sm leading-6 text-background sm:mt-6 sm:text-base">
-              {t("heroDescription")}
-            </p>
-
-            {/* On small screens the label may wrap onto two lines instead of overflowing */}
+            <p className={descriptionClass}>{t("heroDescription")}</p>
             <PrimaryButton
               btnType="solid-primary"
-              className="mt-8 min-h-11 max-w-full items-stretch text-left whitespace-normal sm:mt-12 sm:items-center sm:text-center sm:whitespace-nowrap"
+              className={buttonClass}
               href="/#save-water"
               localized
             >
               {t("heroCta")}
             </PrimaryButton>
-          </div>
-        </div>
-      </div>
-      <div className="absolute bottom-0 left-0 w-full z-10">
-        <div className="my-container-x flex justify-center sm:justify-end translate-y-1/2">
+          </>
+        ),
+      },
+    ];
+  }
+
+  return (
+    <section className="relative -mt-30">
+      <HeroSlider items={items} />
+
+      <div className="absolute bottom-0 translate-y-full left-0 z-10 w-full">
+        <div className="my-container-x flex justify-center sm:justify-end">
           <Image
             src="/images/patent-badge.png"
             alt={tCommon("patentBadgeAlt")}
@@ -68,7 +120,7 @@ export default async function HeroSection({
             height={200}
             quality={100}
             priority={false}
-            className="pointer-events-none z-10 select-none h-auto w-40 md:w-45 lg:w-50"
+            className="pointer-events-none z-10 h-auto w-40 select-none md:w-45 lg:w-50 -translate-y-1/2"
           />
         </div>
       </div>
