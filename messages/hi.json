@@ -65,7 +65,8 @@
     "heroBannerAlt": "हीरो बैनर",
     "patentBadgeAlt": "पेटेंट बैज",
     "mapSelectedAreaAlt": "आपके चयनित छत क्षेत्र को दिखाने वाला मानचित्र",
-    "rainCollectAlt": "बगीचे में डाउनपाइप से हरी भंडारण टंकी में बहता वर्षा जल"
+    "rainCollectAlt": "बगीचे में डाउनपाइप से हरी भंडारण टंकी में बहता वर्षा जल",
+    "scrollToTop": "ऊपर जाएँ"
   },
   "LanguageSwitcher": {
     "en": "English",

@@ -12,6 +12,7 @@ import { SITE_URL } from "@/i18n/seo";
 import AppProviders from "@/components/AppProviders";
 import { cn } from "@/lib/utils";
 import "./../globals.css";
+import ScrollToTop from "@/components/main/shared/button/ScrollToTop";
 
 type LocaleLayoutProps = {
   children: React.ReactNode;
@@ -65,6 +66,7 @@ export default async function LocaleLayout({
       <body className="min-h-full bg-white flex flex-col">
         <NextIntlClientProvider locale={appLocale} messages={messages}>
           <AppProviders loadingLabel={t("loading")}>{children}</AppProviders>
+          <ScrollToTop label={t("scrollToTop")} />
         </NextIntlClientProvider>
       </body>
     </html>

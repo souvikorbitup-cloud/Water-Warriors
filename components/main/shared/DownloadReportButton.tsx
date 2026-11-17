@@ -48,7 +48,7 @@ export default function DownloadReportButton() {
     <Link
       href="/report"
       aria-label="Download report"
-      className="group fixed right-4 bottom-4 z-40 flex items-center focus-visible:outline-none sm:right-6 sm:bottom-6"
+      className="group fixed right-3 bottom-18 z-40 flex items-center focus-visible:outline-none sm:right-6.5 sm:bottom-28"
     >
       {/* Label: tucked under the circle, slides out to the left */}
       <span className="pointer-events-auto absolute right-6 flex h-11 translate-x-0 items-center rounded-full bg-background pr-12 pl-5 text-sm font-medium whitespace-nowrap text-heading opacity-100 shadow-lg shadow-foreground/15 transition-all duration-300 ease-out sm:pointer-events-none sm:h-12 sm:translate-x-full sm:pr-13 sm:pl-6 sm:text-base sm:opacity-0 sm:group-hover:pointer-events-auto sm:group-hover:translate-x-0 sm:group-hover:opacity-100 sm:group-focus-visible:pointer-events-auto sm:group-focus-visible:translate-x-0 sm:group-focus-visible:opacity-100">

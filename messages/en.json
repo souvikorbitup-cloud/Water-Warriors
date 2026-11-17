@@ -65,7 +65,8 @@
     "heroBannerAlt": "Hero banner",
     "patentBadgeAlt": "Patent badge",
     "mapSelectedAreaAlt": "Map showing your selected rooftop area",
-    "rainCollectAlt": "Rainwater flowing from a downpipe into a green storage tank in a garden"
+    "rainCollectAlt": "Rainwater flowing from a downpipe into a green storage tank in a garden",
+    "scrollToTop": "Scroll to top"
   },
   "LanguageSwitcher": {
     "en": "English",
