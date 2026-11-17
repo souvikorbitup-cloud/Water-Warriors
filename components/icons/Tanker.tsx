@@ -7,7 +7,7 @@ export default function Tanker() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle cx="26.5" cy="14" r="14" className="fill-secondary" />
+      <circle cx="26.5" cy="14" r="14" className="fill-secondary group-hover:fill-primary" />
       <path
         d="M14.625 18.4062C14.9615 18.4062 15.2344 18.1334 15.2344 17.7969C15.2344 17.4603 14.9615 17.1875 14.625 17.1875C14.2885 17.1875 14.0156 17.4603 14.0156 17.7969C14.0156 18.1334 14.2885 18.4062 14.625 18.4062Z"
         fill="black"

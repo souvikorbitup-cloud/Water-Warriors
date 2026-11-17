@@ -7,7 +7,7 @@ export default function Tree() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle cx="26.5" cy="15" r="14" className="fill-secondary" />
+      <circle cx="26.5" cy="15" r="14" className="fill-secondary group-hover:fill-primary" />
       <g clipPath="url(#clip0_766_3653)">
         <mask
           id="mask0_766_3653"

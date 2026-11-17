@@ -115,7 +115,7 @@ export default function RainwaterPotentialSection({
             {impacts.map(({ label, value, note, Icon }) => (
               <li
                 key={label}
-                className="relative rounded-3xl bg-secondary/40 px-4 pt-14 pb-5 text-center"
+                className="relative rounded-3xl bg-secondary/40 px-4 pt-14 pb-5 text-center hover:bg-primary transition-all group"
               >
                 <span
                   aria-hidden
