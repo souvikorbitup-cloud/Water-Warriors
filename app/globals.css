@@ -137,7 +137,8 @@
 }
 
 .brand-logo [fill="#F1BB1B"] {
-  fill: var(--primary);
+  /* fill: var(--primary); */
+  fill: #f1bb1b;
 }
 
 @layer base {

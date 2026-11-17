@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,6 +21,7 @@ import {
 } from "@/lib/appearance/settings";
 import { APPEARANCE_SETTINGS_UPDATED_EVENT } from "@/components/admin/sections/appearance/AppearanceProvider";
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
+import { Button } from "@/components/ui/button";
 
 function isHexColor(value: string) {
   return /^#[\da-f]{6}$/i.test(value);
@@ -32,6 +33,7 @@ export default function AppearanceSettingsForm({
   initialSettings: AppearanceSettings;
 }) {
   const [settings, setSettings] = useState<AppearanceSettings>(initialSettings);
+
   const [saving, setSaving] = useState(false);
 
   function updateColor(
@@ -41,15 +43,40 @@ export default function AppearanceSettingsForm({
     setSettings((current) => ({ ...current, [field]: value }));
   }
 
+  // Reset both brand colors
+  function resetColors() {
+    setSettings((current) => ({
+      ...current,
+      primaryColor: DEFAULT_APPEARANCE_SETTINGS.primaryColor,
+      secondaryColor: DEFAULT_APPEARANCE_SETTINGS.secondaryColor,
+    }));
+
+    toast.success("Brand colors restored to defaults.");
+  }
+
+  // Reset both fonts
+  function resetTypography() {
+    setSettings((current) => ({
+      ...current,
+      headingFont: DEFAULT_APPEARANCE_SETTINGS.headingFont,
+      bodyFont: DEFAULT_APPEARANCE_SETTINGS.bodyFont,
+    }));
+
+    toast.success("Typography restored to defaults.");
+  }
+
   async function saveSettings() {
     setSaving(true);
+
     try {
       const response = await fetch("/api/appearance", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
+
       const result: unknown = await response.json();
+
       if (!response.ok) {
         const message =
           typeof result === "object" &&
@@ -58,18 +85,22 @@ export default function AppearanceSettingsForm({
           typeof result.message === "string"
             ? result.message
             : "Could not save appearance settings.";
+
         throw new Error(message);
       }
+
       if (!isAppearanceSettings(result)) {
         throw new Error("The server returned invalid appearance settings.");
       }
 
       setSettings(result);
+
       window.dispatchEvent(
         new CustomEvent(APPEARANCE_SETTINGS_UPDATED_EVENT, {
           detail: result,
         }),
       );
+
       toast.success("Brand appearance updated.");
     } catch (error) {
       toast.error(
@@ -86,23 +117,44 @@ export default function AppearanceSettingsForm({
 
   return (
     <div className="space-y-6">
+      {/* Page heading */}
       <div>
         <h1 className="text-2xl font-semibold text-heading">
           Brand Appearance
         </h1>
+
         <p className="mt-1 text-sm text-muted-foreground">
           Customize the colors and Google Fonts used across the site.
         </p>
       </div>
 
+      {/* Brand Colors */}
       <Card>
         <CardHeader>
-          <CardTitle>Brand colors</CardTitle>
-          <CardDescription>
-            Choose the primary and secondary colors used by buttons, accents,
-            backgrounds, and logos.
-          </CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-1.5">
+              <CardTitle>Brand colors</CardTitle>
+
+              <CardDescription>
+                Choose the primary and secondary colors used by buttons,
+                accents, backgrounds, and logos.
+              </CardDescription>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={resetColors}
+              disabled={saving}
+              className="gap-2 cursor-pointer"
+            >
+              <RotateCcw className="size-4" />
+              Reset colors
+            </Button>
+          </div>
         </CardHeader>
+
         <CardContent className="grid gap-6 sm:grid-cols-2">
           {(
             [
@@ -112,6 +164,7 @@ export default function AppearanceSettingsForm({
           ).map(([field, label]) => (
             <div key={field} className="space-y-2">
               <Label htmlFor={field}>{label}</Label>
+
               <div className="flex gap-2">
                 <Input
                   aria-label={`${label} picker`}
@@ -125,6 +178,7 @@ export default function AppearanceSettingsForm({
                   onChange={(event) => updateColor(field, event.target.value)}
                   disabled={saving}
                 />
+
                 <Input
                   id={field}
                   className="h-10"
@@ -140,22 +194,44 @@ export default function AppearanceSettingsForm({
         </CardContent>
       </Card>
 
+      {/* Typography */}
       <Card>
         <CardHeader>
-          <CardTitle>Typography</CardTitle>
-          <CardDescription>
-            Select heading and body typefaces from Google Fonts.
-          </CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-1.5">
+              <CardTitle>Typography</CardTitle>
+
+              <CardDescription>
+                Select heading and body typefaces from Google Fonts.
+              </CardDescription>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={resetTypography}
+              disabled={saving}
+              className="gap-2 cursor-pointer"
+            >
+              <RotateCcw className="size-4" />
+              Reset fonts
+            </Button>
+          </div>
         </CardHeader>
+
         <CardContent className="grid gap-6 sm:grid-cols-2">
+          {/* Heading Font */}
           <div className="space-y-2">
             <Label htmlFor="headingFont">Heading font</Label>
+
             <select
               id="headingFont"
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
               value={settings.headingFont}
               onChange={(event) => {
                 const font = event.target.value;
+
                 if (isGoogleFontFamily(font)) {
                   setSettings((current) => ({
                     ...current,
@@ -172,14 +248,18 @@ export default function AppearanceSettingsForm({
               ))}
             </select>
           </div>
+
+          {/* Body Font */}
           <div className="space-y-2">
             <Label htmlFor="bodyFont">Body font</Label>
+
             <select
               id="bodyFont"
               className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
               value={settings.bodyFont}
               onChange={(event) => {
                 const font = event.target.value;
+
                 if (isGoogleFontFamily(font)) {
                   setSettings((current) => ({
                     ...current,
@@ -199,6 +279,7 @@ export default function AppearanceSettingsForm({
         </CardContent>
       </Card>
 
+      {/* Save Changes */}
       <div className="flex justify-end">
         <PrimaryButton
           btnType="solid-primary"
