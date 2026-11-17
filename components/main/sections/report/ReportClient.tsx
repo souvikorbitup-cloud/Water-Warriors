@@ -188,14 +188,28 @@ function hasCompleteReportDetails(
 }
 
 export default function ReportClient() {
-  const t = useTranslations("Report");
-  const locale = useLocale();
-  const router = useRouter();
   const reportSessionId = useSyncExternalStore(
     subscribeToReportSession,
     getReportSessionReference,
     () => undefined,
   );
+
+  return (
+    <ReportSessionClient
+      key={reportSessionId}
+      reportSessionId={reportSessionId}
+    />
+  );
+}
+
+function ReportSessionClient({
+  reportSessionId,
+}: {
+  reportSessionId: string | null | undefined;
+}) {
+  const t = useTranslations("Report");
+  const locale = useLocale();
+  const router = useRouter();
   const [report, setReport] = useState<ReportSessionData | null>(null);
   const [sessionAuthorized, setSessionAuthorized] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);

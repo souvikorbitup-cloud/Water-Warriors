@@ -280,6 +280,9 @@ export default function CheckoutSection() {
         );
       }
 
+      setPaymentStage("idle");
+      setPaymentResponse(null);
+      setVerificationError(null);
       router.replace("/report");
     } catch (error) {
       const message =

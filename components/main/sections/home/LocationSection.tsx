@@ -49,6 +49,8 @@ type LocationSectionProps = {
 const INITIAL_CENTER: LatLng = { lat: 22.6446, lng: 88.3737 };
 const INITIAL_ZOOM = 17;
 const MIN_POINTS = 4;
+const MIN_MAGIC_SELECTION_ZOOM = 15;
+const MAX_MAGIC_SELECTION_ZOOM = 21;
 // Two map clicks closer together than this are treated as one double-click.
 const DOUBLE_CLICK_MS = 350;
 
@@ -238,10 +240,16 @@ async function detectBuildingFromMap(
   point: LatLng,
   zoom: number,
 ): Promise<LatLng[] | null> {
+  const mapZoom = Number.isFinite(zoom)
+    ? Math.min(
+        Math.max(zoom, MIN_MAGIC_SELECTION_ZOOM),
+        MAX_MAGIC_SELECTION_ZOOM,
+      )
+    : INITIAL_ZOOM;
   const response = await fetch("/api/detect-building-footprint", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...point, zoom }),
+    body: JSON.stringify({ ...point, zoom: mapZoom }),
   });
 
   if (!response.ok) {
