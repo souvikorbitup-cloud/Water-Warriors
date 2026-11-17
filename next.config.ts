@@ -7,6 +7,7 @@ const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME;
 const nextConfig: NextConfig = {
   experimental: {
     agentFeedback: true,
+    agentUpgrade: "security",
   },
 
   cacheComponents: true,
