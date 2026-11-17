@@ -16,7 +16,7 @@ export default function PdfForecast({ data }: { data: WaterWarriorsPdfData }) {
 
       <Text style={pdfStyles.forecastTitle}>{forecast.title}</Text>
       <View style={pdfStyles.periodPill}>
-        <Text style={pdfStyles.periodText}>({forecast.period})</Text>
+        <Text style={pdfStyles.periodText}>{forecast.period}</Text>
       </View>
 
       <View style={pdfStyles.table}>
