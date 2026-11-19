@@ -9,13 +9,6 @@ import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 import SubmissionSuccessModal from "@/components/main/shared/modal/SubmissionSuccessModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { readApiError } from "@/lib/submissions/api-error";
 import {
@@ -24,7 +17,6 @@ import {
   zodErrorToFieldErrors,
 } from "@/lib/submissions/schemas";
 
-const topicKeys = ["property", "report", "general", "other"] as const;
 const ratingValues = ["1", "2", "3", "4", "5"] as const;
 
 const fieldClasses =
@@ -36,7 +28,6 @@ export default function FeedbackSection() {
   const t = useTranslations("Feedback");
   const [sending, setSending] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-  const [topic, setTopic] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -44,7 +35,7 @@ export default function FeedbackSection() {
     if (sending) return;
 
     const form = event.currentTarget;
-    const raw = { ...Object.fromEntries(new FormData(form)), topic };
+    const raw = Object.fromEntries(new FormData(form));
     const parsed = feedbackSubmissionSchema.safeParse(raw);
 
     if (!parsed.success) {
@@ -80,7 +71,6 @@ export default function FeedbackSection() {
 
       toast.success(t("success"));
       form.reset();
-      setTopic("");
       setConfirmed(true);
     } catch {
       toast.error(t("error"));
@@ -134,26 +124,14 @@ export default function FeedbackSection() {
                 <Label htmlFor="feedback-topic" className={labelClasses}>
                   {t("topicLabel")}
                 </Label>
-                <Select value={topic} onValueChange={setTopic} name="topic">
-                  <SelectTrigger
-                    id="feedback-topic"
-                    aria-invalid={Boolean(fieldErrors.topic)}
-                    className={`mt-2 h-12! w-full sm:h-13! ${fieldClasses}`}
-                  >
-                    <SelectValue placeholder={t("topicPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent className="-translate-x-1.5">
-                    {topicKeys.map((item) => (
-                      <SelectItem
-                        key={item}
-                        value={item}
-                        className="text-sm sm:text-[15px] w-full h-12!"
-                      >
-                        {t(`topics.${item}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="feedback-topic"
+                  name="topic"
+                  maxLength={100}
+                  placeholder={t("topicPlaceholder")}
+                  aria-invalid={Boolean(fieldErrors.topic)}
+                  className={`mt-2 h-12 sm:h-13 ${fieldClasses}`}
+                />
                 {fieldErrors.topic && (
                   <p className="mt-1.5 text-xs text-destructive">
                     {fieldErrors.topic}
@@ -247,9 +225,6 @@ export default function FeedbackSection() {
                   placeholder={t("messagePlaceholder")}
                   className={`mt-2 min-h-36 resize-y py-3.5 sm:min-h-43 ${fieldClasses}`}
                 />
-                <p className="mt-3 text-xs sm:text-[13px]">
-                  {t("messageHint")}
-                </p>
                 {fieldErrors.message && (
                   <p className="mt-1.5 text-xs text-destructive">
                     {fieldErrors.message}
@@ -257,10 +232,6 @@ export default function FeedbackSection() {
                 )}
               </div>
             </div>
-
-            <p className="mt-6 text-xs sm:mt-8 sm:text-[13px]">
-              {t("optionalHint")}
-            </p>
 
             <div className="mt-6 sm:mt-7">
               <PrimaryButton

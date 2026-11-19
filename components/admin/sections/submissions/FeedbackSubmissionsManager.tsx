@@ -16,10 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  FEEDBACK_STATUSES,
-  FEEDBACK_TOPICS,
-} from "@/lib/submissions/constants";
+import { FEEDBACK_STATUSES } from "@/lib/submissions/constants";
 import { formatSubmissionDate } from "@/lib/submissions/format";
 import { useSubmissionsList } from "@/lib/hooks/use-submissions-list";
 import type {
@@ -33,13 +30,6 @@ const STATUS_OPTIONS: FilterOption[] = FEEDBACK_STATUSES.map((status) => ({
   value: status,
   label: status.charAt(0).toUpperCase() + status.slice(1),
 }));
-
-const TOPIC_LABELS: Record<(typeof FEEDBACK_TOPICS)[number], string> = {
-  property: "Property assessment",
-  report: "Report questions",
-  general: "General feedback",
-  other: "Something else",
-};
 
 const SORT_OPTIONS: FilterOption[] = [
   { value: "createdAt:desc", label: "Newest first" },
@@ -76,7 +66,7 @@ export default function FeedbackSubmissionsManager({
         value: selected.isAnonymous ? "Anonymous" : selected.name,
       },
       { label: "Email", value: selected.email },
-      { label: "Topic", value: TOPIC_LABELS[selected.topic] },
+      { label: "Topic", value: selected.topic },
       { label: "Rating", value: `${selected.rating} / 5` },
       { label: "Received", value: formatSubmissionDate(selected.createdAt) },
       {
@@ -117,67 +107,38 @@ export default function FeedbackSubmissionsManager({
         sortOptions={SORT_OPTIONS}
         onSortChange={(sort) => updateParams({ sort })}
         extraFilters={
-          <>
-            <div>
-              <Label htmlFor="feedback-topic-filter" className="text-heading">
-                Topic
-              </Label>
-              <Select
-                value={params.topic || ALL_VALUE}
-                onValueChange={(value) =>
-                  updateParams({ topic: value === ALL_VALUE ? "" : value })
-                }
+          <div>
+            <Label htmlFor="feedback-rating-filter" className="text-heading">
+              Rating
+            </Label>
+            <Select
+              value={params.rating || ALL_VALUE}
+              onValueChange={(value) =>
+                updateParams({ rating: value === ALL_VALUE ? "" : value })
+              }
+            >
+              <SelectTrigger
+                id="feedback-rating-filter"
+                className="mt-2 h-10! w-full"
               >
-                <SelectTrigger
-                  id="feedback-topic-filter"
-                  className="mt-2 h-10! w-full"
-                >
-                  <SelectValue placeholder="All topics" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_VALUE}>All topics</SelectItem>
-                  {FEEDBACK_TOPICS.map((topic) => (
-                    <SelectItem key={topic} value={topic}>
-                      {TOPIC_LABELS[topic]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="feedback-rating-filter" className="text-heading">
-                Rating
-              </Label>
-              <Select
-                value={params.rating || ALL_VALUE}
-                onValueChange={(value) =>
-                  updateParams({ rating: value === ALL_VALUE ? "" : value })
-                }
-              >
-                <SelectTrigger
-                  id="feedback-rating-filter"
-                  className="mt-2 h-10! w-full"
-                >
-                  <SelectValue placeholder="All ratings" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_VALUE}>All ratings</SelectItem>
-                  {["1", "2", "3", "4", "5"].map((rating) => (
-                    <SelectItem key={rating} value={rating}>
-                      {rating} star{rating === "1" ? "" : "s"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </>
+                <SelectValue placeholder="All ratings" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_VALUE}>All ratings</SelectItem>
+                {["1", "2", "3", "4", "5"].map((rating) => (
+                  <SelectItem key={rating} value={rating}>
+                    {rating} star{rating === "1" ? "" : "s"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         }
         onReset={() =>
           updateParams({
             search: "",
             status: "",
             sort: "createdAt:desc",
-            topic: "",
             rating: "",
             page: 1,
           })
@@ -231,7 +192,7 @@ export default function FeedbackSubmissionsManager({
                       </p>
                     </td>
                     <td className="px-4 py-3 align-top text-heading">
-                      {TOPIC_LABELS[item.topic]}
+                      {item.topic}
                     </td>
                     <td className="px-4 py-3 align-top font-medium text-heading">
                       {item.rating}/5

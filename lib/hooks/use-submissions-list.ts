@@ -10,7 +10,6 @@ export type SubmissionsListParams = {
   search: string;
   status: string;
   sort: string;
-  topic?: string;
   rating?: string;
 };
 
@@ -20,7 +19,6 @@ const DEFAULT_PARAMS: SubmissionsListParams = {
   search: "",
   status: "",
   sort: "createdAt:desc",
-  topic: "",
   rating: "",
 };
 
@@ -44,7 +42,6 @@ export function useSubmissionsList<T>(
       if (nextParams.search) searchParams.set("search", nextParams.search);
       if (nextParams.status) searchParams.set("status", nextParams.status);
       if (nextParams.sort) searchParams.set("sort", nextParams.sort);
-      if (nextParams.topic) searchParams.set("topic", nextParams.topic);
       if (nextParams.rating) searchParams.set("rating", nextParams.rating);
 
       try {
@@ -78,7 +75,6 @@ export function useSubmissionsList<T>(
         patch.search !== undefined ||
         patch.status !== undefined ||
         patch.sort !== undefined ||
-        patch.topic !== undefined ||
         patch.rating !== undefined
       ) {
         next.page = patch.page ?? 1;

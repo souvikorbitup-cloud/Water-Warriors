@@ -7,14 +7,6 @@ export const CONTACT_STATUSES = [
 ] as const;
 export type ContactStatus = (typeof CONTACT_STATUSES)[number];
 
-export const FEEDBACK_TOPICS = [
-  "property",
-  "report",
-  "general",
-  "other",
-] as const;
-export type FeedbackTopic = (typeof FEEDBACK_TOPICS)[number];
-
 export const FEEDBACK_STATUSES = [
   "new",
   "reviewed",

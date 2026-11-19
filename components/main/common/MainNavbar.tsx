@@ -107,10 +107,10 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
               </ul>
             </nav>
 
-            <hr className="mx-4 mt-6 border-t border-heading/80" />
+            {/* <hr className="mx-4 mt-6 border-t border-heading/80" /> */}
 
             {/* Contact */}
-            <div className="px-6 pt-8 pb-10">
+            {/* <div className="px-6 pt-8 pb-10">
               <h2 className="text-xl md:text-2xl font-normal">
                 {t("contactUs")}
               </h2>
@@ -141,7 +141,7 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
                   </span>
                 </li>
               </ul>
-            </div>
+            </div> */}
           </SheetContent>
         </Sheet>
 

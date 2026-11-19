@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
 
   images: {
+    qualities: [100, 75],
     remotePatterns: cloudinaryCloudName
       ? [
           {

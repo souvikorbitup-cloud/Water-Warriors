@@ -1,7 +1,6 @@
 import type {
   ContactStatus,
   FeedbackStatus,
-  FeedbackTopic,
 } from "@/lib/submissions/constants";
 
 export type ContactListItem = {
@@ -21,7 +20,7 @@ export type ContactListItem = {
 
 export type FeedbackListItem = {
   id: string;
-  topic: FeedbackTopic;
+  topic: string;
   rating: number;
   name: string;
   email: string;

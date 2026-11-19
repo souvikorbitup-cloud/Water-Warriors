@@ -2,10 +2,8 @@ import { z } from "zod";
 import {
   CONTACT_STATUSES,
   FEEDBACK_STATUSES,
-  FEEDBACK_TOPICS,
   type ContactStatus,
   type FeedbackStatus,
-  type FeedbackTopic,
 } from "@/lib/submissions/constants";
 import { emailSchema } from "@/lib/auth/validation";
 import { sanitizeMultilineText, sanitizePlainText } from "./sanitize";
@@ -84,9 +82,15 @@ export const contactSubmissionSchema = z.object({
 });
 
 export const feedbackSubmissionSchema = z.object({
-  topic: z.enum(FEEDBACK_TOPICS, {
-    error: "Please select a feedback topic.",
-  }),
+  topic: z
+    .string()
+    .transform(sanitizePlainText)
+    .pipe(
+      z
+        .string()
+        .min(1, "Please enter a feedback topic.")
+        .max(100, "Topic cannot exceed 100 characters"),
+    ),
   rating: z.coerce
     .number({ error: "Rating is required" })
     .int("Rating must be a whole number")
@@ -150,10 +154,6 @@ export function isContactStatus(value: string): value is ContactStatus {
 
 export function isFeedbackStatus(value: string): value is FeedbackStatus {
   return (FEEDBACK_STATUSES as readonly string[]).includes(value);
-}
-
-export function isFeedbackTopic(value: string): value is FeedbackTopic {
-  return (FEEDBACK_TOPICS as readonly string[]).includes(value);
 }
 
 export function zodErrorToFieldErrors(

@@ -5,7 +5,6 @@ import { escapeRegex } from "./sanitize";
 import {
   isContactStatus,
   isFeedbackStatus,
-  isFeedbackTopic,
   listQuerySchema,
   type ListQueryInput,
   type SortValue,
@@ -87,7 +86,7 @@ export function buildFeedbackFilter(
     filter.status = query.status;
   }
 
-  if (query.topic && isFeedbackTopic(query.topic)) {
+  if (query.topic) {
     filter.topic = query.topic;
   }
 
@@ -99,6 +98,7 @@ export function buildFeedbackFilter(
   }
 
   const searchFilter = buildSearchFilter(query.search, [
+    "topic",
     "name",
     "email",
     "message",

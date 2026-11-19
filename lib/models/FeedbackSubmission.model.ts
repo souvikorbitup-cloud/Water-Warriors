@@ -2,21 +2,14 @@ import { Schema, model, models, Model, Query, Types } from "mongoose";
 
 import {
   FEEDBACK_STATUSES,
-  FEEDBACK_TOPICS,
   type FeedbackStatus,
-  type FeedbackTopic,
 } from "@/lib/submissions/constants";
 
-export {
-  FEEDBACK_STATUSES,
-  FEEDBACK_TOPICS,
-  type FeedbackStatus,
-  type FeedbackTopic,
-};
+export { FEEDBACK_STATUSES, type FeedbackStatus };
 
 export interface IFeedbackSubmission {
   // --- Submitted by the visitor (matches the feedback form) ---
-  topic: FeedbackTopic;
+  topic: string;
   /** 1 (lowest) to 5 (highest), as chosen on the form. */
   rating: number;
   /** Optional - the form allows anonymous feedback. */
@@ -72,7 +65,7 @@ export interface FeedbackSubmissionModel extends Model<
   /** Number of unreviewed submissions, for the admin sidebar badge. */
   countUnread(): Promise<number>;
   /** Average + distribution for the admin dashboard (excludes spam/deleted). */
-  getRatingStats(topic?: FeedbackTopic): Promise<FeedbackRatingStats>;
+  getRatingStats(topic?: string): Promise<FeedbackRatingStats>;
 }
 
 /* ------------------------------------------------------------------
@@ -100,10 +93,7 @@ const feedbackSubmissionSchema = new Schema<
     topic: {
       type: String,
       required: [true, "Topic is required"],
-      enum: {
-        values: FEEDBACK_TOPICS,
-        message: "{VALUE} is not a valid topic",
-      },
+      maxlength: [100, "Topic cannot exceed 100 characters"],
     },
 
     rating: {
@@ -286,7 +276,7 @@ feedbackSubmissionSchema.statics.countUnread = function () {
 };
 
 feedbackSubmissionSchema.statics.getRatingStats = async function (
-  topic?: FeedbackTopic,
+  topic?: string,
 ): Promise<FeedbackRatingStats> {
   const match: Record<string, unknown> = {
     isDeleted: false,

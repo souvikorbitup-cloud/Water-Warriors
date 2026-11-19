@@ -74,7 +74,7 @@
     "bn": "বাংলা"
   },
   "CTA": {
-    "title": "Your Rooftop. A New Possibility.",
+    "title": "Your rooftop. A new possibility.",
     "description": "Start with your location and rooftop area. Discover your property's rainwater-harvesting potential with a customized report at a nominal cost.",
     "button": "Discover how much water you could save",
     "disclaimer": "All measurements are approximate and intended for reference only."
@@ -100,8 +100,8 @@
     "demoButton": "Click here for a demo",
     "demoTitle": "Demo video",
     "demoUnavailable": "The demo video isn't available yet. Please check back soon.",
-    "testimonialsTitle": "What Our Users Say",
-    "diyTitle": "Step-by-Step DIY Guides",
+    "testimonialsTitle": "What our users say",
+    "diyTitle": "Step-by-step DIY guides",
     "diyEmpty": "DIY guides will appear here once they are published.",
     "diyError": "We couldn't load DIY guides right now. Please try again soon."
   },
@@ -115,7 +115,7 @@
     "noBuildingFound": "No building found here. Click to place points instead.",
     "buildingLookupFailed": "Couldn't look up the building. Place points instead.",
     "privacyNote": "Your rooftop stays in this browser until checkout. Paid report data is saved so you can return to it.",
-    "title": "Select Your Location",
+    "title": "Select your location",
     "nameLabel": "To include your name (optional) on the final report, please enter it below.",
     "namePlaceholder": "Name (Optional)",
     "instructionPin": "Select the <mapIcon>map icon</mapIcon> to pinpoint your location, or simply enter your location in the search bar to get started.",
@@ -148,14 +148,14 @@
     "bannerHeading": "Every Rooftop",
     "bannerHighlight": "Holds a Possibility.",
     "bannerDescription": "We help homeowners, offices and buildings discover their rainwater-harvesting potential, one property at a time.",
-    "missionTitle": "A Water Conscious Future Starts at Home.",
+    "missionTitle": "A water conscious future starts at home.",
     "missionP1": "Rain falls on our roofs, yet its potential often goes unnoticed. We believe understanding that potential is a meaningful first step towards making better use of the water around us.",
     "missionP2": "Our mission is to make rainwater-harvesting potential easier to explore. Water Warriors AI brings location and rooftop area together to help homeowners, offices and buildings see what could be possible for their property.",
     "missionQuote": "Make the first step towards rainwater harvesting an informed one.",
     "missionCaption": "From rainfall to a resource: a different way to look at the water that reaches your roof.",
-    "ourMission": "Our Mission",
+    "ourMission": "Our mission",
     "missionCard": "Water Warriors is a tool designed to help homeowners, building managers, and sustainability advocates understand the rainwater harvesting potential of their properties. Every year, billions of litres of fresh rainwater are lost to runoff because we lack the tools to visualize its potential. We are changing that.",
-    "resourceTitle": "A Resource Worth a Second Look.",
+    "resourceTitle": "A resource worth a second look.",
     "resourceDescription": "A more thoughtful relationship with water can begin with the rain that already falls on your property.",
     "highlights": {
       "0": {
@@ -171,7 +171,7 @@
         "description": "Understanding what might be possible helps, you ask better questions and take a more considered approach to rainwater harvesting."
       }
     },
-    "howTitle": "From a Location To a Clearer Picture.",
+    "howTitle": "From a location to a clearer picture.",
     "howDescription": "You don't need to begin with all the answers. Start with your property, select its collection area and explore its rainwater-harvesting potential.",
     "steps": {
       "0": {
@@ -187,7 +187,7 @@
         "description": "Get a customized report at free of cost to understand your property’s rainwater-harvesting potential."
       }
     },
-    "designTitle": "Thoughtful By Design.",
+    "designTitle": "Thoughtful by design.",
     "designDescription": "We focus on a useful starting point, not a one-size-fits-all answer.",
     "principles": {
       "0": {
@@ -208,8 +208,8 @@
     "bannerHeading": "Every rooftop",
     "bannerHighlight": "holds a possibility.",
     "bannerDescription": "We help homeowners, offices and buildings discover their rainwater-harvesting potential, one property at a time.",
-    "leadershipTitle": "Leadership Team",
-    "advisorsTitle": "Technical Advisors Team",
+    "leadershipTitle": "Leadership team",
+    "advisorsTitle": "Technical advisors team",
     "previousMember": "Previous team member",
     "nextMember": "Next team member",
     "previous": "Previous",
@@ -220,7 +220,7 @@
     "bannerHeading": "Every rooftop",
     "bannerHighlight": "holds a possibility.",
     "bannerDescription": "We help homeowners, offices and buildings discover their rainwater-harvesting potential, one property at a time.",
-    "howItWorks": "How It Works",
+    "howItWorks": "How it works",
     "step": "Step {number}",
     "steps": {
       "0": {
@@ -240,12 +240,12 @@
         "description": "The clean water is either stored in a tank for later use or guided into the ground through a recharge pit."
       }
     },
-    "twoWaysTitle": "Two Ways to Use Rainwater",
-    "option1Title": "Option 1: Store It for Use",
+    "twoWaysTitle": "Two ways to use rainwater",
+    "option1Title": "Option 1: Store it for use",
     "option1Description": "Collect rainwater in a covered tank or sump and use it for gardening, cleaning, flushing and other non-drinking needs. It reduces the water you draw from taps, borewells or tankers.",
-    "option2Title": "Option 2: Recharge the Ground",
+    "option2Title": "Option 2: Recharge the ground",
     "option2Description": "Direct rainwater into a recharge pit, trench or old well so it soaks back into the soil. This helps replenish the groundwater that borewells in your neighbourhood depend on.",
-    "diyTitle": "Step-by-Step DIY Guides",
+    "diyTitle": "Step-by-step DIY guides",
     "diyEmpty": "DIY guides will appear here once they are published.",
     "diyError": "We couldn't load DIY guides right now. Please try again soon.",
     "keepTitle": "Keep It Working",
@@ -256,7 +256,7 @@
       "2": "Keep tanks covered and screened to keep out debris, insects and sunlight.",
       "3": "Inspect recharge pits each year and clear silt so water keeps soaking in."
     },
-    "comingSoonTitle": "More Learning Is on the Way",
+    "comingSoonTitle": "More learning is on the way",
     "comingSoon": "Coming Soon"
   },
   "Video": {
@@ -270,7 +270,7 @@
     "bannerHeading": "Let's Talk",
     "bannerHighlight": "Rainwater",
     "bannerDescription": "Have a question about your property's potential or your report? Tell us what's on your mind.",
-    "helpTitle": "How Can We Help?",
+    "helpTitle": "How can we help?",
     "helpDescription": "Whether you're exploring rainwater harvesting for the first time or have a question about a report, use the form to share your inquiry.",
     "directionTitle": "Let's point you in the right direction.",
     "topics": {
@@ -310,19 +310,12 @@
     "bannerHeading": "Your experience matters.",
     "bannerHighlight": "Help us make it better.",
     "bannerDescription": "Share what worked, what could be clearer and how we can improve your rainwater-harvesting journey.",
-    "introTitle": "A Better Journey Starts With You.",
+    "introTitle": "A better journey starts with you.",
     "introDescription": "Whether you're finding your property, marking a rooftop or exploring a report, we'd like to hear about your experience with Water Warriors AI.",
     "formTitle": "Share your feedback",
     "formDescription": "Fields marked * are required. Your name and email are optional.",
     "topicLabel": "Feedback topic *",
-    "topicPlaceholder": "Select a topic",
-    "topicRequired": "Please select a feedback topic.",
-    "topics": {
-      "property": "Property assessment",
-      "report": "Report questions",
-      "general": "General feedback",
-      "other": "Something else"
-    },
+    "topicPlaceholder": "Enter a topic",
     "ratingLabel": "How was your overall experience? *",
     "ratingHint": "Choose one rating, from 1 (poor) to 5 (excellent).",
     "ratings": {
@@ -338,8 +331,6 @@
     "emailPlaceholder": "you@example.com",
     "message": "Your feedback *",
     "messagePlaceholder": "What worked well? What could we do better?",
-    "messageHint": "A little context helps us understand your feedback.",
-    "optionalHint": "If you'd like a response, include your email. You can leave both contact fields blank.",
     "submitting": "Submitting...",
     "submit": "Submit feedback",
     "success": "Thank you! Your feedback has been submitted.",

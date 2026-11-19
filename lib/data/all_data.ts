@@ -7,7 +7,7 @@ export const navLinks = [
   { titleKey: "aboutUs", href: "/about-us" },
   { titleKey: "leadership", href: "/leadership" },
   { titleKey: "feedback", href: "/feedback" },
-  { titleKey: "contact", href: "/contact-us" },
+  { titleKey: "contactUs", href: "/contact-us" },
   { titleKey: "education", href: "/education" },
 ] as const;
 
@@ -20,7 +20,7 @@ export const footerNavLinks = [
   { titleKey: "aboutUs", href: "/about-us" },
   { titleKey: "leadership", href: "/leadership" },
   { titleKey: "feedback", href: "/feedback" },
-  { titleKey: "contact", href: "/contact-us" },
+  { titleKey: "contactUs", href: "/contact-us" },
   { titleKey: "education", href: "/education" },
   { titleKey: "privacyPolicy", href: "/privacy-policy" },
 ] as const;
