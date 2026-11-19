@@ -510,9 +510,6 @@ export default function CheckoutSection() {
           <div className="rounded-3xl bg-linear-to-b from-primary/35 to-border p-2.5 shadow-xl shadow-foreground/5 sm:rounded-4xl sm:p-3">
             <div className="overflow-hidden rounded-2xl bg-background sm:rounded-3xl">
               <div className="bg-foreground/3 px-5 pt-6 pb-9 sm:px-6.5 sm:pt-7 sm:pb-10">
-                <h3 className="text-2xl font-semibold text-heading sm:text-3xl">
-                  {t("planName")}
-                </h3>
                 <p className="mt-1 text-sm text-paragraph sm:text-base">
                   {t("planDescription")}
                 </p>

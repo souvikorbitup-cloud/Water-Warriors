@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { MapPin, Mail, Phone, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import { Logo, LogoLight } from "@/components/icons";
 import {
@@ -13,7 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Link, usePathname } from "@/i18n/navigation";
-import { contactDetails, navLinks } from "@/lib/data/all_data";
+import { navLinks } from "@/lib/data/all_data";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 type MainNavbarProps = {

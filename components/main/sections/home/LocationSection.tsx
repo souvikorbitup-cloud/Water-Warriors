@@ -744,9 +744,6 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
         {/* Heading + name field */}
         <div className="grid items-end gap-6 md:grid-cols-2 md:gap-10">
           <div>
-            <p className="inline-block border-b border-heading pb-1 text-sm text-heading">
-              {t("privacyNote")}
-            </p>
             <h2 className="mt-1 text-3xl leading-tight font-semibold sm:text-4xl lg:text-[40px]">
               {t("title")}
             </h2>
