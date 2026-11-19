@@ -101,13 +101,13 @@ export default function PdfForecast({ data }: { data: WaterWarriorsPdfData }) {
         )}
       </View>
 
-      <View style={pdfStyles.tipBox} wrap={false}>
+      {/* <View style={pdfStyles.tipBox} wrap={false}>
         <PdfImage
           src={resolveAsset(data.assets, "bulb")}
           style={pdfStyles.tipIcon}
         />
         <Text style={pdfStyles.tipText}>{forecast.tip}</Text>
-      </View>
+      </View> */}
 
       <View style={pdfStyles.noteBox} wrap={false}>
         <Text style={pdfStyles.noteText}>{forecast.note}</Text>

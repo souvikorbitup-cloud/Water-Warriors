@@ -136,7 +136,7 @@ export default function ForecastProjectionSection({
         </div>
 
         {/* Tip banner */}
-        <div className="mt-8 flex items-center gap-6 rounded-3xl bg-primary px-6 py-8 sm:mt-10 sm:gap-10 sm:rounded-4xl sm:px-10 sm:py-7 lg:gap-12 lg:px-12 lg:py-6">
+        {/* <div className="mt-8 flex items-center gap-6 rounded-3xl bg-primary px-6 py-8 sm:mt-10 sm:gap-10 sm:rounded-4xl sm:px-10 sm:py-7 lg:gap-12 lg:px-12 lg:py-6">
           <Lightbulb
             aria-hidden
             className="size-9 shrink-0 fill-heading text-heading sm:size-11 lg:size-12"
@@ -145,7 +145,7 @@ export default function ForecastProjectionSection({
           <p className="text-base leading-normal text-heading sm:text-lg lg:text-base">
             {resolvedTip}
           </p>
-        </div>
+        </div> */}
 
         {/* Notes */}
         <div className="mt-8 space-y-4 sm:mt-10 sm:space-y-5 lg:mt-8 lg:space-y-4">
@@ -188,15 +188,15 @@ export default function ForecastProjectionSection({
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
             <PrimaryButton
               btnType="solid-primary"
-              onClick={onDownload}
-              disabled={downloadDisabled}
+              onClick={onHighQualityDownload}
+              disabled={highQualityDisabled}
               endIcon={<Download className="size-4.5" strokeWidth={1.5} />}
             >
-              {downloadingQuality === "standard"
+              {downloadingQuality === "high"
                 ? t("preparingPdf")
                 : resolvedDownloadLabel}
             </PrimaryButton>
-            <PrimaryButton
+            {/* <PrimaryButton
               btnType="outline"
               onClick={onHighQualityDownload}
               disabled={highQualityDisabled}
@@ -205,7 +205,7 @@ export default function ForecastProjectionSection({
               {downloadingQuality === "high"
                 ? t("preparingPdf")
                 : resolvedHighQualityLabel}
-            </PrimaryButton>
+            </PrimaryButton> */}
           </div>
         </div>
       </div>
