@@ -287,7 +287,7 @@ export default function MainFooter({ visitorCount = 216 }: MainFooterProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={altText}
-                    className="flex size-9 items-center justify-center rounded-full border border-background transition-colors hover:border-primary sm:size-10"
+                    className="flex size-10 items-center justify-center rounded-full border-background border-2 transition-colors hover:border-primary sm:size-12"
                   >
                     {altText === "Facebook" ? (
                       <Image
