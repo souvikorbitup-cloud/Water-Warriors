@@ -420,6 +420,8 @@
     "reportLoadFailed": "Could not load your report.",
     "reportNotFound": "No paid report session was found for this browser.",
     "retryReport": "Retry report generation",
+    "reloadReport": "Reload report",
+    "reportLanguage": "Report currently displayed in {language}",
     "anotherReport": "Ready For Another Report?",
     "measureAnother": "Measure Another Rooftop"
   },
@@ -447,10 +449,15 @@
     "loadingAreaPreview": "Preparing your selected-area map...",
     "missingAreaPreview": "No saved area was found. Return to the map and select at least four points.",
     "areaPreviewFailed": "Could not create the map preview. Please try again.",
-    "startingPayment": "Preparing your payment",
+    "startingPayment": "Preparing your report and payment",
     "verifyingPayment": "Verifying your payment",
-    "paymentProcessingNote": "Please keep this page open while we securely confirm your payment.",
+    "paymentProcessingNote": "Please keep this page open while we prepare your report and securely confirm your payment.",
     "retryVerification": "Retry payment verification",
+    "reportPreparationFailedTitle": "We couldn't finish your report",
+    "reportPreparationFailedDescription": "Please wait a moment and try again. Your entered information is safe, and you can retry report preparation.",
+    "reportPreparationFailedNote": "Payment has not been started.",
+    "tryAgain": "Try again",
+    "close": "Close",
     "disclaimer": "Measurements are approximate and provided for reference purposes only. We do not retain or store your data."
   },
   "Auth": {

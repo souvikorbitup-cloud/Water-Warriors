@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import {
   BadgePercent,
@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 
 import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
+import ReportPreparationErrorModal from "@/components/main/shared/modal/ReportPreparationErrorModal";
 import SampleReportModal from "@/components/main/shared/modal/SampleReportModal";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
@@ -31,6 +32,15 @@ import {
   loadRazorpayScript,
   type RazorpayCheckoutResponse,
 } from "@/lib/razorpay/razorpay-client";
+import {
+  reportLocaleSchema,
+  reportSessionResponseSchema,
+  rooftopSelectionSchema,
+} from "@/lib/report/schemas";
+import {
+  readPreparedReport,
+  savePreparedReport,
+} from "@/lib/data/prepared-report-session";
 
 type PaymentStage = "idle" | "starting" | "verifying";
 type MapPreviewError = "missing-area" | "failed";
@@ -111,6 +121,7 @@ function createAreaPreviewUrl(points: { lat: number; lng: number }[]): string {
 export default function CheckoutSection() {
   const t = useTranslations("Checkout");
   const tCommon = useTranslations("Common");
+  const locale = reportLocaleSchema.parse(useLocale());
   const router = useRouter();
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
@@ -125,7 +136,12 @@ export default function CheckoutSection() {
     typeof window === "undefined" ? "" : readSavedLocationName(),
   );
   const [reportOpen, setReportOpen] = useState(false);
+  const [reportPreparationFailed, setReportPreparationFailed] = useState(false);
   const [paymentStage, setPaymentStage] = useState<PaymentStage>("idle");
+  const [preparedOrder, setPreparedOrder] =
+    useState<CreateOrderResponse | null>(null);
+  const [preparedInput, setPreparedInput] = useState<string | null>(null);
+  const paymentInProgress = useRef(false);
   const [paymentResponse, setPaymentResponse] =
     useState<RazorpayCheckoutResponse | null>(null);
   const [verificationError, setVerificationError] = useState<string | null>(
@@ -225,6 +241,8 @@ export default function CheckoutSection() {
       setQuote(result);
       setAppliedCoupon(result.couponCode);
       setCoupon(result.couponCode ?? "");
+      setPreparedOrder(null);
+      setPreparedInput(null);
       toast.success(
         result.couponCode ? t("couponApplied") : t("couponRemoved"),
       );
@@ -262,7 +280,9 @@ export default function CheckoutSection() {
         typeof body.reportSessionId !== "string" ||
         body.reportSessionId !== payment.razorpay_order_id
       ) {
-        throw new Error("Payment verification returned an invalid report session.");
+        throw new Error(
+          "Payment verification returned an invalid report session.",
+        );
       }
 
       try {
@@ -270,9 +290,7 @@ export default function CheckoutSection() {
           REPORT_SESSION_REFERENCE_KEY,
           body.reportSessionId,
         );
-        window.dispatchEvent(
-          new Event(REPORT_SESSION_REFERENCE_CHANGE_EVENT),
-        );
+        window.dispatchEvent(new Event(REPORT_SESSION_REFERENCE_CHANGE_EVENT));
       } catch (error) {
         console.error("Could not save the report session for this tab.", error);
         throw new Error(
@@ -300,53 +318,121 @@ export default function CheckoutSection() {
   }
 
   async function handleProceed() {
-    if (!quote || quoteLoading || paymentStage !== "idle") return;
+    if (
+      !quote ||
+      quoteLoading ||
+      paymentStage !== "idle" ||
+      paymentInProgress.current
+    ) {
+      return;
+    }
+    paymentInProgress.current = true;
     setPaymentStage("starting");
+    let preparingReport = false;
 
     try {
-      const response = await fetch("/api/billing/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          couponCode: appliedCoupon,
-          customerName,
-          selection: {
-            name: customerName,
-            points: readSavedMapPoints(),
-            zoom: readSavedMapCamera()?.zoom ?? 19,
-          },
-        }),
+      const currentSelection = rooftopSelectionSchema.safeParse({
+        name: customerName,
+        points: readSavedMapPoints(),
+        zoom: readSavedMapCamera()?.zoom ?? 19,
       });
-      if (!response.ok) {
-        throw new Error(
-          await getApiMessage(response, "Could not start payment."),
-        );
+      if (!currentSelection.success) {
+        throw new Error("Select a valid rooftop area before checkout.");
       }
 
-      const orderResult: unknown = await response.json();
-      if (!isCreateOrderResponse(orderResult)) {
-        throw new Error("The server returned an invalid payment order.");
+      const input = {
+        customerName,
+        selection: currentSelection.data,
+        couponCode: appliedCoupon,
+      };
+      const inputFingerprint = JSON.stringify(input);
+      let order = preparedInput === inputFingerprint ? preparedOrder : null;
+      if (!order) {
+        const response = await fetch("/api/billing/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            couponCode: appliedCoupon,
+            customerName,
+            selection: currentSelection.data,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(
+            await getApiMessage(response, "Could not start payment."),
+          );
+        }
+
+        const orderResult: unknown = await response.json();
+        if (!isCreateOrderResponse(orderResult)) {
+          throw new Error("The server returned an invalid payment order.");
+        }
+        order = orderResult;
+        setPreparedOrder(order);
+        setPreparedInput(inputFingerprint);
+      }
+
+      const savedReport = readPreparedReport(order.orderId, locale);
+      const samePreparedInput =
+        savedReport !== null &&
+        JSON.stringify(savedReport.input) === JSON.stringify(input);
+      if (!samePreparedInput) {
+        preparingReport = true;
+        const reportResponse = await fetch("/api/report-session/prepare", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ locale }),
+          cache: "no-store",
+        });
+        if (!reportResponse.ok) {
+          throw new Error(
+            await getApiMessage(
+              reportResponse,
+              "Could not generate the complete report.",
+            ),
+          );
+        }
+
+        const reportBody: unknown = await reportResponse.json();
+        const parsedReport = reportSessionResponseSchema.safeParse(reportBody);
+        if (
+          !parsedReport.success ||
+          parsedReport.data.orderId !== order.orderId
+        ) {
+          throw new Error("The server returned an invalid report.");
+        }
+        savePreparedReport(parsedReport.data, locale, input);
+        preparingReport = false;
       }
 
       if (!(await loadRazorpayScript())) {
         throw new Error("Could not load the Razorpay payment window.");
       }
 
+      let verificationStarted = false;
       const checkout = createRazorpayCheckout({
-        key: orderResult.keyId,
-        amount: orderResult.amount,
-        currency: orderResult.currency,
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
         name: "Water Warriors",
-        description: orderResult.description,
-        order_id: orderResult.orderId,
+        description: order.description,
+        order_id: order.orderId,
         prefill: {
-          name: orderResult.customerName,
+          name: order.customerName,
           email: "",
           contact: "",
         },
-        handler: verifyPayment,
+        handler: (payment) => {
+          verificationStarted = true;
+          return verifyPayment(payment);
+        },
         modal: {
-          ondismiss: () => setPaymentStage("idle"),
+          ondismiss: () => {
+            if (!verificationStarted) {
+              paymentInProgress.current = false;
+              setPaymentStage("idle");
+            }
+          },
         },
       });
 
@@ -357,42 +443,60 @@ export default function CheckoutSection() {
       setPaymentStage("idle");
       checkout.open();
     } catch (error) {
+      paymentInProgress.current = false;
       setPaymentStage("idle");
-      toast.error(
-        error instanceof Error ? error.message : "Could not start payment.",
-      );
+      if (preparingReport) {
+        console.error("Could not generate the report before payment.", error);
+        setReportPreparationFailed(true);
+      } else {
+        toast.error(
+          error instanceof Error ? error.message : "Could not start payment.",
+        );
+      }
     }
   }
 
   if (paymentStage !== "idle") {
     return (
-      <section
-        className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center"
+      <div
+        className="fixed inset-0 z-9999 flex min-h-dvh items-center justify-center overflow-hidden bg-background px-6 text-center"
         role="status"
         aria-live="polite"
       >
-        <LoaderCircle className="size-12 animate-spin text-primary" />
-        <h1 className="mt-5 text-2xl font-semibold text-heading sm:text-3xl">
-          {paymentStage === "starting"
-            ? t("startingPayment")
-            : t("verifyingPayment")}
-        </h1>
-        <p className="mt-2 max-w-md text-sm text-paragraph sm:text-base">
-          {t("paymentProcessingNote")}
-        </p>
-        {verificationError && paymentResponse && (
-          <div className="mt-5">
-            <p className="text-sm text-destructive">{verificationError}</p>
-            <button
-              type="button"
-              onClick={() => void submitPaymentVerification(paymentResponse)}
-              className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
-            >
-              {t("retryVerification")}
-            </button>
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 size-80 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-primary/10 blur-3xl"
+        />
+        <div className="relative flex max-w-md flex-col items-center">
+          <div className="relative mb-8 flex size-28 items-center justify-center">
+            <span className="absolute inset-0 animate-ping rounded-full border border-primary/20 animation-duration-[2.4s]" />
+            <span className="absolute inset-2 animate-spin rounded-full border-2 border-primary/20 border-t-primary animation-duration-[1.6s]" />
+            <span className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <LoaderCircle className="size-8 animate-spin" aria-hidden />
+            </span>
           </div>
-        )}
-      </section>
+          <h1 className="text-xl font-semibold text-heading sm:text-2xl">
+            {paymentStage === "starting"
+              ? t("startingPayment")
+              : t("verifyingPayment")}
+          </h1>
+          <p className="mt-3 max-w-md text-sm leading-6 text-paragraph sm:text-base">
+            {t("paymentProcessingNote")}
+          </p>
+          {verificationError && paymentResponse && (
+            <div className="mt-5">
+              <p className="text-sm text-destructive">{verificationError}</p>
+              <button
+                type="button"
+                onClick={() => void submitPaymentVerification(paymentResponse)}
+                className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
+              >
+                {t("retryVerification")}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
 
@@ -601,6 +705,14 @@ export default function CheckoutSection() {
       <SampleReportModal
         open={reportOpen}
         onClose={() => setReportOpen(false)}
+      />
+      <ReportPreparationErrorModal
+        open={reportPreparationFailed}
+        onClose={() => setReportPreparationFailed(false)}
+        onRetry={() => {
+          setReportPreparationFailed(false);
+          window.setTimeout(() => void handleProceed(), 1200);
+        }}
       />
     </section>
   );

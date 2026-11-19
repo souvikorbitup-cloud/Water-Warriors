@@ -152,6 +152,7 @@ function buildReportData(
 export async function generateReport(
   orderId: string,
   locale: ReportLocale = "en",
+  allowUnpaid = false,
 ): Promise<ReportSessionData> {
   await connectDB();
   const [report, order] = await Promise.all([
@@ -161,8 +162,9 @@ export async function generateReport(
   if (!report) throw new Error("Report session was not found.");
   if (
     !order ||
-    order.status !== "paid" ||
-    order.paymentId !== report.paymentId
+    (allowUnpaid
+      ? order.status !== "created"
+      : order.status !== "paid" || order.paymentId !== report.paymentId)
   ) {
     throw new Error("A verified, paid order is required for this report.");
   }

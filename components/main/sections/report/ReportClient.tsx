@@ -4,10 +4,12 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
 import { LoaderCircle } from "lucide-react";
 import Image from "next/image";
@@ -49,8 +51,11 @@ import {
   REPORT_SESSION_REFERENCE_HEADER,
   REPORT_SESSION_REFERENCE_KEY,
 } from "@/lib/data/report-session";
-
-const REPORT_SESSION_STORAGE_PREFIX = "ww-report-session:";
+import {
+  readPreparedReport,
+  savePreparedReport,
+} from "@/lib/data/prepared-report-session";
+import { reportLocaleSchema } from "@/lib/report/schemas";
 
 function subscribeToReportSession(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -140,34 +145,19 @@ function hasAnalyticsConsent(): boolean {
 }
 
 function readSessionReport(orderId: string): ReportSessionData | null {
-  const key = `${REPORT_SESSION_STORAGE_PREFIX}${orderId}`;
-  try {
-    const stored = window.sessionStorage.getItem(key);
-    if (!stored) return null;
-
-    const parsed: unknown = JSON.parse(stored);
-    const result = reportSessionResponseSchema.safeParse(parsed);
-    if (!result.success || result.data.orderId !== orderId) {
-      window.sessionStorage.removeItem(key);
-      console.warn(
-        "Ignoring invalid report data saved for this browser session.",
-      );
-      return null;
-    }
-
-    return result.data;
-  } catch (error) {
-    console.warn("Could not restore this browser session's report.", error);
-    return null;
-  }
+  return readPreparedReport(orderId)?.report ?? null;
 }
 
 function saveSessionReport(report: ReportSessionData): void {
   try {
-    window.sessionStorage.setItem(
-      `${REPORT_SESSION_STORAGE_PREFIX}${report.orderId}`,
-      JSON.stringify(report),
+    const reportLocale = reportLocaleSchema.parse(
+      report.analysisLocale ?? "en",
     );
+    savePreparedReport(report, reportLocale, {
+      customerName: report.customerName,
+      selection: report.selection,
+      couponCode: null,
+    });
   } catch (error) {
     console.warn("Could not save the report for this browser session.", error);
   }
@@ -178,6 +168,11 @@ function hasCompleteReportDetails(
   locale: string,
 ): boolean {
   return Boolean(
+    report.status === "ready" &&
+    report.steps.location === "complete" &&
+    report.steps.rainfall === "complete" &&
+    report.steps.analysis === "complete" &&
+    report.steps.forecast === "complete" &&
     report.annualRainfallMm !== undefined &&
     report.potentialLitres !== undefined &&
     report.location &&
@@ -209,9 +204,10 @@ function ReportSessionClient({
   reportSessionId: string | null | undefined;
 }) {
   const t = useTranslations("Report");
-  const locale = useLocale();
+  const locale = reportLocaleSchema.parse(useLocale());
   const router = useRouter();
   const [report, setReport] = useState<ReportSessionData | null>(null);
+  const announcedReportLanguage = useRef<string | null>(null);
   const [sessionAuthorized, setSessionAuthorized] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -251,7 +247,12 @@ function ReportSessionClient({
         throw new Error(t("reportNotFound"));
       }
       setSessionAuthorized(true);
-      setReport(parsed.data);
+      if (
+        parsed.data.analysisLocale &&
+        hasCompleteReportDetails(parsed.data, parsed.data.analysisLocale)
+      ) {
+        setReport(parsed.data);
+      }
       setLoadError(null);
       return parsed.data;
     },
@@ -310,8 +311,15 @@ function ReportSessionClient({
         throw new Error(t("reportNotFound"));
       }
       setSessionAuthorized(true);
+      if (!hasCompleteReportDetails(parsed.data, locale)) {
+        if (parsed.data.status === "failed" || parsed.data.status === "ready") {
+          throw new Error(parsed.data.lastError || t("reportFailed"));
+        }
+        return parsed.data;
+      }
       setReport(parsed.data);
       setLoadError(null);
+      saveSessionReport(parsed.data);
       return parsed.data;
     },
     [locale, router, t],
@@ -320,6 +328,20 @@ function ReportSessionClient({
   useEffect(() => {
     if (reportSessionId === null) router.replace("/");
   }, [reportSessionId, router]);
+
+  useEffect(() => {
+    if (!report?.analysisLocale) return;
+
+    const languageKey = `${report.orderId}:${report.analysisLocale}`;
+    if (announcedReportLanguage.current === languageKey) return;
+    announcedReportLanguage.current = languageKey;
+
+    toast.success(
+      t("reportLanguage", {
+        language: report.analysisLocale === "hi" ? "हिन्दी" : "English",
+      }),
+    );
+  }, [report?.analysisLocale, report?.orderId, t]);
 
   useEffect(() => {
     if (reportSessionId === undefined || reportSessionId === null) return;
@@ -336,39 +358,37 @@ function ReportSessionClient({
         );
         if (!active) return;
 
-        if (!consentAccepted) {
-          const cachedReport =
-            generationAttempt === 0
-              ? readSessionReport(nextReport.orderId)
-              : null;
-          if (cachedReport && hasCompleteReportDetails(cachedReport, locale)) {
-            setReport(cachedReport);
-            setLoadError(null);
+        const cachedReport = readSessionReport(nextReport.orderId);
+        if (cachedReport) {
+          setReport(cachedReport);
+          setLoadError(null);
+          if (hasCompleteReportDetails(cachedReport, locale)) {
             setIsRetrying(false);
             return;
           }
-          nextReport = await startGeneration(reportSessionId);
-          if (!active) return;
-          if (
-            nextReport.status !== "generating" &&
-            nextReport.status !== "retrying"
-          ) {
-            saveSessionReport(nextReport);
-          }
-        } else {
+        }
+
+        if (consentAccepted) {
           nextReport = await loadReport(true, reportSessionId);
           if (!active) return;
         }
 
+        const reportCompleteForLocale = hasCompleteReportDetails(
+          nextReport,
+          locale,
+        );
         if (
-          consentAccepted &&
-          ((isInitialRequest &&
+          !isInitialRequest &&
+          nextReport.status === "failed" &&
+          !reportCompleteForLocale
+        ) {
+          throw new Error(nextReport.lastError || t("reportFailed"));
+        }
+        if (
+          (isInitialRequest &&
             (nextReport.status === "pending" ||
-              (nextReport.status === "failed" &&
-                (generationAttempt > 0 ||
-                  !hasCompleteReportDetails(nextReport, locale))))) ||
-            (nextReport.status === "ready" &&
-              !hasCompleteReportDetails(nextReport, locale)))
+              (nextReport.status === "failed" && !reportCompleteForLocale))) ||
+          (nextReport.status === "ready" && !reportCompleteForLocale)
         ) {
           setIsRetrying(true);
           nextReport = await startGeneration(reportSessionId);
@@ -453,23 +473,35 @@ function ReportSessionClient({
   const formattedPotential =
     report?.potentialLitres === undefined
       ? undefined
-      : numberFormat(locale, Math.round(report.potentialLitres));
+      : numberFormat(
+          report.analysisLocale ?? locale,
+          Math.round(report.potentialLitres),
+        );
   const formattedArea =
     report === null
       ? undefined
-      : `${numberFormat(locale, report.areaSqm, 2)} sq. metres`;
+      : `${numberFormat(
+          report.analysisLocale ?? locale,
+          report.areaSqm,
+          2,
+        )} sq. metres`;
   const formattedRainfall =
     report?.annualRainfallMm === undefined
       ? undefined
-      : `${numberFormat(locale, report.annualRainfallMm, 1)} mm per year`;
+      : `${numberFormat(
+          report.analysisLocale ?? locale,
+          report.annualRainfallMm,
+          1,
+        )} mm per year`;
   const harvestableInWords =
-    locale.startsWith("en") && report?.potentialLitres !== undefined
+    (report?.analysisLocale ?? locale).startsWith("en") &&
+    report?.potentialLitres !== undefined
       ? numberToIndianWords(Math.round(report.potentialLitres))
       : undefined;
   const calculation =
     report?.annualRainfallMm !== undefined &&
     report.potentialLitres !== undefined
-      ? `(${numberFormat(locale, report.areaSqm, 2)} sq.m x ${numberFormat(locale, report.annualRainfallMm, 1)} mm x ${numberFormat(locale, report.runoffCoefficient, 1)} = ${formattedPotential} ${t("litresUnit")}) - 10% run-off`
+      ? `(${numberFormat(report.analysisLocale ?? locale, report.areaSqm, 2)} sq.m x ${numberFormat(report.analysisLocale ?? locale, report.annualRainfallMm, 1)} mm x ${numberFormat(report.analysisLocale ?? locale, report.runoffCoefficient, 1)} = ${formattedPotential} ${t("litresUnit")}) - 10% run-off`
       : undefined;
 
   const impacts = useMemo<ImpactStat[] | undefined>(() => {
@@ -479,7 +511,7 @@ function ReportSessionClient({
       {
         label: t("impacts.0.label"),
         value: `${numberFormat(
-          locale,
+          report.analysisLocale ?? locale,
           Math.floor(
             report.potentialLitres /
               (REPORT_IMPACT_ASSUMPTIONS.familySize *
@@ -492,7 +524,7 @@ function ReportSessionClient({
       {
         label: t("impacts.1.label"),
         value: `${numberFormat(
-          locale,
+          report.analysisLocale ?? locale,
           Math.floor(
             report.potentialLitres /
               REPORT_IMPACT_ASSUMPTIONS.litresPerTreePerYear,
@@ -504,7 +536,7 @@ function ReportSessionClient({
       {
         label: t("impacts.2.label"),
         value: `${numberFormat(
-          locale,
+          report.analysisLocale ?? locale,
           Math.floor(
             report.potentialLitres /
               REPORT_IMPACT_ASSUMPTIONS.tankerCapacityLitres,
@@ -516,7 +548,7 @@ function ReportSessionClient({
       {
         label: t("impacts.3.label"),
         value: `${numberFormat(
-          locale,
+          report.analysisLocale ?? locale,
           Math.floor(
             report.potentialLitres /
               (REPORT_IMPACT_ASSUMPTIONS.litresPerChildPerSchoolDay *
@@ -534,19 +566,19 @@ function ReportSessionClient({
 
     return [
       ...report.forecast.map((month) => ({
-        month: monthName(locale, month.monthStart),
-        rainfall: `${numberFormat(locale, month.rainfallMm, 1)} mm`,
-        potential: `${numberFormat(locale, Math.round(month.harvestableLitres))} ${t("litresUnit")}`,
+        month: monthName(report.analysisLocale ?? locale, month.monthStart),
+        rainfall: `${numberFormat(report.analysisLocale ?? locale, month.rainfallMm, 1)} mm`,
+        potential: `${numberFormat(report.analysisLocale ?? locale, Math.round(month.harvestableLitres))} ${t("litresUnit")}`,
       })),
       {
         month: t("grandTotal"),
         rainfall: `${numberFormat(
-          locale,
+          report.analysisLocale ?? locale,
           report.forecast.reduce((sum, month) => sum + month.rainfallMm, 0),
           1,
         )} mm`,
         potential: `${numberFormat(
-          locale,
+          report.analysisLocale ?? locale,
           Math.round(
             report.forecast.reduce(
               (sum, month) => sum + month.harvestableLitres,
@@ -561,8 +593,8 @@ function ReportSessionClient({
 
   const forecastPeriod =
     report?.forecast && report.forecast.length > 0
-      ? `(${monthName(locale, report.forecast[0]!.monthStart)} - ${monthName(
-          locale,
+      ? `(${monthName(report.analysisLocale ?? locale, report.forecast[0]!.monthStart)} - ${monthName(
+          report.analysisLocale ?? locale,
           report.forecast[report.forecast.length - 1]!.monthStart,
         )})`
       : undefined;
@@ -600,7 +632,7 @@ function ReportSessionClient({
         : "";
 
     return {
-      locale,
+      locale: report.analysisLocale ?? locale,
       greeting: report.customerName
         ? t("pdfGreeting", { customerName: report.customerName })
         : t("pdfGreetingDefault"),
@@ -716,7 +748,7 @@ function ReportSessionClient({
             };
       const blob = await buildPdfBlob(data);
       const fileName = createSafePdfFileName(
-        `WaterWarriors-${report?.location?.city || "Rainwater-Report"}-${locale}-${quality === "high" ? "high-quality" : "standard"}`,
+        `WaterWarriors-${report?.location?.city || "Rainwater-Report"}-${report?.analysisLocale ?? locale}-${quality === "high" ? "high-quality" : "standard"}`,
       );
       downloadPdfBlob(blob, fileName);
     } catch (error) {
@@ -743,7 +775,7 @@ function ReportSessionClient({
 
   return (
     <>
-      {report?.status !== "ready" && (
+      {report?.status !== "ready" || loadError ? (
         <div
           className="my-container-x mt-6 print:hidden"
           role={loadError ? "alert" : "status"}
@@ -760,7 +792,7 @@ function ReportSessionClient({
             {report?.lastError && !isReady && (
               <p className="mt-2 text-paragraph">{report.lastError}</p>
             )}
-            {(report?.status === "failed" || Boolean(loadError)) && (
+            {report?.status === "failed" && !loadError && (
               <button
                 type="button"
                 onClick={() => void retryGeneration()}
@@ -770,9 +802,18 @@ function ReportSessionClient({
                 {isRetrying ? t("reportRetrying") : t("retryReport")}
               </button>
             )}
+            {loadError && (
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-3 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground"
+              >
+                {t("reloadReport")}
+              </button>
+            )}
           </div>
         </div>
-      )}
+      ) : null}
       <ReportOverviewSection
         name={report?.customerName || undefined}
         generationFinished={

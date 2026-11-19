@@ -21,7 +21,7 @@ export interface IReportSession extends Omit<
   | "location"
   | "forecast"
 > {
-  paymentId: string;
+  paymentId?: string;
   analyticsConsent: boolean;
   customerName?: string;
   selection?: RooftopSelection;
@@ -79,7 +79,7 @@ const forecastMonthSchema = new Schema<ReportForecastMonth>(
 const reportSessionSchema = new Schema<IReportSession>(
   {
     orderId: { type: String, required: true },
-    paymentId: { type: String, required: true },
+    paymentId: { type: String },
     analyticsConsent: { type: Boolean, default: false, required: true },
     status: {
       type: String,

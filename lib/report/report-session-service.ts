@@ -78,21 +78,18 @@ export function toReportSessionData(
   };
 }
 
-export async function createOrGetReportSession(
+async function findOrCreateReportSession(
   order: BillingOrderDocument,
 ): Promise<IReportSession> {
-  if (order.status !== "paid" || !order.paymentId) {
-    throw new Error("A paid order is required to create a report session.");
-  }
   if (!order.rooftopSelection || order.rooftopSelection.points.length < 4) {
-    throw new Error("The paid order has no valid rooftop selection.");
+    throw new Error("The order has no valid rooftop selection.");
   }
 
   await connectDB();
   await ReportSession.init();
   const sessionFields = {
     orderId: order.orderId,
-    paymentId: order.paymentId,
+    ...(order.paymentId ? { paymentId: order.paymentId } : {}),
     analyticsConsent: false,
     status: "pending" as const,
     steps: {
@@ -118,6 +115,24 @@ export async function createOrGetReportSession(
     if (!existing) throw error;
     return existing;
   }
+}
+
+export async function createOrGetReportSession(
+  order: BillingOrderDocument,
+): Promise<IReportSession> {
+  if (order.status !== "paid" || !order.paymentId) {
+    throw new Error("A paid order is required to create a report session.");
+  }
+  return findOrCreateReportSession(order);
+}
+
+export async function createCheckoutReportSession(
+  order: BillingOrderDocument,
+): Promise<IReportSession> {
+  if (order.status !== "created") {
+    throw new Error("An unpaid checkout order is required.");
+  }
+  return findOrCreateReportSession(order);
 }
 
 export async function setReportSessionConsent(
@@ -281,12 +296,31 @@ export async function ensurePaidReportSession(
     throw new Error("A verified, paid order is required for this report.");
   }
   const session = await createOrGetReportSession(order);
-  if (session.paymentId !== paymentId) {
+  if (session.paymentId && session.paymentId !== paymentId) {
     throw new Error(
       "Report session payment does not match the verified order.",
     );
   }
-  return session;
+  if (session.paymentId === paymentId) return session;
+
+  await ReportSession.updateOne(
+    {
+      orderId,
+      $or: [
+        { paymentId: { $exists: false } },
+        { paymentId: null },
+        { paymentId: "" },
+      ],
+    },
+    { $set: { paymentId } },
+  );
+  const updated = await getReportSession(orderId);
+  if (!updated || updated.paymentId !== paymentId) {
+    throw new Error(
+      "Report session payment does not match the verified order.",
+    );
+  }
+  return updated;
 }
 
 export async function getReportSession(
