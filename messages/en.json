@@ -385,7 +385,7 @@
     "impactPending": "Impact metrics will appear when the rainwater potential is calculated.",
     "annualRainfallSource": "Source: Open-Meteo historical data; average of the last 10 complete calendar years.",
     "analysisPending": "Location-specific hydrogeology analysis is being generated.",
-    "assumptions": "* Assumptions: Family of 4 using 50L/person/day · Standard tanker = 5,000L · Trees Supported uses an illustrative Water Warriors equivalence of 365L/tree/year, not a universal scientific requirement · Schools & Hygiene uses 5L/child/school day based on WHO/UNICEF day-school guidance (drinking, personal hygiene, food preparation, cleaning and laundry; excluding toilet flushing and showers) x 200 school days, with the 200-day academic year being a Water Warriors assumption.",
+    "assumptions": "* Assumptions: Family of 4 using 75L/person/day · Standard tanker = 5,000L · Trees Supported uses an illustrative Water Warriors equivalence of 365L/tree/year, not a universal scientific requirement · Schools & Hygiene uses 5L/child/school day based on WHO/UNICEF day-school guidance (drinking, personal hygiene, food preparation, cleaning and laundry; excluding toilet flushing and showers) x 200 school days, with the 200-day academic year being a Water Warriors assumption.",
     "rechargeTitle": "Why Rainwater Recharge Matters.",
     "rechargeIntro": "Harvesting approximately {litres} litres of rainwater annually at your location in {location}, represents a substantial potential for augmenting your household water supply. This significant volume could be strategically utilized for various non-potable needs, reducing the demand on other sources.",
     "rechargeHighlights": {
