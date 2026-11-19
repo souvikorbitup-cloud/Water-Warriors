@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { FileDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
   REPORT_SESSION_REFERENCE_CHANGE_EVENT,
@@ -28,14 +29,15 @@ function hasActiveReportSession(): boolean {
 }
 
 /**
- * Floating "Download Report" button, fixed to the bottom-right of the screen.
+ * Floating report-download button, fixed to the bottom-right of the screen.
  *
  * - sm and up (hover devices): only the yellow icon circle is visible. Hovering it
- *   (or focusing it with the keyboard) slides the "Download Report" label out to the left,
+ *   (or focusing it with the keyboard) slides the label out to the left,
  *   and the whole control is a single link to /report.
  * - Mobile: the label is always visible, since there is no hover on touch screens.
  */
 export default function DownloadReportButton() {
+  const t = useTranslations("Report");
   const isReportSessionActive = useSyncExternalStore(
     subscribeToReportSession,
     hasActiveReportSession,
@@ -47,12 +49,12 @@ export default function DownloadReportButton() {
   return (
     <Link
       href="/report"
-      aria-label="Download report"
+      aria-label={t("viewPdf")}
       className="group fixed right-3 bottom-18 z-40 flex items-center focus-visible:outline-none sm:right-6.5 sm:bottom-28"
     >
       {/* Label: tucked under the circle, slides out to the left */}
       <span className="pointer-events-auto absolute right-6 flex h-11 translate-x-0 items-center rounded-full bg-background pr-12 pl-5 text-sm font-medium whitespace-nowrap text-heading opacity-100 shadow-lg shadow-foreground/15 transition-all duration-300 ease-out sm:pointer-events-none sm:h-12 sm:translate-x-full sm:pr-13 sm:pl-6 sm:text-base sm:opacity-0 sm:group-hover:pointer-events-auto sm:group-hover:translate-x-0 sm:group-hover:opacity-100 sm:group-focus-visible:pointer-events-auto sm:group-focus-visible:translate-x-0 sm:group-focus-visible:opacity-100">
-        Download Report
+        {t("viewPdf")}
       </span>
 
       {/* Icon circle */}

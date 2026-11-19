@@ -12,6 +12,7 @@ import { useRouter } from "@/i18n/navigation";
 import { LoaderCircle } from "lucide-react";
 import Image from "next/image";
 import { Children, Family, Tanker, Tree } from "@/components/icons";
+import DownloadHighQualityReportButton from "@/components/main/shared/DownloadHighQualityReportButton";
 import ForecastProjectionSection, {
   type ForecastRow,
 } from "@/components/main/sections/report/ForecastProjectionSection";
@@ -831,6 +832,13 @@ function ReportSessionClient({
         downloadingQuality={preparingPdfQuality}
       />
       <ReportCTASection />
+      {isReady && (
+        <DownloadHighQualityReportButton
+          onClick={() => void downloadReport("high")}
+          disabled={isPreparingPdf}
+          isPreparing={preparingPdfQuality === "high"}
+        />
+      )}
     </>
   );
 }
