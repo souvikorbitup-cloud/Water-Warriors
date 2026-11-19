@@ -104,7 +104,7 @@ function createPdfMapImageUrl(
 }
 
 function numberFormat(locale: string, value: number, decimals = 0): string {
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(`${locale}-IN`, {
     maximumFractionDigits: decimals,
     minimumFractionDigits: decimals,
   }).format(value);
@@ -469,7 +469,7 @@ function ReportSessionClient({
   const calculation =
     report?.annualRainfallMm !== undefined &&
     report.potentialLitres !== undefined
-      ? `(${numberFormat(locale, report.areaSqm, 2)} sq.m x ${numberFormat(locale, report.annualRainfallMm, 1)} mm x ${numberFormat(locale, report.runoffCoefficient)} = ${formattedPotential} ${t("litresUnit")})`
+      ? `(${numberFormat(locale, report.areaSqm, 2)} sq.m x ${numberFormat(locale, report.annualRainfallMm, 1)} mm x ${numberFormat(locale, report.runoffCoefficient, 1)} = ${formattedPotential} ${t("litresUnit")}) - 10% run-off`
       : undefined;
 
   const impacts = useMemo<ImpactStat[] | undefined>(() => {
