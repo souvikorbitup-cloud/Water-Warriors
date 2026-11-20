@@ -229,10 +229,17 @@ contactSubmissionSchema.methods.setStatus = function (
   return this.save();
 };
 
-contactSubmissionSchema.methods.softDelete = function () {
+contactSubmissionSchema.methods.softDelete = async function () {
+  const deletedAt = new Date();
+  const result = await this.updateOne({
+    $set: { isDeleted: true, deletedAt },
+  });
+  if (result.matchedCount !== 1) {
+    throw new Error("Could not soft-delete contact submission.");
+  }
   this.isDeleted = true;
-  this.deletedAt = new Date();
-  return this.save();
+  this.deletedAt = deletedAt;
+  return this;
 };
 
 contactSubmissionSchema.methods.restore = function () {

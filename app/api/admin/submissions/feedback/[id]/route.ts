@@ -96,3 +96,28 @@ export const PATCH = withAuth(
   },
   { permission: PERMISSIONS.AllFeedbackSubmissionsEdit },
 );
+
+export const DELETE = withAuth(
+  async (_req, { params }) => {
+    const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { message: "Submission not found." },
+        { status: 404 },
+      );
+    }
+
+    await connectDB();
+    const doc = await FeedbackSubmission.findById(id);
+    if (!doc) {
+      return NextResponse.json(
+        { message: "Submission not found." },
+        { status: 404 },
+      );
+    }
+
+    await doc.softDelete();
+    return NextResponse.json({ success: true });
+  },
+  { permission: PERMISSIONS.AllFeedbackSubmissionsEdit },
+);

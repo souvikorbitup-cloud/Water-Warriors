@@ -1,9 +1,8 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { Modal } from "@/components/admin/shared/modal";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,49 +23,47 @@ const emptyForm = {
   translations: emptyTestimonialTranslations(),
 };
 
-export default function TestimonialFormModal({
-  open,
-  item,
-  canEdit,
-  onClose,
-  onSaved,
-}: {
+type TestimonialFormModalProps = {
   open: boolean;
   item: TestimonialDetail | null;
   canEdit: boolean;
   onClose: () => void;
   onSaved: (item: TestimonialListItem) => void;
-}) {
+};
+
+export default function TestimonialFormModal(props: TestimonialFormModalProps) {
+  return (
+    <TestimonialFormModalContent
+      key={`${props.open}:${props.item?.id ?? "new"}`}
+      {...props}
+    />
+  );
+}
+
+function TestimonialFormModalContent({
+  open,
+  item,
+  canEdit,
+  onClose,
+  onSaved,
+}: TestimonialFormModalProps) {
   const isEdit = item !== null;
-  const [fullName, setFullName] = useState(emptyForm.fullName);
-  const [order, setOrder] = useState(emptyForm.order);
-  const [isPublished, setIsPublished] = useState(emptyForm.isPublished);
-  const [translations, setTranslations] = useState(emptyForm.translations);
+  const [fullName, setFullName] = useState(
+    item?.fullName ?? emptyForm.fullName,
+  );
+  const [order, setOrder] = useState(
+    item ? String(item.order) : emptyForm.order,
+  );
+  const [isPublished, setIsPublished] = useState(item?.isPublished ?? true);
+  const [translations, setTranslations] = useState(
+    item
+      ? { ...emptyTestimonialTranslations(), ...item.translations }
+      : emptyTestimonialTranslations(),
+  );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setFieldErrors({});
-    setImageFile(null);
-    setRemoveImage(false);
-    if (item) {
-      setFullName(item.fullName);
-      setOrder(String(item.order));
-      setIsPublished(item.isPublished);
-      setTranslations({
-        ...emptyTestimonialTranslations(),
-        ...item.translations,
-      });
-    } else {
-      setFullName("");
-      setOrder("");
-      setIsPublished(true);
-      setTranslations(emptyTestimonialTranslations());
-    }
-  }, [open, item]);
 
   function updateTranslation(
     locale: keyof typeof translations,

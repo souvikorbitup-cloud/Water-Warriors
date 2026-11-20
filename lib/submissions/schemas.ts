@@ -135,6 +135,17 @@ export const feedbackAdminUpdateSchema = z
     },
   );
 
+export const submissionBulkDeleteSchema = z.object({
+  ids: z
+    .array(z.string().regex(/^[a-f\d]{24}$/i, "Invalid submission ID."))
+    .min(1, "Select at least one submission to delete.")
+    .max(50, "You can delete up to 50 submissions at once.")
+    .transform((ids) => ids.map((id) => id.toLowerCase()))
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "Submission IDs must be unique.",
+    }),
+});
+
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),

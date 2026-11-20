@@ -1,7 +1,8 @@
 "use client";
 
 import { Modal } from "@/components/admin/shared/modal";
-import { Button } from "@/components/ui/button";
+import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
+import { Trash2 } from "lucide-react";
 
 export default function ConfirmDialog({
   open,
@@ -23,30 +24,30 @@ export default function ConfirmDialog({
   onClose: () => void;
 }) {
   return (
-    <Modal isOpen={open} onClose={onClose} className="max-w-md p-6 sm:p-8">
+    <Modal isOpen={open} onClose={onClose} className="max-w-lg p-6 sm:p-8">
       <h2 className="pr-12 text-xl font-semibold text-heading">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
         {description}
       </p>
-      <div className="mt-6 flex justify-end gap-2">
-        <Button
+      <div className="mt-10 flex justify-end gap-2">
+        <PrimaryButton
           type="button"
-          variant="outline"
-          className="cursor-pointer"
+          btnType="outline"
+          className="border-border"
           onClick={onClose}
           disabled={confirming}
         >
           {cancelLabel}
-        </Button>
-        <Button
+        </PrimaryButton>
+        <PrimaryButton
           type="button"
-          variant="destructive"
-          className="cursor-pointer"
+          btnType="solid-destructive"
           onClick={onConfirm}
           disabled={confirming}
+          endIcon={<Trash2 aria-hidden />}
         >
           {confirming ? "Deleting..." : confirmLabel}
-        </Button>
+        </PrimaryButton>
       </div>
     </Modal>
   );

@@ -249,10 +249,17 @@ feedbackSubmissionSchema.methods.setStatus = function (
   return this.save();
 };
 
-feedbackSubmissionSchema.methods.softDelete = function () {
+feedbackSubmissionSchema.methods.softDelete = async function () {
+  const deletedAt = new Date();
+  const result = await this.updateOne({
+    $set: { isDeleted: true, deletedAt },
+  });
+  if (result.matchedCount !== 1) {
+    throw new Error("Could not soft-delete feedback submission.");
+  }
   this.isDeleted = true;
-  this.deletedAt = new Date();
-  return this.save();
+  this.deletedAt = deletedAt;
+  return this;
 };
 
 feedbackSubmissionSchema.methods.restore = function () {

@@ -8,12 +8,16 @@ import { cn } from "@/lib/utils";
 
 type ButtonType =
   | "solid-primary"
+  | "solid-destructive"
   | "solid-secondary"
   | "outline-white"
   | "outline"
   | "underline";
 
-type ShapedType = Extract<ButtonType, "solid-primary" | "solid-secondary">;
+type ShapedType = Extract<
+  ButtonType,
+  "solid-primary" | "solid-destructive" | "solid-secondary"
+>;
 type PlainType = Exclude<ButtonType, ShapedType>;
 
 type ButtonSize = "sm" | "md";
@@ -54,6 +58,10 @@ const shapedStyles: Record<ShapedType, { fill: string; text: string }> = {
     fill: "bg-primary",
     text: "text-primary-foreground",
   },
+  "solid-destructive": {
+    fill: "bg-destructive",
+    text: "text-destructive-foreground",
+  },
   "solid-secondary": {
     fill: "bg-secondary",
     text: "text-heading",
@@ -80,7 +88,9 @@ const plainVariantClasses: Record<PlainType, string> = {
 };
 
 const isShaped = (type: ButtonType): type is ShapedType =>
-  type === "solid-primary" || type === "solid-secondary";
+  type === "solid-primary" ||
+  type === "solid-destructive" ||
+  type === "solid-secondary";
 
 export default function PrimaryButton({
   children,
@@ -148,9 +158,7 @@ export default function PrimaryButton({
       return <LocalizedLink {...linkProps} />;
     }
 
-    return (
-      <Link {...linkProps} />
-    );
+    return <Link {...linkProps} />;
   }
 
   // Render as normal button

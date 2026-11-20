@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Eye, MessageSquareText } from "lucide-react";
+import { Eye, MessageSquareText, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import Pagination from "@/components/admin/shared/Pagination";
 import StatusBadge from "@/components/admin/shared/StatusBadge";
+import ConfirmDialog from "@/components/admin/shared/modal/ConfirmDialog";
 import SubmissionsFilter, {
   type FilterOption,
 } from "@/components/admin/shared/filters/SubmissionsFilter";
@@ -19,6 +21,7 @@ import {
 import { FEEDBACK_STATUSES } from "@/lib/submissions/constants";
 import { formatSubmissionDate } from "@/lib/submissions/format";
 import { useSubmissionsList } from "@/lib/hooks/use-submissions-list";
+import { readApiError } from "@/lib/submissions/api-error";
 import type {
   FeedbackListItem,
   SubmissionsListResponse,
@@ -55,8 +58,65 @@ export default function FeedbackSubmissionsManager({
       initialData,
     );
   const [selected, setSelected] = useState<FeedbackListItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<string[] | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const endpoint = "/api/admin/submissions/feedback";
+  const items = data?.items ?? [];
+  const allSelected =
+    items.length > 0 && items.every((item) => selectedIds.includes(item.id));
 
   const empty = !loading && !error && (data?.items.length ?? 0) === 0;
+
+  function changeParams(patch: Parameters<typeof updateParams>[0]) {
+    setSelectedIds([]);
+    updateParams(patch);
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget || deleting) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch(
+        deleteTarget.length === 1 ? `${endpoint}/${deleteTarget[0]}` : endpoint,
+        {
+          method: "DELETE",
+          ...(deleteTarget.length > 1
+            ? {
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: deleteTarget }),
+              }
+            : {}),
+        },
+      );
+      if (!response.ok) {
+        const { message } = await readApiError(
+          response,
+          "Could not delete the selected submission(s).",
+        );
+        throw new Error(message);
+      }
+
+      toast.success(
+        deleteTarget.length === 1
+          ? "Submission deleted."
+          : `${deleteTarget.length} submissions deleted.`,
+      );
+      if (selected && deleteTarget.includes(selected.id)) setSelected(null);
+      setSelectedIds([]);
+      setDeleteTarget(null);
+      refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not delete the selected submission(s).",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const selectedFields = useMemo(() => {
     if (!selected) return [];
@@ -99,13 +159,13 @@ export default function FeedbackSubmissionsManager({
 
       <SubmissionsFilter
         search={params.search}
-        onSearchChange={(search) => updateParams({ search })}
+        onSearchChange={(search) => changeParams({ search })}
         status={params.status}
         statusOptions={STATUS_OPTIONS}
-        onStatusChange={(status) => updateParams({ status })}
+        onStatusChange={(status) => changeParams({ status })}
         sort={params.sort}
         sortOptions={SORT_OPTIONS}
-        onSortChange={(sort) => updateParams({ sort })}
+        onSortChange={(sort) => changeParams({ sort })}
         extraFilters={
           <div>
             <Label htmlFor="feedback-rating-filter" className="text-heading">
@@ -114,7 +174,7 @@ export default function FeedbackSubmissionsManager({
             <Select
               value={params.rating || ALL_VALUE}
               onValueChange={(value) =>
-                updateParams({ rating: value === ALL_VALUE ? "" : value })
+                changeParams({ rating: value === ALL_VALUE ? "" : value })
               }
             >
               <SelectTrigger
@@ -135,7 +195,7 @@ export default function FeedbackSubmissionsManager({
           </div>
         }
         onReset={() =>
-          updateParams({
+          changeParams({
             search: "",
             status: "",
             sort: "createdAt:desc",
@@ -155,7 +215,7 @@ export default function FeedbackSubmissionsManager({
       )}
 
       {loading ? (
-        <SubmissionsTableSkeleton columns={6} />
+        <SubmissionsTableSkeleton columns={canEdit ? 8 : 7} />
       ) : error ? null : empty ? (
         <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-16 text-center">
           <p className="text-base font-medium text-heading">
@@ -167,10 +227,47 @@ export default function FeedbackSubmissionsManager({
         </div>
       ) : (
         <>
+          {canEdit && (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">
+                {selectedIds.length
+                  ? `${selectedIds.length} selected`
+                  : "Select submissions to delete"}
+              </p>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="cursor-pointer"
+                disabled={selectedIds.length === 0 || deleting}
+                onClick={() => setDeleteTarget(selectedIds)}
+              >
+                <Trash2 className="size-4" />
+                Delete selected
+              </Button>
+            </div>
+          )}
           <div className="overflow-x-auto rounded-2xl border border-gray-200">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-gray-50 text-xs tracking-wide text-muted-foreground uppercase">
                 <tr>
+                  {canEdit && (
+                    <th className="w-10 px-4 py-3 font-medium">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all submissions on this page"
+                        checked={allSelected}
+                        onChange={(event) =>
+                          setSelectedIds(
+                            event.target.checked
+                              ? items.map((item) => item.id)
+                              : [],
+                          )
+                        }
+                        className="size-4 cursor-pointer accent-primary"
+                      />
+                    </th>
+                  )}
                   <th className="px-4 py-3 font-medium">From</th>
                   <th className="px-4 py-3 font-medium">Topic</th>
                   <th className="px-4 py-3 font-medium">Rating</th>
@@ -181,8 +278,25 @@ export default function FeedbackSubmissionsManager({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {(data?.items ?? []).map((item) => (
+                {items.map((item) => (
                   <tr key={item.id} className="bg-white hover:bg-gray-50/70">
+                    {canEdit && (
+                      <td className="px-4 py-3 align-top">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select submission about ${item.topic}`}
+                          checked={selectedIds.includes(item.id)}
+                          onChange={(event) =>
+                            setSelectedIds((current) =>
+                              event.target.checked
+                                ? [...current, item.id]
+                                : current.filter((id) => id !== item.id),
+                            )
+                          }
+                          className="size-4 cursor-pointer accent-primary"
+                        />
+                      </td>
+                    )}
                     <td className="px-4 py-3 align-top">
                       <p className="font-medium text-heading">
                         {item.isAnonymous ? "Anonymous" : item.name || "—"}
@@ -207,16 +321,30 @@ export default function FeedbackSubmissionsManager({
                       {formatSubmissionDate(item.createdAt)}
                     </td>
                     <td className="px-4 py-3 align-top text-right">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelected(item)}
-                        className="cursor-pointer"
-                      >
-                        <Eye className="size-4" />
-                        View
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelected(item)}
+                          className="cursor-pointer"
+                        >
+                          <Eye className="size-4" />
+                          View
+                        </Button>
+                        {canEdit && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setDeleteTarget([item.id])}
+                            className="cursor-pointer"
+                          >
+                            <Trash2 className="size-4" />
+                            Delete
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -227,7 +355,7 @@ export default function FeedbackSubmissionsManager({
           <Pagination
             currentPage={data?.page ?? 1}
             totalPages={data?.totalPages ?? 1}
-            onPageChange={(page) => updateParams({ page })}
+            onPageChange={(page) => changeParams({ page })}
           />
         </>
       )}
@@ -253,6 +381,18 @@ export default function FeedbackSubmissionsManager({
               : current,
           );
         }}
+      />
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={
+          deleteTarget?.length === 1
+            ? "Delete submission?"
+            : `Delete ${deleteTarget?.length ?? 0} submissions?`
+        }
+        description="Deleting a submission is permanent and cannot be undone."
+        confirming={deleting}
+        onConfirm={() => void handleDelete()}
+        onClose={() => setDeleteTarget(null)}
       />
     </div>
   );
