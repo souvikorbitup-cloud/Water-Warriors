@@ -5,6 +5,5 @@ export const REPORT_IMPACT_ASSUMPTIONS = {
   litresPerPersonPerDay: 75,
   litresPerTreePerYear: 365,
   tankerCapacityLitres: 5_000,
-  litresPerChildPerSchoolDay: 5,
-  schoolDaysPerYear: 200,
+  waterValueRupeesPerKilolitre: 100,
 } as const;

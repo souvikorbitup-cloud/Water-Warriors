@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
 import { LoaderCircle } from "lucide-react";
 import Image from "next/image";
-import { Children, Family, Tanker, Tree } from "@/components/icons";
+import { Family, Tanker, Tree, Savings } from "@/components/icons";
 import DownloadHighQualityReportButton from "@/components/main/shared/DownloadHighQualityReportButton";
 import ForecastProjectionSection, {
   type ForecastRow,
@@ -503,6 +503,22 @@ function ReportSessionClient({
     report.potentialLitres !== undefined
       ? `(${numberFormat(report.analysisLocale ?? locale, report.areaSqm, 2)} sq.m x ${numberFormat(report.analysisLocale ?? locale, report.annualRainfallMm, 1)} mm x ${numberFormat(report.analysisLocale ?? locale, report.runoffCoefficient, 1)} = ${formattedPotential} ${t("litresUnit")}) - 10% run-off`
       : undefined;
+  const waterValueRupeesPerKilolitre =
+    report?.waterValueRupeesPerKilolitre ??
+    REPORT_IMPACT_ASSUMPTIONS.waterValueRupeesPerKilolitre;
+  const formattedWaterValue = numberFormat(
+    report?.analysisLocale ?? locale,
+    waterValueRupeesPerKilolitre,
+    Number.isInteger(waterValueRupeesPerKilolitre) ? 0 : 2,
+  );
+  const assumptions = t("assumptions", {
+    price: formattedWaterValue,
+    priceBasis: t(
+      report?.waterValueIsLocationBased === true
+        ? "localWaterPriceBasis"
+        : "fallbackWaterPriceBasis",
+    ),
+  });
 
   const impacts = useMemo<ImpactStat[] | undefined>(() => {
     if (report?.potentialLitres === undefined) return undefined;
@@ -547,19 +563,20 @@ function ReportSessionClient({
       },
       {
         label: t("impacts.3.label"),
-        value: `${numberFormat(
-          report.analysisLocale ?? locale,
-          Math.floor(
-            report.potentialLitres /
-              (REPORT_IMPACT_ASSUMPTIONS.litresPerChildPerSchoolDay *
-                REPORT_IMPACT_ASSUMPTIONS.schoolDaysPerYear),
+        value: new Intl.NumberFormat(`${report.analysisLocale ?? locale}-IN`, {
+          style: "currency",
+          currency: "INR",
+          maximumFractionDigits: 0,
+        }).format(
+          Math.round(
+            (report.potentialLitres / 1_000) * waterValueRupeesPerKilolitre,
           ),
-        )} ${t("childrenUnit")}`,
+        ),
         note: t("impacts.3.note"),
-        Icon: Children,
+        Icon: Savings,
       },
     ];
-  }, [locale, report, t]);
+  }, [locale, report, t, waterValueRupeesPerKilolitre]);
 
   const forecastRows = useMemo<ForecastRow[] | undefined>(() => {
     if (!report?.forecast) return undefined;
@@ -610,6 +627,13 @@ function ReportSessionClient({
         )
         .join(", ")
     : undefined;
+  const rechargeIntroduction =
+    formattedPotential && locationName
+      ? t("rechargeIntro", {
+          litres: formattedPotential,
+          location: locationName,
+        })
+      : "";
 
   const pdfMapImageUrl = useMemo(
     () => createPdfMapImageUrl(report, "standard"),
@@ -622,14 +646,6 @@ function ReportSessionClient({
     const potentialValue = formattedPotential
       ? `${formattedPotential} ${t("litresUnit")}`
       : t("notAvailable");
-
-    const rechargeIntroduction =
-      formattedPotential && locationName
-        ? t("rechargeIntro", {
-            litres: formattedPotential,
-            location: locationName,
-          })
-        : "";
 
     return {
       locale: report.analysisLocale ?? locale,
@@ -668,7 +684,7 @@ function ReportSessionClient({
           value,
           note,
         })),
-        assumptions: t("assumptions"),
+        assumptions,
       },
       recharge: {
         title: t("rechargeTitle"),
@@ -699,7 +715,9 @@ function ReportSessionClient({
     harvestableInWords,
     calculation,
     impacts,
+    assumptions,
     locationName,
+    rechargeIntroduction,
     pdfMapImageUrl,
     forecastPeriod,
     forecastRows,
@@ -847,6 +865,7 @@ function ReportSessionClient({
         }
         annualSavingLitres={formattedPotential}
         impacts={impacts}
+        assumptions={assumptions}
       />
       <div className="relative aspect-15/4 w-full">
         <Image

@@ -8,7 +8,10 @@ import {
 import ReportSession, {
   type IReportSession,
 } from "@/lib/models/ReportSession.model";
-import { RUNOFF_COEFFICIENT } from "@/lib/report/constants";
+import {
+  REPORT_IMPACT_ASSUMPTIONS,
+  RUNOFF_COEFFICIENT,
+} from "@/lib/report/constants";
 import {
   getPolygonAreaSquareMeters,
   getPolygonCentroid,
@@ -24,6 +27,7 @@ import {
 } from "@/lib/report/providers";
 import type {
   ReportForecastMonth,
+  ReportAnalysisResult,
   ReportLocale,
   ReportLocation,
   ReportSessionData,
@@ -53,6 +57,8 @@ async function updateStep(
   value: unknown,
   persistDetails: boolean,
   analysisLocale?: ReportLocale,
+  waterValueRupeesPerKilolitre?: number,
+  waterValueIsLocationBased?: boolean,
 ): Promise<void> {
   await ReportSession.updateOne(
     { orderId },
@@ -63,9 +69,25 @@ async function updateStep(
     if (step === "analysis" && analysisLocale) {
       detailFields.analysisLocale = analysisLocale;
     }
+    if (step === "analysis" && waterValueRupeesPerKilolitre !== undefined) {
+      detailFields.waterValueRupeesPerKilolitre = waterValueRupeesPerKilolitre;
+    }
+    if (step === "analysis" && waterValueIsLocationBased !== undefined) {
+      detailFields.waterValueIsLocationBased = waterValueIsLocationBased;
+    }
+    const unsetFields: Record<string, ""> = {};
+    if (step === "analysis" && waterValueRupeesPerKilolitre === undefined) {
+      unsetFields.waterValueRupeesPerKilolitre = "";
+    }
+    if (step === "analysis" && waterValueIsLocationBased === undefined) {
+      unsetFields.waterValueIsLocationBased = "";
+    }
     await ReportSession.updateOne(
       { orderId, analyticsConsent: true },
-      { $set: detailFields },
+      {
+        $set: detailFields,
+        ...(Object.keys(unsetFields).length > 0 ? { $unset: unsetFields } : {}),
+      },
     );
   }
 }
@@ -85,7 +107,7 @@ async function generateAnalysisWithRetries(
   potentialLitres: number,
   persistDetails: boolean,
   locale: ReportLocale,
-): Promise<string[]> {
+): Promise<ReportAnalysisResult> {
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
     try {
       return await getHydrogeologyAnalysis(
@@ -130,6 +152,8 @@ function buildReportData(
     location?: ReportLocation;
     analysis?: string[];
     analysisLocale?: ReportLocale;
+    waterValueRupeesPerKilolitre?: number;
+    waterValueIsLocationBased?: boolean;
     forecast?: ReportForecastMonth[];
     mapSnapshotType?: string;
   },
@@ -252,6 +276,16 @@ export async function generateReport(
     persistDetails && savedAnalysisLocale === locale
       ? report.analysis
       : undefined;
+  let waterValueRupeesPerKilolitre = persistDetails
+    ? report.waterValueRupeesPerKilolitre
+    : undefined;
+  let waterValueIsLocationBased = persistDetails
+    ? report.waterValueIsLocationBased
+    : undefined;
+  const needsWaterValueRefresh =
+    persistDetails &&
+    (report.waterValueIsLocationBased === undefined ||
+      report.waterValueRupeesPerKilolitre === undefined);
   const prerequisitesAvailable =
     location !== undefined &&
     annualRainfallMm !== undefined &&
@@ -259,7 +293,8 @@ export async function generateReport(
   if (
     !persistDetails ||
     steps.analysis !== "complete" ||
-    savedAnalysisLocale !== locale
+    savedAnalysisLocale !== locale ||
+    needsWaterValueRefresh
   ) {
     if (
       prerequisitesAvailable &&
@@ -268,7 +303,7 @@ export async function generateReport(
       potentialLitres !== undefined
     ) {
       try {
-        analysis = await generateAnalysisWithRetries(
+        const analysisResult = await generateAnalysisWithRetries(
           orderId,
           location,
           areaSqm,
@@ -277,8 +312,22 @@ export async function generateReport(
           persistDetails,
           locale,
         );
+        analysis = analysisResult.analysis;
+        waterValueIsLocationBased =
+          analysisResult.waterValueRupeesPerKilolitre !== undefined;
+        waterValueRupeesPerKilolitre =
+          analysisResult.waterValueRupeesPerKilolitre ??
+          REPORT_IMPACT_ASSUMPTIONS.waterValueRupeesPerKilolitre;
         steps.analysis = "complete";
-        await updateStep(orderId, "analysis", analysis, persistDetails, locale);
+        await updateStep(
+          orderId,
+          "analysis",
+          analysis,
+          persistDetails,
+          locale,
+          waterValueRupeesPerKilolitre,
+          waterValueIsLocationBased,
+        );
       } catch (error) {
         const message = getErrorMessage(error);
         failures.push(`Hydrogeology analysis: ${message}`);
@@ -375,6 +424,12 @@ export async function generateReport(
       ...(location ? { location } : {}),
       ...(analysis ? { analysis } : {}),
       ...(analysis ? { analysisLocale: locale } : {}),
+      ...(waterValueRupeesPerKilolitre === undefined
+        ? {}
+        : { waterValueRupeesPerKilolitre }),
+      ...(waterValueIsLocationBased === undefined
+        ? {}
+        : { waterValueIsLocationBased }),
       ...(forecast ? { forecast } : {}),
       ...(mapSnapshotType ? { mapSnapshotType } : {}),
     },

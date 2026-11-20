@@ -5,6 +5,7 @@ import { Model, Schema, model, models } from "mongoose";
 interface IReportAnalysisCache {
   cacheKey: string;
   analysis: string[];
+  waterValueRupeesPerKilolitre?: number;
   expiresAt: Date;
 }
 
@@ -12,6 +13,7 @@ const reportAnalysisCacheSchema = new Schema<IReportAnalysisCache>(
   {
     cacheKey: { type: String, required: true },
     analysis: { type: [String], required: true },
+    waterValueRupeesPerKilolitre: { type: Number, min: 0 },
     expiresAt: { type: Date, required: true },
   },
   { collection: "reportAnalysisCache" },

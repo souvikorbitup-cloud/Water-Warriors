@@ -6,7 +6,7 @@ import {
 import type { ReportLocale, ReportSessionData } from "@/lib/report/types";
 
 export const PREPARED_REPORT_STORAGE_PREFIX = "ww-report-session:";
-const PREPARED_REPORT_VERSION = 1;
+const PREPARED_REPORT_VERSION = 2;
 const PREPARED_REPORT_TTL_MS = 24 * 60 * 60 * 1000;
 
 const preparedReportSchema = z.object({

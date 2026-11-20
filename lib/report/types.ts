@@ -34,6 +34,11 @@ export type ReportForecastMonth = {
   harvestableLitres: number;
 };
 
+export type ReportAnalysisResult = {
+  analysis: string[];
+  waterValueRupeesPerKilolitre?: number;
+};
+
 export type ReportSessionData = {
   orderId: string;
   status: ReportStatus;
@@ -47,6 +52,8 @@ export type ReportSessionData = {
   location?: ReportLocation;
   analysis?: string[];
   analysisLocale?: ReportLocale;
+  waterValueRupeesPerKilolitre?: number;
+  waterValueIsLocationBased?: boolean;
   forecast?: ReportForecastMonth[];
   mapSnapshotType?: string;
   steps: {

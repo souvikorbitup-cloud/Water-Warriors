@@ -36,6 +36,8 @@ export const reportSessionResponseSchema = z.object({
   location: reportLocationSchema.optional(),
   analysis: z.array(z.string()).optional(),
   analysisLocale: z.enum(["en", "hi"]).optional(),
+  waterValueRupeesPerKilolitre: z.number().finite().nonnegative().optional(),
+  waterValueIsLocationBased: z.boolean().optional(),
   forecast: z
     .array(
       z.object({

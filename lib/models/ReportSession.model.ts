@@ -97,6 +97,8 @@ const reportSessionSchema = new Schema<IReportSession>(
     location: { type: locationSchema },
     analysis: { type: [String], default: undefined },
     analysisLocale: { type: String, enum: ["en", "hi"] },
+    waterValueRupeesPerKilolitre: { type: Number, min: 0 },
+    waterValueIsLocationBased: { type: Boolean },
     forecast: { type: [forecastMonthSchema], default: undefined },
     mapSnapshotType: { type: String },
     steps: {

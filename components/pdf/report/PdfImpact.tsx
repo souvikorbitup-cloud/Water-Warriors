@@ -3,7 +3,7 @@ import type { WaterWarriorsPdfData } from "./pdf.types";
 import { resolveAsset, type PdfAssetKey } from "./pdf.assets";
 import { pdfStyles } from "./pdf.styles";
 
-const IMPACT_ICONS: PdfAssetKey[] = ["family", "trees", "truck", "children"];
+const IMPACT_ICONS: PdfAssetKey[] = ["family", "trees", "truck", "savings"];
 
 export default function PdfImpact({ data }: { data: WaterWarriorsPdfData }) {
   return (

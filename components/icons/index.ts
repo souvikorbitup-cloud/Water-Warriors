@@ -11,4 +11,4 @@ export { default as WaterDrop } from "./WaterDrop";
 export { default as Family } from "./Family";
 export { default as Tree } from "./Tree";
 export { default as Tanker } from "./Tanker";
-export { default as Children } from "./Children";
+export { default as Savings } from "./Savings";

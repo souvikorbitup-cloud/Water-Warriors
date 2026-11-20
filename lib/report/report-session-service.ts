@@ -46,6 +46,8 @@ export function toReportSessionData(
     location,
     analysis,
     analysisLocale,
+    waterValueRupeesPerKilolitre,
+    waterValueIsLocationBased,
     forecast,
     mapSnapshotType,
     steps,
@@ -70,6 +72,12 @@ export function toReportSessionData(
     ...(shouldIncludeDetails && analysis?.length ? { analysis } : {}),
     ...(shouldIncludeDetails && analysis?.length
       ? { analysisLocale: analysisLocale ?? "en" }
+      : {}),
+    ...(shouldIncludeDetails && waterValueRupeesPerKilolitre !== undefined
+      ? { waterValueRupeesPerKilolitre }
+      : {}),
+    ...(shouldIncludeDetails && waterValueIsLocationBased !== undefined
+      ? { waterValueIsLocationBased }
       : {}),
     ...(shouldIncludeDetails && forecast?.length ? { forecast } : {}),
     ...(shouldIncludeDetails && mapSnapshotType ? { mapSnapshotType } : {}),
@@ -352,6 +360,8 @@ export async function claimReportGeneration(
             { analysis: { $exists: false } },
             { analysis: { $size: 0 } },
             { analysisLocale: { $ne: locale } },
+            { waterValueIsLocationBased: { $exists: false } },
+            { waterValueRupeesPerKilolitre: { $exists: false } },
             { location: { $exists: false } },
             { annualRainfallMm: { $exists: false } },
             { potentialLitres: { $exists: false } },

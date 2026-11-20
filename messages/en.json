@@ -373,7 +373,7 @@
     "notAvailable": "Not available",
     "mapPending": "Your selected rooftop map will appear here.",
     "mapFailed": "The selected rooftop map could not be loaded.",
-    "potentialTitle": "Rainwater Harvesting Potential",
+    "potentialTitle": "Rainwater harvesting potential",
     "potentialDescription": "Based on the above parameters, your selected location has the potential to harvest approximately",
     "impactTitle": "The Impact Of Saving {litres} Litres Of Rainwater Per Year",
     "impactDescription": "Conserving this much water annually can make a huge difference!",
@@ -391,42 +391,38 @@
         "note": "of 5,000L each*"
       },
       "3": {
-        "label": "Schools & Hygiene",
-        "note": "children for one school year*"
+        "label": "Cost Savings",
+        "note": "estimated purchased water*"
       }
     },
     "daysUnit": "days",
     "treesUnit": "trees",
     "tripsUnit": "trips",
-    "childrenUnit": "children",
     "litresUnit": "Litres",
     "impactPending": "Impact metrics will appear when the rainwater potential is calculated.",
     "annualRainfallSource": "Source: Open-Meteo historical data; average of the last 10 complete calendar years.",
     "analysisPending": "Location-specific hydrogeology analysis is being generated.",
-    "assumptions": "* Assumptions: Family of 4 using 75L/person/day · Standard tanker = 5,000L · Trees Supported uses an illustrative Water Warriors equivalence of 365L/tree/year, not a universal scientific requirement · Schools & Hygiene uses 5L/child/school day based on WHO/UNICEF day-school guidance (drinking, personal hygiene, food preparation, cleaning and laundry; excluding toilet flushing and showers) x 200 school days, with the 200-day academic year being a Water Warriors assumption.",
-    "rechargeTitle": "Why Rainwater Recharge Matters.",
+    "assumptions": "* Assumptions: Family of 4 using 75L/person/day · Standard tanker = 5,000L · Trees Supported uses an illustrative Water Warriors equivalence of 365L/tree/year, not a universal scientific requirement · Cost Savings uses ₹{price} per 1,000L based on the {priceBasis}; actual savings depend on your tariff and how much rainwater replaces purchased water.",
+    "localWaterPriceBasis": "best available local or regional residential tariff",
+    "fallbackWaterPriceBasis": "configured illustrative fallback rate",
+    "rechargeTitle": "Why rainwater recharge matters.",
     "rechargeIntro": "Harvesting approximately {litres} litres of rainwater annually at your location in {location}, represents a substantial potential for augmenting your household water supply. This significant volume could be strategically utilized for various non-potable needs, reducing the demand on other sources.",
-    "rechargeHighlights": {
-      "0": "For instance, this collected water may be used for outdoor tasks like watering gardens and landscaping, as well as for indoor uses such as toilet flushing, potentially leading to noticeable reductions in household water-related expenses over time.",
-      "1": "Beyond direct consumption, directing this considerable amount of rainwater into the ground can play a vital role in local groundwater recharge. This process helps to replenish underground water reserves, supporting the natural water cycle in your immediate area.",
-      "2": "Such efforts contribute to overall water resilience for the region, minimizing stormwater runoff and fostering a more sustainable approach to managing this precious resource."
-    },
-    "forecastTitle": "Your Next Five-Month Rainfall Harvesting Projection",
+    "forecastTitle": "Your next five-month rainfall harvesting projection",
     "forecastPeriod": "(November 2026 - March 2027)",
     "forecastPeriodPending": "Five-month seasonal forecast",
     "forecastPending": "Seasonal forecast data will appear when available.",
     "month": "Month",
-    "forecastedRainfall": "Forecasted Average Rainfall (mm)",
-    "harvestingPotential": "Rainwater Harvesting Potential (Litres)*",
-    "grandTotal": "Grand Total",
+    "forecastedRainfall": "Forecasted average rainfall (mm)",
+    "harvestingPotential": "Rainwater harvesting potential (Litres)*",
+    "grandTotal": "Grand total",
     "tip": "Don't let the next rain go to waste. Harvest it, divert it, and conserve it with proven rainwater harvesting techniques—turning every drop into a lasting water resource for your home.",
     "forecastNote": "*Forecast rainfall values are based on Open-Meteo seasonal forecast data. Long-range forecasts are indicative and actual rainfall may vary.",
-    "forecastSource": "Source: Open-Meteo Seasonal Forecast API (ECMWF seasonal forecast).",
+    "forecastSource": "Source: Open-meteo seasonal forecast API (ECMWF seasonal forecast).",
     "disclaimer": "*Measurements are estimates for reference. To restore a paid report after refresh, its rooftop outline and generated results are stored in a secure report session.",
-    "ctaTitle": "Turn Every Drop of Rain into a Sustainable Future!",
+    "ctaTitle": "Turn every drop of rain into a sustainable future!",
     "ctaText": "Discover your rainwater harvesting potential, save water, and make every drop count with Water Warriors AI.",
-    "downloadPdf": "Download PDF Report",
-    "viewPdf": "View Report",
+    "downloadPdf": "Download PDF report",
+    "viewPdf": "View report",
     "downloadHighQualityPdf": "Download High-Quality PDF",
     "preparingPdf": "Preparing PDF...",
     "pdfGenerationFailed": "Could not generate the PDF. Please try again.",
@@ -440,8 +436,8 @@
     "retryReport": "Retry report generation",
     "reloadReport": "Reload report",
     "reportLanguage": "Report currently displayed in {language}",
-    "anotherReport": "Ready For Another Report?",
-    "measureAnother": "Measure Another Rooftop"
+    "anotherReport": "Ready for another report?",
+    "measureAnother": "Measure another rooftop"
   },
   "Checkout": {
     "updateArea": "Is your selected area not quite right? <link>Update it here.</link>",
@@ -449,7 +445,7 @@
     "updateNote": "Note: Selecting this link takes you back to the home page.",
     "seeSavings": "See your potential water savings.",
     "viewSample": "View a sample report",
-    "completeTitle": "Get Your Complete Report",
+    "completeTitle": "Get your complete report",
     "completeDescription": "Check your order summary and apply any available discounts before checkout.",
     "planDescription": "You're almost there! We're thrilled you've made it this far! You're just one step away from unlocking your customized rainwater harvesting report.",
     "subtotal": "Subtotal",
@@ -565,10 +561,10 @@
         "body": "Our hosting and back-end providers keep standard technical logs, such as IP address, browser type and time of request, to run the site securely."
       }
     },
-    "googlePrivacy": "Google's Privacy Policy",
-    "optOut": "Google Analytics opt-out add-on",
+    "googlePrivacy": "Google's privacy policy",
+    "optOut": "Google analytics opt-out add-on",
     "googleInfo": "how Google uses information from sites that use its services",
-    "adCenter": "My Ad Center",
+    "adCenter": "My Ad center",
     "recipientsTitle": "Who receives information",
     "recipientsIntro": "These services process information on our behalf to provide the features above. Some of them process it outside India.",
     "columns": {
@@ -581,7 +577,7 @@
     },
     "recipients": {
       "0": {
-        "name": "Google (Maps Platform)",
+        "name": "Google (Maps platform)",
         "for": "Map, place search, address lookup and the map image in your report",
         "receives": "Your IP address, the area you draw and its location"
       },

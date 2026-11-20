@@ -57,7 +57,7 @@ function getFontFamily(locale: string): string | string[] {
   if (locale.startsWith("hi")) {
     return ["WWNotoSansDevanagari", "WWNotoSans"];
   }
-  return "WWNotoSans";
+  return ["WWNotoSans", "WWNotoSansDevanagari"];
 }
 
 function PageFooter() {

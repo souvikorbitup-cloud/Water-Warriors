@@ -6,7 +6,7 @@ export const PDF_ASSET_PATHS = {
   family: "/pdf-images/family-dot.png",
   trees: "/pdf-images/trees-dot.png",
   truck: "/pdf-images/truck-dot.png",
-  children: "/pdf-images/children-dot.png",
+  savings: "/pdf-images/savings-dot.png",
   bulb: "/pdf-images/bulb.svg",
   rainCollect: "/section-images/rain-collect.png",
   divider: "/section-images/report-divider-img.png",
