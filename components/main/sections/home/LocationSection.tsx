@@ -732,7 +732,7 @@ export default function LocationSection({ onNext }: LocationSectionProps) {
       return;
     }
 
-    router.push("/checkout");
+    router.push(`/checkout?attempt=${crypto.randomUUID()}`);
   };
 
   return (

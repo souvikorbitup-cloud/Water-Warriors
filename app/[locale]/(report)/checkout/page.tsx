@@ -5,6 +5,7 @@ import { getAppLocale } from "@/i18n/get-app-locale";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: PageProps) {
@@ -17,13 +18,22 @@ export async function generateMetadata({ params }: PageProps) {
   });
 }
 
-export default async function PaymentStepPage({ params }: PageProps) {
-  const locale = getAppLocale((await params).locale);
+export default async function PaymentStepPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const [{ locale: requestedLocale }, { attempt }] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+  const locale = getAppLocale(requestedLocale);
   setRequestLocale(locale);
 
   return (
     <>
-      <CheckoutSection />
+      <CheckoutSection
+        key={typeof attempt === "string" ? attempt : "default"}
+      />
     </>
   );
 }

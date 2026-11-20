@@ -16,7 +16,7 @@ type JsonRecord = Record<string, unknown>;
 type AnalysisBlock = { kind: "paragraph" | "point"; text: string };
 
 const GEMINI_MODEL_IDS = ["gemini-2.5-flash", "gemini-3.5-flash-lite"] as const;
-const ANALYSIS_PROMPT_VERSION = "recharge-analysis-v5";
+const ANALYSIS_PROMPT_VERSION = "recharge-analysis-v7";
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null;
@@ -99,10 +99,7 @@ export async function reverseGeocode(
         ? address.address_components
         : [],
     );
-  const locality =
-    getAddressComponent(components, "locality") ||
-    getAddressComponent(components, "sublocality_level_1");
-  const city =
+  const administrativeCity =
     getAddressComponent(components, "locality") ||
     getAddressComponent(components, "postal_town") ||
     getAddressComponent(components, "administrative_area_level_3");
@@ -111,11 +108,21 @@ export async function reverseGeocode(
     "administrative_area_level_2",
   );
   const state = getAddressComponent(components, "administrative_area_level_1");
+  const city = administrativeCity || district || state;
+  const locality =
+    getAddressComponent(components, "locality") ||
+    getAddressComponent(components, "sublocality_level_1") ||
+    city;
   const countryCode = getAddressComponent(components, "country", true);
 
-  if (!locality || !city || !district || !state || !countryCode) {
+  const missingDetails = [
+    !locality && "locality",
+    !city && "city or region",
+    !countryCode && "country",
+  ].filter((detail): detail is string => Boolean(detail));
+  if (missingDetails.length > 0) {
     throw new Error(
-      "Reverse geocoding did not return all required locality details.",
+      `Reverse geocoding did not return enough location details (${missingDetails.join(", ")}).`,
     );
   }
 
@@ -385,12 +392,12 @@ async function requestHydrogeologyAnalysis(
     "Do not say the water is safe to drink or make health promises.",
     "Avoid generic filler about lower bills, property value, setting an example, raising awareness or sustainability slogans.",
     "Do not describe rainfall timing or monthly patterns, and do not mention roof or gutter cleaning, first-flush diverters or filters.",
-    "Use plain text except for paired double asterisks used for emphasis. Wrap important place names and complete measured quantities, including both the number and its unit (for example, bold the whole roof-area or litres phrase, not only its digits), in **double asterisks**. Do not use any other Markdown.",
+    "Use plain text except for paired double asterisks used for emphasis. Wrap important place names and complete measured quantities, including both the number and its unit (for example, bold the whole roof-area or litres phrase, not only its digits), in **double asterisks**. Also, in each block, bold one additional short phrase that captures its most important local takeaway, such as a relevant water pressure, risk, suitable method or recommended action. Choose a phrase specific to that block; do not bold a whole sentence or generic filler. Do not use any other Markdown.",
     "Point blocks must contain only their text; do not start a point with a bullet, dot or other marker.",
     locale === "hi"
       ? "Write the report in Hindi using clear Devanagari script; keep local place names and technical terms understandable."
       : "Write the report in English.",
-    "You must return the metadata field waterValueRupeesPerKilolitre: the best-supported current typical residential water tariff for this location, expressed in INR per 1,000 litres. Prefer a published local water-utility tariff. If no exact local tariff is available, use the closest reliable published residential tariff from the city, district or state as a location-based estimate. Never omit this field. Do not use a generic default or copy a value from the prompt. Do not mention this metadata in the report blocks.",
+    "You must return the metadata field waterValueRupeesPerKilolitre: the best-supported current local cost in INR for 1,000 litres of water that a household could realistically avoid purchasing by using rainwater. Estimate the marginal replacement cost, not the cheapest nominal rate. First consider the typical residential supply and which paid source rainwater would replace: where households commonly rely on tanker or private-vendor deliveries, prioritize the typical residential delivered price, including delivery charges, over a low municipal tariff. Convert quoted prices to a per-1,000-litre rate using the quoted volume. Where delivered water is not the relevant source, use the effective volumetric residential utility rate for additional water, not a connection fee or a subsidized minimum/lifeline tier unless that tier is representative of the household. Prefer current, credible local published prices; if none are available, use the closest credible city, district or regional residential purchase price. Do not use commercial/industrial rates, a generic national benchmark, or an unsupported guess. Never omit this field and do not copy a value from the prompt. Do not mention this metadata in the report blocks.",
   ];
 
   let rejectionReason: string | undefined;
@@ -446,7 +453,7 @@ async function requestHydrogeologyAnalysis(
                   waterValueRupeesPerKilolitre: {
                     type: "NUMBER",
                     description:
-                      "Residential water tariff in Indian rupees per 1,000 litres, based on the best available local or regional published rate.",
+                      "Best-supported local residential replacement cost for purchased water in Indian rupees per 1,000 litres. Prefer delivered tanker/private-vendor prices where those are a common household source; otherwise use the effective residential volumetric tariff.",
                   },
                 },
                 required: ["analysis", "waterValueRupeesPerKilolitre"],
@@ -532,7 +539,7 @@ async function requestHydrogeologyAnalysis(
         (total, block) => total + block.text.split(/\s+/).length,
         0,
       );
-      const hasEmphasis = validatedBlocks.some((block) =>
+      const hasEmphasisInEveryBlock = validatedBlocks.every((block) =>
         /\*\*[^*\r\n]+\*\*/u.test(block.text),
       );
       const hasUnpairedEmphasis = validatedBlocks.some(
@@ -553,8 +560,8 @@ async function requestHydrogeologyAnalysis(
                     ),
                   )
                 ? 'the answer must not use "we", "our", "us", or first-person plural Hindi phrasing'
-                : !hasEmphasis || hasUnpairedEmphasis
-                  ? "wrap important figures with their units and place names in paired double asterisks"
+                : !hasEmphasisInEveryBlock || hasUnpairedEmphasis
+                  ? "use paired double asterisks for important place names and complete measured quantities, and include a concise key takeaway phrase in every block"
                   : null;
 
       const numberTokens = validatedBlocks.flatMap(
