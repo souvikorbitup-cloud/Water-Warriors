@@ -1,9 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { X } from "lucide-react";
+import { LayoutDashboard, UserRound, X } from "lucide-react";
 
+import { useCurrentUser } from "@/lib/hooks/use-auth";
 import { Logo, LogoLight } from "@/components/icons";
+import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 import {
   Sheet,
   SheetClose,
@@ -23,6 +25,7 @@ type MainNavbarProps = {
 export default function MainNavbar({ type = "light" }: MainNavbarProps) {
   const pathname = usePathname();
   const t = useTranslations("Common");
+  const { user, isPending } = useCurrentUser();
 
   return (
     <header
@@ -107,7 +110,40 @@ export default function MainNavbar({ type = "light" }: MainNavbarProps) {
               </ul>
             </nav>
 
-            {/* <hr className="mx-4 mt-6 border-t border-heading/80" /> */}
+            <hr className="mx-4 mt-6 border-t border-heading/80" />
+
+            {!isPending && (
+              <div className="px-6 pt-6">
+                {user?.role === "admin" ? (
+                  <SheetClose asChild>
+                    <PrimaryButton
+                      href="/admin"
+                      btnType="solid-primary"
+                      size="sm"
+                      full
+                      className="w-full"
+                      endIcon={<LayoutDashboard aria-hidden />}
+                    >
+                      {t("viewDashboard")}
+                    </PrimaryButton>
+                  </SheetClose>
+                ) : (
+                  <SheetClose asChild>
+                    <PrimaryButton
+                      href="/sign-in?redirect=%2Fadmin"
+                      localized
+                      btnType="solid-primary"
+                      size="sm"
+                      full
+                      className="w-full"
+                      endIcon={<UserRound aria-hidden />}
+                    >
+                      {t("adminLogin")}
+                    </PrimaryButton>
+                  </SheetClose>
+                )}
+              </div>
+            )}
 
             {/* Contact */}
             {/* <div className="px-6 pt-8 pb-10">
