@@ -1,4 +1,5 @@
 import type {
+  ContactReason,
   ContactStatus,
   FeedbackStatus,
 } from "@/lib/submissions/constants";
@@ -7,6 +8,7 @@ export type ContactListItem = {
   id: string;
   name: string;
   email: string;
+  reason: ContactReason | null;
   message: string;
   preview: string;
   status: ContactStatus;

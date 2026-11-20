@@ -1,15 +1,23 @@
 import { Schema, model, models, Model, Query, Types } from "mongoose";
 import {
+  CONTACT_REASONS,
   CONTACT_STATUSES,
+  type ContactReason,
   type ContactStatus,
 } from "@/lib/submissions/constants";
 
-export { CONTACT_STATUSES, type ContactStatus };
+export {
+  CONTACT_REASONS,
+  CONTACT_STATUSES,
+  type ContactReason,
+  type ContactStatus,
+};
 
 export interface IContactSubmission {
   // --- Submitted by the visitor (matches the form's name / email / message) ---
   name: string;
   email: string;
+  reason?: ContactReason;
   message: string;
 
   // --- Request metadata (captured server-side in /api/contact) ---
@@ -82,6 +90,15 @@ const contactSubmissionSchema = new Schema<
       lowercase: true, // normalise so per-sender lookups and indexes match
       maxlength: [254, "Email cannot exceed 254 characters"], // RFC 5321 limit
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, "Please enter a valid email"],
+    },
+
+    reason: {
+      type: String,
+      required: [true, "Please choose a reason"],
+      enum: {
+        values: CONTACT_REASONS,
+        message: "{VALUE} is not a valid contact reason",
+      },
     },
 
     message: {

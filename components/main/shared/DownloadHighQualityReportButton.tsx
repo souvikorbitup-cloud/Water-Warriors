@@ -13,14 +13,14 @@ export default function DownloadHighQualityReportButton({
   isPreparing: boolean;
 }) {
   const t = useTranslations("Report");
-  const label = isPreparing ? t("preparingPdf") : t("downloadHighQualityPdf");
+  const label = isPreparing ? t("preparingPdf") : t("downloadPdf");
 
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-label={t("downloadHighQualityPdf")}
+      aria-label={t("downloadPdf")}
       aria-busy={isPreparing}
       className="group fixed right-3 bottom-18 z-40 flex items-center focus-visible:outline-none sm:right-6.5 sm:bottom-28 cursor-pointer"
     >

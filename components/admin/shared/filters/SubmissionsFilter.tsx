@@ -29,6 +29,11 @@ export default function SubmissionsFilter({
   onStatusChange,
   statusLabel = "Status",
   allStatusLabel = "All statuses",
+  reason,
+  reasonOptions,
+  onReasonChange,
+  reasonLabel = "Reason",
+  allReasonLabel = "All reasons",
   sort,
   sortOptions,
   onSortChange,
@@ -43,6 +48,11 @@ export default function SubmissionsFilter({
   onStatusChange: (value: string) => void;
   statusLabel?: string;
   allStatusLabel?: string;
+  reason?: string;
+  reasonOptions?: FilterOption[];
+  onReasonChange?: (value: string) => void;
+  reasonLabel?: string;
+  allReasonLabel?: string;
   sort: string;
   sortOptions: FilterOption[];
   onSortChange: (value: string) => void;
@@ -112,6 +122,35 @@ export default function SubmissionsFilter({
             </SelectContent>
           </Select>
         </div>
+
+        {reason !== undefined && reasonOptions && onReasonChange && (
+          <div>
+            <Label htmlFor="submissions-reason" className="text-heading">
+              {reasonLabel}
+            </Label>
+            <Select
+              value={reason || ALL_VALUE}
+              onValueChange={(value) =>
+                onReasonChange(value === ALL_VALUE ? "" : value)
+              }
+            >
+              <SelectTrigger
+                id="submissions-reason"
+                className="mt-2 h-10! w-full"
+              >
+                <SelectValue placeholder={allReasonLabel} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_VALUE}>{allReasonLabel}</SelectItem>
+                {reasonOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {extraFilters}
 

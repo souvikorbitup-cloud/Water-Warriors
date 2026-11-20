@@ -31,6 +31,7 @@ async function FeedbackSubmissionsContent() {
     limit: 10,
     search: "",
     status: "",
+    reason: "",
     sort: "createdAt:desc",
     topic: "",
     rating: "",

@@ -288,6 +288,22 @@
     },
     "formTitle": "Send us a message",
     "formDescription": "Tell us a little about your question. Fields marked * are required.",
+    "reasonLabel": "What can we help with? *",
+    "reasonPlaceholder": "Choose a reason",
+    "reasons": {
+      "question": {
+        "label": "Question",
+        "description": "About rainwater harvesting or Water Warriors"
+      },
+      "support": {
+        "label": "Support",
+        "description": "Help with the map, reports or payments"
+      },
+      "partnership": {
+        "label": "Partnership",
+        "description": "NGOs, companies, communities, institutions"
+      }
+    },
     "name": "Name *",
     "namePlaceholder": "Your name",
     "email": "Email *",

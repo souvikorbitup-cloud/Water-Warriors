@@ -4,6 +4,7 @@ import type { IFeedbackSubmission } from "@/lib/models/FeedbackSubmission.model"
 import { escapeRegex } from "./sanitize";
 import {
   isContactStatus,
+  isContactReason,
   isFeedbackStatus,
   listQuerySchema,
   type ListQueryInput,
@@ -20,6 +21,7 @@ export function parseListQuery(searchParams: URLSearchParams): ListQueryInput {
     limit: searchParams.get("limit") ?? undefined,
     search: searchParams.get("search") ?? "",
     status: searchParams.get("status") ?? "",
+    reason: searchParams.get("reason") ?? "",
     sort: searchParams.get("sort") ?? undefined,
     topic: searchParams.get("topic") ?? "",
     rating: searchParams.get("rating") ?? "",
@@ -31,6 +33,7 @@ export function parseListQuery(searchParams: URLSearchParams): ListQueryInput {
       limit: 10,
       search: "",
       status: "",
+      reason: "",
       sort: "createdAt:desc",
       topic: "",
       rating: "",
@@ -67,6 +70,10 @@ export function buildContactFilter(
 
   if (query.status && isContactStatus(query.status)) {
     filter.status = query.status;
+  }
+
+  if (query.reason && isContactReason(query.reason)) {
+    filter.reason = query.reason;
   }
 
   const searchFilter = buildSearchFilter(query.search, [
@@ -133,6 +140,7 @@ export function toContactListItem(
     id: serializeId(doc._id),
     name: doc.name,
     email: doc.email,
+    reason: doc.reason ?? null,
     message: doc.message,
     preview: previewText(doc.message),
     status: doc.status,

@@ -13,7 +13,7 @@ export default function ContactUsSubmissionsPage() {
   return (
     <Suspense
       fallback={
-        <SubmissionsPageSkeleton title="Contact Us Submissions" columns={5} />
+        <SubmissionsPageSkeleton title="Contact Us Submissions" columns={6} />
       }
     >
       <ContactUsSubmissionsContent />
@@ -30,6 +30,7 @@ async function ContactUsSubmissionsContent() {
     limit: 10,
     search: "",
     status: "",
+    reason: "",
     sort: "createdAt:desc",
     topic: "",
     rating: "",

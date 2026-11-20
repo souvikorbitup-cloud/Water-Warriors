@@ -8,7 +8,11 @@ import SubmissionsFilter, {
   type FilterOption,
 } from "@/components/admin/shared/filters/SubmissionsFilter";
 import { Button } from "@/components/ui/button";
-import { CONTACT_STATUSES } from "@/lib/submissions/constants";
+import {
+  CONTACT_REASONS,
+  CONTACT_STATUSES,
+  type ContactReason,
+} from "@/lib/submissions/constants";
 import { formatSubmissionDate } from "@/lib/submissions/format";
 import { useSubmissionsList } from "@/lib/hooks/use-submissions-list";
 import type {
@@ -21,6 +25,17 @@ import SubmissionsTableSkeleton from "./SubmissionsTableSkeleton";
 const STATUS_OPTIONS: FilterOption[] = CONTACT_STATUSES.map((status) => ({
   value: status,
   label: status.charAt(0).toUpperCase() + status.slice(1),
+}));
+
+const REASON_LABELS: Record<ContactReason, string> = {
+  question: "Question",
+  support: "Support",
+  partnership: "Partnership",
+};
+
+const REASON_OPTIONS: FilterOption[] = CONTACT_REASONS.map((reason) => ({
+  value: reason,
+  label: REASON_LABELS[reason],
 }));
 
 const SORT_OPTIONS: FilterOption[] = [
@@ -53,6 +68,12 @@ export default function ContactSubmissionsManager({
     return [
       { label: "Name", value: selected.name },
       { label: "Email", value: selected.email },
+      {
+        label: "Reason",
+        value: selected.reason
+          ? REASON_LABELS[selected.reason]
+          : "Not specified",
+      },
       { label: "Received", value: formatSubmissionDate(selected.createdAt) },
       {
         label: "Last updated",
@@ -88,6 +109,9 @@ export default function ContactSubmissionsManager({
         status={params.status}
         statusOptions={STATUS_OPTIONS}
         onStatusChange={(status) => updateParams({ status })}
+        reason={params.reason}
+        reasonOptions={REASON_OPTIONS}
+        onReasonChange={(reason) => updateParams({ reason })}
         sort={params.sort}
         sortOptions={SORT_OPTIONS}
         onSortChange={(sort) => updateParams({ sort })}
@@ -95,6 +119,7 @@ export default function ContactSubmissionsManager({
           updateParams({
             search: "",
             status: "",
+            reason: "",
             sort: "createdAt:desc",
             page: 1,
           })
@@ -111,7 +136,7 @@ export default function ContactSubmissionsManager({
       )}
 
       {loading ? (
-        <SubmissionsTableSkeleton columns={5} />
+        <SubmissionsTableSkeleton columns={6} />
       ) : error ? null : empty ? (
         <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-16 text-center">
           <p className="text-base font-medium text-heading">
@@ -128,6 +153,7 @@ export default function ContactSubmissionsManager({
               <thead className="bg-gray-50 text-xs tracking-wide text-muted-foreground uppercase">
                 <tr>
                   <th className="px-4 py-3 font-medium">From</th>
+                  <th className="px-4 py-3 font-medium">Reason</th>
                   <th className="px-4 py-3 font-medium">Message</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Received</th>
@@ -142,6 +168,11 @@ export default function ContactSubmissionsManager({
                       <p className="text-xs text-muted-foreground">
                         {item.email}
                       </p>
+                    </td>
+                    <td className="px-4 py-3 align-top text-heading">
+                      {item.reason
+                        ? REASON_LABELS[item.reason]
+                        : "Not specified"}
                     </td>
                     <td className="max-w-xs px-4 py-3 align-top text-muted-foreground">
                       {item.preview}

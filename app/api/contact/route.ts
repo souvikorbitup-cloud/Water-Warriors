@@ -57,10 +57,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, message } = parsed.data;
+    const { name, email, reason, message } = parsed.data;
     const submission = await ContactSubmission.create({
       name,
       email,
+      reason,
       message,
       ipHash,
       userAgent: getUserAgent(req),

@@ -1,7 +1,9 @@
 import { z } from "zod";
 import {
+  CONTACT_REASONS,
   CONTACT_STATUSES,
   FEEDBACK_STATUSES,
+  type ContactReason,
   type ContactStatus,
   type FeedbackStatus,
 } from "@/lib/submissions/constants";
@@ -76,6 +78,9 @@ const messageSchema = z
   );
 
 export const contactSubmissionSchema = z.object({
+  reason: z.enum(CONTACT_REASONS, {
+    error: "Please choose a valid reason.",
+  }),
   name: nameSchema,
   email: requiredEmailSchema,
   message: messageSchema,
@@ -135,6 +140,7 @@ export const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(10),
   search: z.string().trim().max(200).optional().default(""),
   status: z.string().trim().optional().default(""),
+  reason: z.string().trim().optional().default(""),
   sort: z.enum(SORT_VALUES).default("createdAt:desc"),
   topic: z.string().trim().optional().default(""),
   rating: z.string().trim().optional().default(""),
@@ -150,6 +156,10 @@ export type ListQueryInput = z.infer<typeof listQuerySchema>;
 
 export function isContactStatus(value: string): value is ContactStatus {
   return (CONTACT_STATUSES as readonly string[]).includes(value);
+}
+
+export function isContactReason(value: string): value is ContactReason {
+  return (CONTACT_REASONS as readonly string[]).includes(value);
 }
 
 export function isFeedbackStatus(value: string): value is FeedbackStatus {

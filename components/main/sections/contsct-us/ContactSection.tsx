@@ -3,7 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
+  CircleHelp,
   FileChartColumn,
+  Handshake,
+  LifeBuoy,
   MapPin,
   MessageSquare,
   type LucideIcon,
@@ -14,11 +17,23 @@ import PrimaryButton from "@/components/main/shared/button/PrimaryButton";
 import SubmissionSuccessModal from "@/components/main/shared/modal/SubmissionSuccessModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { readApiError } from "@/lib/submissions/api-error";
 import {
+  CONTACT_REASONS,
+  type ContactReason,
+} from "@/lib/submissions/constants";
+import {
   contactSubmissionSchema,
   firstZodErrorMessage,
+  isContactReason,
   zodErrorToFieldErrors,
 } from "@/lib/submissions/schemas";
 
@@ -28,6 +43,17 @@ const topics: { Icon: LucideIcon; index: 0 | 1 | 2 }[] = [
   { Icon: MessageSquare, index: 2 },
 ];
 
+const reasonIcons: Record<ContactReason, LucideIcon> = {
+  question: CircleHelp,
+  support: LifeBuoy,
+  partnership: Handshake,
+};
+
+const reasons = CONTACT_REASONS.map((value) => ({
+  Icon: reasonIcons[value],
+  value,
+}));
+
 const fieldClasses =
   "rounded-lg border-input bg-background px-4 text-sm shadow-none placeholder:text-muted-foreground sm:text-[15px]";
 
@@ -36,6 +62,7 @@ export default function ContactSection() {
   const [sending, setSending] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [reason, setReason] = useState<ContactReason | "">("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,6 +104,7 @@ export default function ContactSection() {
 
       toast.success(t("success"));
       form.reset();
+      setReason("");
       setConfirmed(true);
     } catch {
       toast.error(t("error"));
@@ -135,6 +163,66 @@ export default function ContactSection() {
             </p>
 
             <div className="mt-6 space-y-5 sm:mt-8 sm:space-y-6">
+              <div>
+                <Label
+                  htmlFor="contact-reason"
+                  className="text-sm font-medium text-heading sm:text-base"
+                >
+                  {t("reasonLabel")}
+                </Label>
+                <Select
+                  name="reason"
+                  required
+                  value={reason}
+                  onValueChange={(value) => {
+                    if (isContactReason(value)) setReason(value);
+                  }}
+                >
+                  <SelectTrigger
+                    id="contact-reason"
+                    aria-invalid={Boolean(fieldErrors.reason)}
+                    className="mt-2 h-12! sm:h-13! w-full rounded-xl border-border px-4 text-[15px] shadow-none focus-visible:ring-primary/30"
+                  >
+                    <SelectValue placeholder={t("reasonPlaceholder")}>
+                      {reason ? t(`reasons.${reason}.label`) : undefined}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent
+                    position="popper"
+                    align="start"
+                    sideOffset={6}
+                    className="w-(--radix-select-trigger-width) min-w-0 rounded-2xl p-1.5 shadow-xl"
+                  >
+                    {reasons.map(({ Icon, value }) => (
+                      <SelectItem
+                        key={value}
+                        value={value}
+                        className="rounded-xl py-2.5 pr-8 pl-2.5 focus:bg-primary/10 focus:text-foreground"
+                      >
+                        <div className="grid min-w-0 grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-3">
+                          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <Icon className="size-5" aria-hidden />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-sm leading-5 font-semibold text-heading">
+                              {t(`reasons.${value}.label`)}
+                            </span>
+                            <span className="mt-0.5 block whitespace-normal text-xs leading-4 text-muted-foreground">
+                              {t(`reasons.${value}.description`)}
+                            </span>
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldErrors.reason && (
+                  <p className="mt-1.5 text-xs text-destructive">
+                    {fieldErrors.reason}
+                  </p>
+                )}
+              </div>
+
               <div>
                 <Label
                   htmlFor="contact-name"
