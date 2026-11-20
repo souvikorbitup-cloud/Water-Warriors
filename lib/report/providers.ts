@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "crypto";
 import { getSiteSettingsCollection } from "@/lib/services/site-settings";
 import ReportAnalysisCache from "@/lib/models/ReportAnalysisCache.model";
+import { stripLeadingReportBullet } from "@/lib/report/highlight-text";
 import type {
   ReportForecastMonth,
   ReportLocale,
@@ -15,7 +16,7 @@ type JsonRecord = Record<string, unknown>;
 type AnalysisBlock = { kind: "paragraph" | "point"; text: string };
 
 const GEMINI_MODEL_IDS = ["gemini-2.5-flash", "gemini-3.5-flash-lite"] as const;
-const ANALYSIS_PROMPT_VERSION = "recharge-analysis-v4";
+const ANALYSIS_PROMPT_VERSION = "recharge-analysis-v5";
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null;
@@ -384,7 +385,8 @@ async function requestHydrogeologyAnalysis(
     "Do not say the water is safe to drink or make health promises.",
     "Avoid generic filler about lower bills, property value, setting an example, raising awareness or sustainability slogans.",
     "Do not describe rainfall timing or monthly patterns, and do not mention roof or gutter cleaning, first-flush diverters or filters.",
-    "Use plain text in each block, with no Markdown formatting. Write numbers in the local style; for India use Indian digit grouping.",
+    "Use plain text except for paired double asterisks used for emphasis. Wrap important place names and complete measured quantities, including both the number and its unit (for example, bold the whole roof-area or litres phrase, not only its digits), in **double asterisks**. Do not use any other Markdown.",
+    "Point blocks must contain only their text; do not start a point with a bullet, dot or other marker.",
     locale === "hi"
       ? "Write the report in Hindi using clear Devanagari script; keep local place names and technical terms understandable."
       : "Write the report in English.",
@@ -530,6 +532,12 @@ async function requestHydrogeologyAnalysis(
         (total, block) => total + block.text.split(/\s+/).length,
         0,
       );
+      const hasEmphasis = validatedBlocks.some((block) =>
+        /\*\*[^*\r\n]+\*\*/u.test(block.text),
+      );
+      const hasUnpairedEmphasis = validatedBlocks.some(
+        (block) => (block.text.match(/\*\*/g)?.length ?? 0) % 2 !== 0,
+      );
       const issue =
         validatedBlocks.length < 4 || validatedBlocks.length > 7
           ? "the answer must contain four to seven blocks"
@@ -545,7 +553,9 @@ async function requestHydrogeologyAnalysis(
                     ),
                   )
                 ? 'the answer must not use "we", "our", "us", or first-person plural Hindi phrasing'
-                : null;
+                : !hasEmphasis || hasUnpairedEmphasis
+                  ? "wrap important figures with their units and place names in paired double asterisks"
+                  : null;
 
       const numberTokens = validatedBlocks.flatMap(
         (block) =>
@@ -589,7 +599,7 @@ async function requestHydrogeologyAnalysis(
           ? parsed.waterValueRupeesPerKilolitre
           : undefined;
       const analysis = validatedBlocks.map((block) =>
-        block.kind === "point" ? `• ${block.text}` : block.text,
+        stripLeadingReportBullet(block.text),
       );
       if (waterValueRupeesPerKilolitre === undefined) {
         validAnalysisWithoutPrice = analysis;

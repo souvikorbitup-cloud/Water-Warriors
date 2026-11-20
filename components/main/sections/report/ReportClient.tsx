@@ -880,6 +880,7 @@ function ReportSessionClient({
       <RechargeMattersSection
         litres={formattedPotential}
         location={locationName}
+        area={formattedArea}
         analysis={report?.analysis}
       />
       <ForecastProjectionSection
