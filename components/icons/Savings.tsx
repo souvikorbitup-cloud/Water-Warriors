@@ -7,7 +7,7 @@ export default function Savings() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g clip-path="url(#clip0_362_4278)">
+      <g clipPath="url(#clip0_362_4278)">
         <circle
           cx="27.5"
           cy="14"
